@@ -148,6 +148,45 @@ function testLeaderboardPage() {
     },
   });
 
+  // Responsive checks
+  tests.push({
+    name: "Leaderboard has mobile list and desktop table toggles",
+    test: () => {
+      const filePath = "src/app/leaderboard/page.tsx";
+      if (!fs.existsSync(filePath)) return "File not found";
+      const content = fs.readFileSync(filePath, "utf8");
+      const hasMobileList = content.includes("md:hidden") && content.includes("mobile-leaderboard-list");
+      const hasDesktopTable = content.includes("hidden md:block") && content.includes("desktop-leaderboard-table");
+      return hasMobileList && hasDesktopTable
+        ? true
+        : "Responsive mobile/desktop views not found";
+    },
+  });
+
+  tests.push({
+    name: "Viewport metadata is configured for mobile devices",
+    test: () => {
+      const filePath = "src/app/layout.tsx";
+      if (!fs.existsSync(filePath)) return "File not found";
+      const content = fs.readFileSync(filePath, "utf8");
+      return content.includes("export const viewport") && content.includes("device-width")
+        ? true
+        : "Viewport configuration missing";
+    },
+  });
+
+  tests.push({
+    name: "Mobile navigation includes Leaderboard with touch-friendly sizing",
+    test: () => {
+      const filePath = "src/components/Navigation.tsx";
+      if (!fs.existsSync(filePath)) return "File not found";
+      const content = fs.readFileSync(filePath, "utf8");
+      const hasLeaderboard = content.includes("router.push(\"/leaderboard\")");
+      const hasTouchSizing = content.includes("min-h-11") && content.includes("text-base");
+      return hasLeaderboard && hasTouchSizing ? true : "Mobile nav not touch-friendly or missing Leaderboard";
+    },
+  });
+
   return tests;
 }
 

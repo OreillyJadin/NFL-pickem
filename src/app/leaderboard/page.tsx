@@ -298,16 +298,18 @@ export default function Leaderboard() {
         {/* View Mode Toggle */}
         <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
           <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 onClick={() => setViewMode("season")}
                 variant={viewMode === "season" ? "default" : "outline"}
+                className="min-h-11 text-base px-4 w-full sm:w-auto"
               >
                 Season Standings
               </Button>
               <Button
                 onClick={() => setViewMode("weekly")}
                 variant={viewMode === "weekly" ? "default" : "outline"}
+                className="min-h-11 text-base px-4 w-full sm:w-auto"
               >
                 Weekly Standings
               </Button>
@@ -315,7 +317,7 @@ export default function Leaderboard() {
 
             {viewMode === "weekly" && (
               <>
-                <div>
+                <div className="w-full sm:w-auto">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Season Type
                   </label>
@@ -326,20 +328,20 @@ export default function Leaderboard() {
                         e.target.value as "preseason" | "regular"
                       )
                     }
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-11 text-base w-full sm:w-48"
                   >
                     <option value="regular">Regular Season</option>
                     <option value="preseason">Preseason</option>
                   </select>
                 </div>
-                <div>
+                <div className="w-full sm:w-auto">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Week
                   </label>
                   <select
                     value={selectedWeek}
                     onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-11 text-base w-full sm:w-40"
                   >
                     {Array.from({ length: 18 }, (_, i) => i + 1).map((week) => (
                       <option key={week} value={week}>
@@ -377,8 +379,96 @@ export default function Leaderboard() {
                 No data available for this period
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <>
+                {/* Mobile list view */}
+                <div className="md:hidden space-y-3" data-testid="mobile-leaderboard-list">
+                  {leaderboard.map((entry, index) => {
+                    const isTopThree = index < 3;
+                    const isLast = index === leaderboard.length - 1;
+
+                    return (
+                      <div
+                        key={entry.user_id}
+                        className={`p-4 rounded-lg border shadow-sm bg-white transition-colors duration-200 ${
+                          isTopThree
+                            ? "bg-gradient-to-r from-yellow-50 to-orange-50"
+                            : isLast
+                            ? "bg-gradient-to-r from-red-50 to-pink-50"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {index === 0 && <span className="text-2xl">🥇</span>}
+                            {index === 1 && <span className="text-2xl">🥈</span>}
+                            {index === 2 && <span className="text-2xl">🥉</span>}
+                            <span className={`font-bold text-lg ${
+                              isTopThree
+                                ? "text-yellow-800"
+                                : isLast
+                                ? "text-red-600"
+                                : "text-gray-700"
+                            }`}>
+                              #{index + 1}
+                            </span>
+                          </div>
+                          <span
+                            className={`font-bold text-xl ${
+                              entry.total_points > 0
+                                ? "text-green-600"
+                                : entry.total_points < 0
+                                ? "text-red-600"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {entry.total_points < 0 ? "-" : ""}
+                            {Math.abs(entry.total_points)} pts
+                          </span>
+                        </div>
+                        <div className="mb-1">
+                          <div className={`font-bold text-base ${
+                            isTopThree
+                              ? "text-yellow-800"
+                              : isLast
+                              ? "text-red-600"
+                              : "text-gray-800"
+                          }`}>
+                            {entry.username}
+                          </div>
+                          <div className="text-sm text-gray-500">{entry.email}</div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 pt-2">
+                          <div className="text-center">
+                            <div className="text-xs text-gray-500">Wins</div>
+                            <div className="text-green-600 font-bold text-base">
+                              {entry.correct_picks}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-gray-500">Losses</div>
+                            <div className="text-red-600 font-bold text-base">
+                              {entry.incorrect_picks}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-gray-500">Win %</div>
+                            <div className="font-bold text-base">
+                              {entry.total_picks > 0
+                                ? Math.round((entry.correct_picks / entry.total_picks) * 100)
+                                : 0}
+                              %
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop table view */}
+                <div className="hidden md:block" data-testid="desktop-leaderboard-table">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
                   <thead>
                     <tr className="border-b-2 border-gray-200">
                       <th className="text-left py-4 px-4 font-bold text-gray-700 text-lg">
@@ -501,8 +591,10 @@ export default function Leaderboard() {
                       );
                     })}
                   </tbody>
-                </table>
-              </div>
+                    </table>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
