@@ -79,7 +79,7 @@ export function Navigation() {
               variant={pathname === "/dashboard" ? "default" : "outline"}
               onClick={() => router.push("/dashboard")}
               size="sm"
-              className="flex-1"
+              className="flex-1 min-h-11 text-base"
             >
               Dashboard
             </Button>
@@ -87,16 +87,24 @@ export function Navigation() {
               variant={pathname === "/profile" ? "default" : "outline"}
               onClick={() => router.push("/profile")}
               size="sm"
-              className="flex-1"
+              className="flex-1 min-h-11 text-base"
             >
               Profile
+            </Button>
+            <Button
+              variant={pathname === "/leaderboard" ? "default" : "outline"}
+              onClick={() => router.push("/leaderboard")}
+              size="sm"
+              className="flex-1 min-h-11 text-base"
+            >
+              Leaderboard
             </Button>
             {isAdmin && (
               <Button
                 variant={pathname === "/admin" ? "default" : "outline"}
                 onClick={() => router.push("/admin")}
                 size="sm"
-                className="flex-1"
+                className="flex-1 min-h-11 text-base"
               >
                 Admin
               </Button>
