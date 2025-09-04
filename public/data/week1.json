@@ -1,0 +1,61 @@
+{
+  "week": 1,
+  "games": [
+    {
+      "id": "game-1",
+      "home_team": "Kansas City Chiefs",
+      "away_team": "Detroit Lions",
+      "game_time": "2024-09-05T20:20:00Z",
+      "status": "scheduled"
+    },
+    {
+      "id": "game-2", 
+      "home_team": "Buffalo Bills",
+      "away_team": "Arizona Cardinals",
+      "game_time": "2024-09-08T17:00:00Z",
+      "status": "scheduled"
+    },
+    {
+      "id": "game-3",
+      "home_team": "Miami Dolphins", 
+      "away_team": "New England Patriots",
+      "game_time": "2024-09-08T17:00:00Z",
+      "status": "scheduled"
+    },
+    {
+      "id": "game-4",
+      "home_team": "New York Jets",
+      "away_team": "San Francisco 49ers", 
+      "game_time": "2024-09-08T17:00:00Z",
+      "status": "scheduled"
+    },
+    {
+      "id": "game-5",
+      "home_team": "Pittsburgh Steelers",
+      "away_team": "Atlanta Falcons",
+      "game_time": "2024-09-08T17:00:00Z", 
+      "status": "scheduled"
+    },
+    {
+      "id": "game-6",
+      "home_team": "Cleveland Browns",
+      "away_team": "Dallas Cowboys",
+      "game_time": "2024-09-08T20:25:00Z",
+      "status": "scheduled"
+    },
+    {
+      "id": "game-7",
+      "home_team": "Denver Broncos",
+      "away_team": "Seattle Seahawks",
+      "game_time": "2024-09-08T20:25:00Z",
+      "status": "scheduled"
+    },
+    {
+      "id": "game-8",
+      "home_team": "Las Vegas Raiders",
+      "away_team": "Los Angeles Chargers",
+      "game_time": "2024-09-09T01:15:00Z",
+      "status": "scheduled"
+    }
+  ]
+}
