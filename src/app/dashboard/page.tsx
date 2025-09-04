@@ -163,6 +163,49 @@ export default function Dashboard() {
     calculateLocksUsed();
   }, [calculateLocksUsed]);
 
+  // Function to toggle lock status for existing picks
+  const toggleLock = async (gameId: string) => {
+    if (!user) return;
+
+    const pick = picks.find((p) => p.game_id === gameId);
+    if (!pick) return;
+
+    const newLockStatus = !pick.is_lock;
+
+    // Check if user is trying to add a lock but already used 3 locks
+    if (newLockStatus && locksUsed >= 3) {
+      alert("You can only use 3 locks per week!");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("picks")
+        .update({ is_lock: newLockStatus })
+        .eq("user_id", user.id)
+        .eq("game_id", gameId);
+
+      if (error) throw error;
+
+      // Update local state
+      setPicks((prev) => {
+        const newPicks = prev.map((p) =>
+          p.game_id === gameId ? { ...p, is_lock: newLockStatus } : p
+        );
+
+        // Recalculate locks used
+        const currentWeekLocks = newPicks.filter(
+          (pick) => pick.is_lock && games.some((game) => game.id === pick.game_id)
+        ).length;
+        setLocksUsed(currentWeekLocks);
+        return newPicks;
+      });
+    } catch (error) {
+      console.error("Error toggling lock:", error);
+      alert("Error updating lock status. Please try again.");
+    }
+  };
+
   const makePick = async (
     gameId: string,
     team: string,
@@ -579,9 +622,7 @@ export default function Dashboard() {
                       {pick && !locked && (
                         <div className="flex items-center justify-center">
                           <button
-                            onClick={() =>
-                              makePick(game.id, pick.picked_team, !pick.is_lock)
-                            }
+                            onClick={() => toggleLock(game.id)}
                             disabled={!pick.picked_team || locked}
                             className={`
                               flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200
@@ -601,7 +642,7 @@ export default function Dashboard() {
                               {pick.is_lock ? "🔒" : "🔓"}
                             </span>
                             <span className="text-sm font-medium">
-                              {pick.is_lock ? "Locked Pick" : "Lock This Pick"}
+                              {pick.is_lock ? "Remove Lock" : "Lock This Pick"}
                             </span>
                           </button>
                         </div>
