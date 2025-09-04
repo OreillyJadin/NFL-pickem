@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
         // Not you = redirect to dashboard
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
-    } catch (error) {
+    } catch {
       // Any error = redirect to home
       return NextResponse.redirect(new URL("/", request.url));
     }

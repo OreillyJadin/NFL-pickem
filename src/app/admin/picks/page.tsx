@@ -54,7 +54,7 @@ export default function AdminPicks() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [picks, setPicks] = useState<Pick[]>([]);
-  const [games, setGames] = useState<any[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingPicks, setLoadingPicks] = useState(false);
   const [loadingGames, setLoadingGames] = useState(false);

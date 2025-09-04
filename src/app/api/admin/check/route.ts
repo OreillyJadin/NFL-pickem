@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       user_id: user.id,
       action: "admin_check",
       details: { email: user.email, isAdmin: profile.is_admin },
-      ip_address: request.ip || "unknown",
+      ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown",
     });
 
     return NextResponse.json({
