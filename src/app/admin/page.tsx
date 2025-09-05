@@ -42,6 +42,7 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResults, setSyncResults] = useState<any[]>([]);
+  const [syncingScores, setSyncingScores] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -184,6 +185,102 @@ export default function Admin() {
     });
   };
 
+  const syncGameScore = async (gameId: string) => {
+    setSyncingScores(true);
+    try {
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) throw new Error("No auth token");
+
+      const response = await fetch("/api/admin/sync-scores", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "sync_game",
+          gameId: gameId,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Reload games to show updated scores
+        loadGames();
+        setSyncResults(prev => [...prev, { 
+          success: true, 
+          week: "Score Update", 
+          message: result.message 
+        }]);
+      } else {
+        setSyncResults(prev => [...prev, { 
+          success: false, 
+          week: "Score Update", 
+          message: result.message 
+        }]);
+      }
+    } catch (error) {
+      console.error("Error syncing game score:", error);
+      setSyncResults(prev => [...prev, { 
+        success: false, 
+        week: "Score Update", 
+        message: "Failed to sync score" 
+      }]);
+    } finally {
+      setSyncingScores(false);
+    }
+  };
+
+  const syncWeekScores = async (season: number, week: number, seasonType: string) => {
+    setSyncingScores(true);
+    try {
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) throw new Error("No auth token");
+
+      const response = await fetch("/api/admin/sync-scores", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "sync_week",
+          season: season,
+          week: week,
+          seasonType: seasonType,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Reload games to show updated scores
+        loadGames();
+        setSyncResults(prev => [...prev, { 
+          success: true, 
+          week: `Week ${week} Scores`, 
+          message: result.message 
+        }]);
+      } else {
+        setSyncResults(prev => [...prev, { 
+          success: false, 
+          week: `Week ${week} Scores`, 
+          message: result.message 
+        }]);
+      }
+    } catch (error) {
+      console.error("Error syncing week scores:", error);
+      setSyncResults(prev => [...prev, { 
+        success: false, 
+        week: `Week ${week} Scores`, 
+        message: "Failed to sync scores" 
+      }]);
+    } finally {
+      setSyncingScores(false);
+    }
+  };
+
   if (loading || loadingGames) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -256,6 +353,35 @@ export default function Admin() {
                   {syncing ? "Processing..." : "🏆 Process Weekly Awards"}
                 </Button>
               </div>
+              
+              <div className="mt-4">
+                <h4 className="font-semibold mb-2">Real-Time Score Sync</h4>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => syncWeekScores(2025, 1, "regular")}
+                    disabled={syncingScores}
+                    variant="outline"
+                    className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    {syncingScores ? "Syncing..." : "🔄 Sync Week 1 Scores"}
+                  </Button>
+                  <Button
+                    onClick={() => syncWeekScores(2025, 2, "regular")}
+                    disabled={syncingScores}
+                    variant="outline"
+                    className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    {syncingScores ? "Syncing..." : "🔄 Sync Week 2 Scores"}
+                  </Button>
+                  <Button
+                    onClick={() => syncWeekScores(2025, 3, "regular")}
+                    disabled={syncingScores}
+                    variant="outline"
+                    className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    {syncingScores ? "Syncing..." : "🔄 Sync Week 3 Scores"}
+                  </Button>
+              </div>
 
               {syncResults.length > 0 && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -306,16 +432,37 @@ export default function Admin() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {game.status === "completed" ? (
-                    <div className="text-lg font-semibold">
-                      Final: {game.away_team} {game.away_score} -{" "}
-                      {game.home_team} {game.home_score}
+                  <div className="flex justify-between items-center">
+                    <div>
+                      {game.status === "completed" ? (
+                        <div className="text-lg font-semibold">
+                          Final: {game.away_team} {game.away_score} -{" "}
+                          {game.home_team} {game.home_score}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500">
+                          {game.home_score !== null && game.away_score !== null ? (
+                            <div>
+                              Current: {game.away_team} {game.away_score} - {game.home_team} {game.home_score}
+                            </div>
+                          ) : (
+                            <div>Game not completed yet</div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="text-sm text-gray-500">
-                      Game not completed yet
-                    </div>
-                  )}
+                    {game.espn_id && (
+                      <Button
+                        onClick={() => syncGameScore(game.id)}
+                        disabled={syncingScores}
+                        size="sm"
+                        variant="outline"
+                        className="ml-4"
+                      >
+                        {syncingScores ? "Syncing..." : "🔄 Sync Score"}
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))
