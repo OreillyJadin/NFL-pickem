@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { TutorialModal } from "@/components/TutorialModal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,7 +16,29 @@ import {
 
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
   const { user, signOut } = useAuth();
+
+  // Show tutorial automatically for new users
+  useEffect(() => {
+    if (user && !hasSeenTutorial) {
+      const tutorialShown = localStorage.getItem("nfl-pickem-tutorial-shown");
+      if (!tutorialShown) {
+        setShowTutorial(true);
+      }
+    }
+  }, [user, hasSeenTutorial]);
+
+  const handleTutorialClose = () => {
+    setShowTutorial(false);
+    setHasSeenTutorial(true);
+    localStorage.setItem("nfl-pickem-tutorial-shown", "true");
+  };
+
+  const goToDashboard = () => {
+    window.location.href = "/dashboard";
+  };
 
   if (user) {
     return (
@@ -30,17 +53,27 @@ export default function Home() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button
-              onClick={() => (window.location.href = "/dashboard")}
-              className="w-full"
-            >
+            <Button onClick={goToDashboard} className="w-full">
               Go to Dashboard
             </Button>
-            <Button onClick={signOut} variant="outline" className="w-full">
+            <Button
+              onClick={() => setShowTutorial(true)}
+              variant="outline"
+              className="w-full"
+            >
+              📚 Take a Tour
+            </Button>
+            <Button onClick={signOut} variant="ghost" className="w-full">
               Sign Out
             </Button>
           </CardContent>
         </Card>
+
+        <TutorialModal
+          isOpen={showTutorial}
+          onClose={handleTutorialClose}
+          onSkip={goToDashboard}
+        />
       </div>
     );
   }

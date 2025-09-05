@@ -13,7 +13,7 @@ export const AWARD_TYPES = {
     description: "Lowest points this week",
   },
   perfect_week: {
-    emoji: "🌟",
+    emoji: "💯",
     name: "Perfect Week",
     description: "Got all picks correct",
   },

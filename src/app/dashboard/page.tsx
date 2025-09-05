@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
+import { TutorialModal } from "@/components/TutorialModal";
 import { supabase } from "@/lib/supabase";
 import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
 
@@ -50,6 +51,7 @@ export default function Dashboard() {
     { week: number; season_type: string; season: number }[]
   >([]);
   const [locksUsed, setLocksUsed] = useState<number>(0);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const loadAvailableWeeks = useCallback(async () => {
     try {
@@ -353,9 +355,19 @@ export default function Dashboard() {
           <p className="text-gray-600">
             Make your picks for this week&apos;s games
           </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Current time: {new Date().toLocaleString()}
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-sm text-gray-500">
+              Current time: {new Date().toLocaleString()}
+            </p>
+            <Button
+              onClick={() => setShowTutorial(true)}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              📚 Help
+            </Button>
+          </div>
           <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -681,6 +693,12 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
+
+      <TutorialModal
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+        onSkip={() => setShowTutorial(false)}
+      />
     </div>
   );
 }

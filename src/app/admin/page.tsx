@@ -188,14 +188,15 @@ export default function Admin() {
   const syncGameScore = async (gameId: string) => {
     setSyncingScores(true);
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const token = (await supabase.auth.getSession()).data.session
+        ?.access_token;
       if (!token) throw new Error("No auth token");
 
       const response = await fetch("/api/admin/sync-scores", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: "sync_game",
@@ -204,45 +205,59 @@ export default function Admin() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         // Reload games to show updated scores
         loadGames();
-        setSyncResults(prev => [...prev, { 
-          success: true, 
-          week: "Score Update", 
-          message: result.message 
-        }]);
+        setSyncResults((prev) => [
+          ...prev,
+          {
+            success: true,
+            week: "Score Update",
+            message: result.message,
+          },
+        ]);
       } else {
-        setSyncResults(prev => [...prev, { 
-          success: false, 
-          week: "Score Update", 
-          message: result.message 
-        }]);
+        setSyncResults((prev) => [
+          ...prev,
+          {
+            success: false,
+            week: "Score Update",
+            message: result.message,
+          },
+        ]);
       }
     } catch (error) {
       console.error("Error syncing game score:", error);
-      setSyncResults(prev => [...prev, { 
-        success: false, 
-        week: "Score Update", 
-        message: "Failed to sync score" 
-      }]);
+      setSyncResults((prev) => [
+        ...prev,
+        {
+          success: false,
+          week: "Score Update",
+          message: "Failed to sync score",
+        },
+      ]);
     } finally {
       setSyncingScores(false);
     }
   };
 
-  const syncWeekScores = async (season: number, week: number, seasonType: string) => {
+  const syncWeekScores = async (
+    season: number,
+    week: number,
+    seasonType: string
+  ) => {
     setSyncingScores(true);
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const token = (await supabase.auth.getSession()).data.session
+        ?.access_token;
       if (!token) throw new Error("No auth token");
 
       const response = await fetch("/api/admin/sync-scores", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: "sync_week",
@@ -253,29 +268,38 @@ export default function Admin() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         // Reload games to show updated scores
         loadGames();
-        setSyncResults(prev => [...prev, { 
-          success: true, 
-          week: `Week ${week} Scores`, 
-          message: result.message 
-        }]);
+        setSyncResults((prev) => [
+          ...prev,
+          {
+            success: true,
+            week: `Week ${week} Scores`,
+            message: result.message,
+          },
+        ]);
       } else {
-        setSyncResults(prev => [...prev, { 
-          success: false, 
-          week: `Week ${week} Scores`, 
-          message: result.message 
-        }]);
+        setSyncResults((prev) => [
+          ...prev,
+          {
+            success: false,
+            week: `Week ${week} Scores`,
+            message: result.message,
+          },
+        ]);
       }
     } catch (error) {
       console.error("Error syncing week scores:", error);
-      setSyncResults(prev => [...prev, { 
-        success: false, 
-        week: `Week ${week} Scores`, 
-        message: "Failed to sync scores" 
-      }]);
+      setSyncResults((prev) => [
+        ...prev,
+        {
+          success: false,
+          week: `Week ${week} Scores`,
+          message: "Failed to sync scores",
+        },
+      ]);
     } finally {
       setSyncingScores(false);
     }
@@ -353,7 +377,7 @@ export default function Admin() {
                   {syncing ? "Processing..." : "🏆 Process Weekly Awards"}
                 </Button>
               </div>
-              
+
               <div className="mt-4">
                 <h4 className="font-semibold mb-2">Real-Time Score Sync</h4>
                 <div className="flex flex-wrap gap-2">
@@ -442,9 +466,11 @@ export default function Admin() {
                         </div>
                       ) : (
                         <div className="text-sm text-gray-500">
-                          {game.home_score !== null && game.away_score !== null ? (
+                          {game.home_score !== null &&
+                          game.away_score !== null ? (
                             <div>
-                              Current: {game.away_team} {game.away_score} - {game.home_team} {game.home_score}
+                              Current: {game.away_team} {game.away_score} -{" "}
+                              {game.home_team} {game.home_score}
                             </div>
                           ) : (
                             <div>Game not completed yet</div>

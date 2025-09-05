@@ -1,0 +1,5 @@
+---
+description: make sure the change implemented in ios/mobile friendly. We want this to work for laptops all the way to iphones.
+globs:
+alwaysApply: true
+---
