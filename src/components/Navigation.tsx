@@ -74,31 +74,39 @@ export function Navigation() {
 
         {/* Mobile navigation */}
         <div className="md:hidden pb-4">
-          <div className="flex space-x-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant={pathname === "/dashboard" ? "default" : "outline"}
               onClick={() => router.push("/dashboard")}
               size="sm"
-              className="flex-1"
+              className="text-xs"
             >
-              Dashboard
+              📊 Dashboard
+            </Button>
+            <Button
+              variant={pathname === "/leaderboard" ? "default" : "outline"}
+              onClick={() => router.push("/leaderboard")}
+              size="sm"
+              className="text-xs"
+            >
+              🏆 Leaderboard
             </Button>
             <Button
               variant={pathname === "/profile" ? "default" : "outline"}
               onClick={() => router.push("/profile")}
               size="sm"
-              className="flex-1"
+              className="text-xs"
             >
-              Profile
+              👤 Profile
             </Button>
             {isAdmin && (
               <Button
                 variant={pathname === "/admin" ? "default" : "outline"}
                 onClick={() => router.push("/admin")}
                 size="sm"
-                className="flex-1"
+                className="text-xs"
               >
-                Admin
+                ⚙️ Admin
               </Button>
             )}
           </div>

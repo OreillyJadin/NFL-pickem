@@ -195,7 +195,8 @@ export default function Dashboard() {
 
         // Recalculate locks used
         const currentWeekLocks = newPicks.filter(
-          (pick) => pick.is_lock && games.some((game) => game.id === pick.game_id)
+          (pick) =>
+            pick.is_lock && games.some((game) => game.id === pick.game_id)
         ).length;
         setLocksUsed(currentWeekLocks);
         return newPicks;
@@ -374,7 +375,7 @@ export default function Dashboard() {
 
         {/* Week and Season Type Selector */}
         <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Season Type
@@ -386,7 +387,7 @@ export default function Dashboard() {
                     e.target.value as "preseason" | "regular"
                   )
                 }
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="regular">Regular Season</option>
                 <option value="preseason">Preseason</option>
@@ -399,7 +400,7 @@ export default function Dashboard() {
               <select
                 value={selectedWeek}
                 onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {availableWeeks
                   .filter((w) => w.season_type === selectedSeasonType)
@@ -413,7 +414,7 @@ export default function Dashboard() {
                   ))}
               </select>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 sm:col-span-2 text-center">
               {games.length} games available
             </div>
           </div>

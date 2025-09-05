@@ -297,24 +297,26 @@ export default function Leaderboard() {
 
         {/* View Mode Toggle */}
         <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="space-y-4">
             <div className="flex gap-2">
               <Button
                 onClick={() => setViewMode("season")}
                 variant={viewMode === "season" ? "default" : "outline"}
+                className="flex-1 text-sm"
               >
-                Season Standings
+                Season
               </Button>
               <Button
                 onClick={() => setViewMode("weekly")}
                 variant={viewMode === "weekly" ? "default" : "outline"}
+                className="flex-1 text-sm"
               >
-                Weekly Standings
+                Weekly
               </Button>
             </div>
 
             {viewMode === "weekly" && (
-              <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Season Type
@@ -326,7 +328,7 @@ export default function Leaderboard() {
                         e.target.value as "preseason" | "regular"
                       )
                     }
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   >
                     <option value="regular">Regular Season</option>
                     <option value="preseason">Preseason</option>
@@ -339,7 +341,7 @@ export default function Leaderboard() {
                   <select
                     value={selectedWeek}
                     onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   >
                     {Array.from({ length: 18 }, (_, i) => i + 1).map((week) => (
                       <option key={week} value={week}>
@@ -348,7 +350,7 @@ export default function Leaderboard() {
                     ))}
                   </select>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -378,25 +380,25 @@ export default function Leaderboard() {
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b-2 border-gray-200">
-                      <th className="text-left py-4 px-4 font-bold text-gray-700 text-lg">
+                      <th className="text-left py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
                         Rank
                       </th>
-                      <th className="text-left py-4 px-4 font-bold text-gray-700 text-lg">
+                      <th className="text-left py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
                         Player
                       </th>
-                      <th className="text-center py-4 px-4 font-bold text-gray-700 text-lg">
+                      <th className="text-center py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
                         Wins
                       </th>
-                      <th className="text-center py-4 px-4 font-bold text-gray-700 text-lg">
+                      <th className="text-center py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
                         Losses
                       </th>
-                      <th className="text-center py-4 px-4 font-bold text-gray-700 text-lg">
+                      <th className="text-center py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
                         Points
                       </th>
-                      <th className="text-center py-4 px-4 font-bold text-gray-700 text-lg">
+                      <th className="text-center py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
                         Win %
                       </th>
                     </tr>
