@@ -381,6 +381,7 @@ export default function Admin() {
                   >
                     {syncingScores ? "Syncing..." : "🔄 Sync Week 3 Scores"}
                   </Button>
+                </div>
               </div>
 
               {syncResults.length > 0 && (
