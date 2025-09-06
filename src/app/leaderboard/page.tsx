@@ -47,6 +47,31 @@ export default function Leaderboard() {
   >("regular");
   const [viewMode, setViewMode] = useState<"season" | "weekly">("season");
 
+  // Helper function to sort leaderboard entries by priority: points, %, wins, lowest losses
+  const sortLeaderboard = (a: LeaderboardEntry, b: LeaderboardEntry) => {
+    // 1. Points (descending)
+    if (b.total_points !== a.total_points) {
+      return b.total_points - a.total_points;
+    }
+
+    // 2. Win percentage (descending)
+    const aWinPercentage =
+      a.total_picks > 0 ? a.correct_picks / a.total_picks : 0;
+    const bWinPercentage =
+      b.total_picks > 0 ? b.correct_picks / b.total_picks : 0;
+    if (bWinPercentage !== aWinPercentage) {
+      return bWinPercentage - aWinPercentage;
+    }
+
+    // 3. Wins (descending)
+    if (b.correct_picks !== a.correct_picks) {
+      return b.correct_picks - a.correct_picks;
+    }
+
+    // 4. Lowest losses (ascending)
+    return a.incorrect_picks - b.incorrect_picks;
+  };
+
   const loadLeaderboard = useCallback(async () => {
     try {
       setLoadingData(true);
@@ -144,10 +169,9 @@ export default function Leaderboard() {
           }
         });
 
-        // Sort by total points (descending)
-        const sortedLeaderboard = Object.values(userStats).sort(
-          (a, b) => b.total_points - a.total_points
-        );
+        // Sort by priority: points, %, wins, lowest losses
+        const sortedLeaderboard =
+          Object.values(userStats).sort(sortLeaderboard);
         setLeaderboard(sortedLeaderboard);
       } else {
         // Load weekly standings - get all users who have made picks for this week
@@ -244,10 +268,9 @@ export default function Leaderboard() {
           }
         });
 
-        // Sort by weekly points (descending)
-        const sortedLeaderboard = Object.values(userStats).sort(
-          (a, b) => b.total_points - a.total_points
-        );
+        // Sort by priority: points, %, wins, lowest losses
+        const sortedLeaderboard =
+          Object.values(userStats).sort(sortLeaderboard);
         setLeaderboard(sortedLeaderboard);
       }
     } catch (error) {
@@ -358,16 +381,16 @@ export default function Leaderboard() {
         {/* Leaderboard Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">
+            <CardTitle className="text-xl sm:text-2xl">
               {viewMode === "season"
-                ? "🏆 Season Standings"
-                : `📅 ${
+                ? "Season Standings"
+                : `${
                     selectedSeasonType === "preseason"
                       ? "Preseason"
                       : "Regular Season"
                   } Week ${selectedWeek}`}
             </CardTitle>
-            <CardDescription className="text-lg">
+            <CardDescription className="text-sm sm:text-base">
               {viewMode === "season"
                 ? "Overall points across all weeks - All players who have made picks"
                 : `Points for this week only - All players who have made picks`}
@@ -380,25 +403,25 @@ export default function Leaderboard() {
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px]">
+                <table className="w-full min-w-[400px]">
                   <thead>
                     <tr className="border-b-2 border-gray-200">
-                      <th className="text-left py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
+                      <th className="text-left py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
                         Rank
                       </th>
-                      <th className="text-left py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
+                      <th className="text-left py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
                         Player
                       </th>
-                      <th className="text-center py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
-                        Wins
-                      </th>
-                      <th className="text-center py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
-                        Losses
-                      </th>
-                      <th className="text-center py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
+                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
                         Points
                       </th>
-                      <th className="text-center py-3 px-2 sm:px-4 font-bold text-gray-700 text-sm sm:text-lg">
+                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
+                        Wins
+                      </th>
+                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
+                        Losses
+                      </th>
+                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
                         Win %
                       </th>
                     </tr>
@@ -422,19 +445,10 @@ export default function Leaderboard() {
                             }
                           `}
                         >
-                          <td className="py-4 px-4">
+                          <td className="py-2 px-1 sm:px-2">
                             <div className="flex items-center">
-                              {index === 0 && (
-                                <span className="text-4xl mr-3">🥇</span>
-                              )}
-                              {index === 1 && (
-                                <span className="text-4xl mr-3">🥈</span>
-                              )}
-                              {index === 2 && (
-                                <span className="text-4xl mr-3">🥉</span>
-                              )}
                               <span
-                                className={`font-bold text-xl ${
+                                className={`font-bold text-sm sm:text-base ${
                                   isTopThree
                                     ? "text-yellow-800"
                                     : isLast
@@ -446,10 +460,10 @@ export default function Leaderboard() {
                               </span>
                             </div>
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-2 px-1 sm:px-2">
                             <div>
                               <div
-                                className={`font-bold text-lg ${
+                                className={`font-bold text-sm sm:text-base ${
                                   isTopThree
                                     ? "text-yellow-800"
                                     : isLast
@@ -457,26 +471,13 @@ export default function Leaderboard() {
                                     : "text-gray-800"
                                 }`}
                               >
-                                {entry.username}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {entry.email}
+                                {entry.username || entry.email}
                               </div>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-center">
-                            <span className="text-green-600 font-bold text-lg">
-                              {entry.correct_picks}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <span className="text-red-600 font-bold text-lg">
-                              {entry.incorrect_picks}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-center">
+                          <td className="py-2 px-1 sm:px-2 text-center">
                             <span
-                              className={`font-bold text-2xl ${
+                              className={`font-bold text-sm sm:text-base ${
                                 entry.total_points > 0
                                   ? "text-green-600"
                                   : entry.total_points < 0
@@ -488,8 +489,18 @@ export default function Leaderboard() {
                               {Math.abs(entry.total_points)}
                             </span>
                           </td>
-                          <td className="py-4 px-4 text-center">
-                            <span className="font-bold text-lg">
+                          <td className="py-2 px-1 sm:px-2 text-center">
+                            <span className="text-green-600 font-bold text-sm sm:text-base">
+                              {entry.correct_picks}
+                            </span>
+                          </td>
+                          <td className="py-2 px-1 sm:px-2 text-center">
+                            <span className="text-red-600 font-bold text-sm sm:text-base">
+                              {entry.incorrect_picks}
+                            </span>
+                          </td>
+                          <td className="py-2 px-1 sm:px-2 text-center">
+                            <span className="font-bold text-sm sm:text-base">
                               {entry.total_picks > 0
                                 ? Math.round(
                                     (entry.correct_picks / entry.total_picks) *
@@ -510,19 +521,17 @@ export default function Leaderboard() {
         </Card>
 
         {/* Scoring Info */}
-        <Card className="mt-6">
+        <Card className="mt-4">
           <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              🎯 Scoring System
-            </CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Scoring System</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <h4 className="font-bold text-green-800 mb-3 text-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                <h4 className="font-bold text-green-800 mb-2 text-sm sm:text-base">
                   Normal Picks
                 </h4>
-                <ul className="text-sm text-green-700 space-y-2">
+                <ul className="text-xs sm:text-sm text-green-700 space-y-1">
                   <li className="flex items-center gap-2">
                     <span className="text-green-600">✓</span>
                     Correct: +1 point
@@ -533,11 +542,11 @@ export default function Leaderboard() {
                   </li>
                 </ul>
               </div>
-              <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <h4 className="font-bold text-yellow-800 mb-3 text-lg flex items-center gap-2">
-                  🔒 Lock Picks
+              <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <h4 className="font-bold text-yellow-800 mb-2 text-sm sm:text-base">
+                  Lock Picks
                 </h4>
-                <ul className="text-sm text-yellow-700 space-y-2">
+                <ul className="text-xs sm:text-sm text-yellow-700 space-y-1">
                   <li className="flex items-center gap-2">
                     <span className="text-green-600">✓</span>
                     Correct: +2 points
@@ -547,7 +556,7 @@ export default function Leaderboard() {
                     Incorrect: -2 points
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-blue-500">🔢</span>
+                    <span className="text-blue-500">#</span>
                     Max 3 locks per week
                   </li>
                 </ul>

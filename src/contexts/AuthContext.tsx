@@ -63,9 +63,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           username,
           email,
         });
-      } catch (profileError) {
+      } catch (profileError: any) {
         console.error("Error creating profile:", profileError);
-        // Don't fail the signup if profile creation fails
+        // If it's a unique constraint violation, return a user-friendly error
+        if (
+          profileError.code === "23505" &&
+          profileError.message.includes("username")
+        ) {
+          return {
+            error: {
+              message: `Username "${username}" already exists. Please choose a different username.`,
+            },
+          };
+        }
+        // For other errors, return the original error
+        return { error: profileError };
       }
     }
 
