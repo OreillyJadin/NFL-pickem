@@ -15,6 +15,10 @@ import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
 import { getUserAwards, getAwardDisplay } from "@/lib/awards";
 import { Award } from "@/lib/supabase";
+import { ProfileEditModal } from "@/components/ProfileEditModal";
+import { PasswordResetModal } from "@/components/PasswordResetModal";
+import { Button } from "@/components/ui/button";
+import { Edit, Key, User } from "lucide-react";
 
 interface UserStats {
   totalPicks: number;
@@ -60,6 +64,57 @@ export default function Profile() {
   const [awards, setAwards] = useState<Award[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingAwards, setLoadingAwards] = useState(true);
+  const [profileData, setProfileData] = useState({
+    display_name: "",
+    bio: "",
+    profile_pic_url: "",
+  });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  const loadProfileData = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("display_name, bio, profile_pic_url")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+
+      setProfileData({
+        display_name: data?.display_name || "",
+        bio: data?.bio || "",
+        profile_pic_url: data?.profile_pic_url || "",
+      });
+    } catch (error) {
+      console.error("Error loading profile data:", error);
+    }
+  }, [user]);
+
+  const updateProfile = async (newProfileData: {
+    display_name: string;
+    bio: string;
+    profile_pic_url: string;
+  }) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update(newProfileData)
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setProfileData(newProfileData);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
+    }
+  };
 
   const loadUserStats = useCallback(async () => {
     if (!user) return;
@@ -159,7 +214,22 @@ export default function Profile() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setPickHistory(data || []);
+
+      // Sort picks: completed games first, then by creation date (newest first)
+      const sortedPicks = (data || []).sort((a, b) => {
+        const aCompleted = a.game?.status === "completed";
+        const bCompleted = b.game?.status === "completed";
+
+        if (aCompleted && !bCompleted) return -1;
+        if (!aCompleted && bCompleted) return 1;
+
+        // If both completed or both not completed, sort by creation date
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
+
+      setPickHistory(sortedPicks);
     } catch (error) {
       console.error("Error loading pick history:", error);
     }
@@ -188,11 +258,12 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
+      loadProfileData();
       loadUserStats();
       loadPickHistory();
       loadAwards();
     }
-  }, [user, loadUserStats, loadPickHistory, loadAwards]);
+  }, [user, loadProfileData, loadUserStats, loadPickHistory, loadAwards]);
 
   const getPickResult = (pick: PickHistory) => {
     const game = pick.game;
@@ -293,159 +364,154 @@ export default function Profile() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       <div className="max-w-4xl mx-auto p-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          <p className="text-gray-600">{user.email}</p>
+        <div className="mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                {profileData.profile_pic_url ? (
+                  <img
+                    src={profileData.profile_pic_url}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="h-6 w-6 text-gray-400" />
+                )}
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">
+                  {profileData.display_name || user.email}
+                </h1>
+                <p className="text-sm text-gray-600">{user.email}</p>
+                {profileData.bio && (
+                  <p className="text-xs text-gray-500 mt-1 max-w-md">
+                    {profileData.bio}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex space-x-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center gap-1 text-xs px-2 py-1"
+              >
+                <Edit className="h-3 w-3" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPasswordModal(true)}
+                className="flex items-center gap-1 text-xs px-2 py-1"
+              >
+                <Key className="h-3 w-3" />
+                Reset
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Total Picks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalPicks}</div>
-            </CardContent>
+        <div className="grid grid-cols-4 gap-1 mb-4">
+          <Card className="p-2 text-center">
+            <div className="text-xs text-gray-600">Total</div>
+            <div className="text-sm font-bold">{stats.totalPicks}</div>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Correct
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {stats.correctPicks}
-              </div>
-            </CardContent>
+          <Card className="p-2 text-center">
+            <div className="text-xs text-gray-600">Correct</div>
+            <div className="text-sm font-bold text-green-600">
+              {stats.correctPicks}
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Incorrect
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {stats.incorrectPicks}
-              </div>
-            </CardContent>
+          <Card className="p-2 text-center">
+            <div className="text-xs text-gray-600">Wrong</div>
+            <div className="text-sm font-bold text-red-600">
+              {stats.incorrectPicks}
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Win %
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {stats.winPercentage}%
-              </div>
-            </CardContent>
+          <Card className="p-2 text-center">
+            <div className="text-xs text-gray-600">Win %</div>
+            <div className="text-sm font-bold text-blue-600">
+              {stats.winPercentage}%
+            </div>
           </Card>
         </div>
 
         {/* Lock Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-yellow-700 flex items-center gap-1">
-                🔒 Lock Picks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-800">
-                {stats.lockPicks}
-              </div>
-            </CardContent>
+        <div className="grid grid-cols-4 gap-1 mb-4">
+          <Card className="border-yellow-200 bg-yellow-50 p-2 text-center">
+            <div className="text-xs text-yellow-700">🔒 Locks</div>
+            <div className="text-sm font-bold text-yellow-800">
+              {stats.lockPicks}
+            </div>
           </Card>
 
-          <Card className="border-green-200 bg-green-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">
-                Lock Wins
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-800">
-                {stats.lockWins}
-              </div>
-            </CardContent>
+          <Card className="border-green-200 bg-green-50 p-2 text-center">
+            <div className="text-xs text-green-700">Lock W</div>
+            <div className="text-sm font-bold text-green-800">
+              {stats.lockWins}
+            </div>
           </Card>
 
-          <Card className="border-red-200 bg-red-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-red-700">
-                Lock Losses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-800">
-                {stats.lockLosses}
-              </div>
-            </CardContent>
+          <Card className="border-red-200 bg-red-50 p-2 text-center">
+            <div className="text-xs text-red-700">Lock L</div>
+            <div className="text-sm font-bold text-red-800">
+              {stats.lockLosses}
+            </div>
           </Card>
 
-          <Card className="border-purple-200 bg-purple-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700">
-                Lock Win %
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-800">
-                {stats.lockWinPercentage}%
-              </div>
-            </CardContent>
+          <Card className="border-purple-200 bg-purple-50 p-2 text-center">
+            <div className="text-xs text-purple-700">Lock %</div>
+            <div className="text-sm font-bold text-purple-800">
+              {stats.lockWinPercentage}%
+            </div>
           </Card>
         </div>
 
         {/* Trophy Wall */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="mb-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
               🏆 Trophy Wall
             </CardTitle>
-            <CardDescription>Your achievements and awards</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {loadingAwards ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-gray-600">Loading awards...</p>
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Loading awards...</p>
               </div>
             ) : awards.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-gray-500 text-center py-4 text-sm">
                 No awards yet. Keep playing to earn trophies!
               </p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {awards.map((award) => {
                   const display = getAwardDisplay(award);
                   return (
                     <div
                       key={award.id}
-                      className="p-4 border rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200"
+                      className="p-2 border rounded bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200"
                     >
                       <div className="text-center">
-                        <div className="text-4xl mb-2">{display.emoji}</div>
-                        <div className="font-semibold text-gray-800 mb-1">
+                        <div className="text-2xl mb-1">{display.emoji}</div>
+                        <div className="font-semibold text-gray-800 text-xs mb-1">
                           {display.name}
                         </div>
-                        <div className="text-sm text-gray-600 mb-2">
+                        <div className="text-xs text-gray-600 mb-1">
                           {display.description}
                         </div>
                         <div className="text-xs text-gray-500">
                           {award.season_type === "preseason"
                             ? "Preseason"
                             : "Regular Season"}{" "}
-                          • {award.points} points
+                          • {award.points} pts
                         </div>
                       </div>
                     </div>
@@ -458,17 +524,16 @@ export default function Profile() {
 
         {/* Pick History */}
         <Card>
-          <CardHeader>
-            <CardTitle>Pick History</CardTitle>
-            <CardDescription>Your recent picks and results</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Pick History</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {pickHistory.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-gray-500 text-center py-4 text-sm">
                 No picks made yet
               </p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {pickHistory.map((pick) => {
                   const result = getPickResult(pick);
                   const game = pick.game;
@@ -476,49 +541,43 @@ export default function Profile() {
                   return (
                     <div
                       key={pick.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
+                      className="flex items-center justify-between p-3 border rounded text-sm"
                     >
-                      <div className="flex-1">
-                        <div className="font-medium">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
                           {game?.away_team} @ {game?.home_team}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          Game:{" "}
-                          {game?.game_time
-                            ? formatGameTime(game.game_time)
-                            : "TBD"}
-                        </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs text-gray-500 truncate">
                           Picked: {pick.picked_team} •{" "}
                           {formatPickTime(pick.created_at)}
                         </div>
                         {pick.is_lock && (
-                          <div className="text-xs text-yellow-600 font-medium flex items-center gap-1">
-                            🔒 LOCKED PICK
+                          <div className="text-xs text-yellow-600 font-medium">
+                            🔒 LOCKED
                           </div>
                         )}
                         {game?.status === "completed" &&
                           game.home_score !== null &&
                           game.away_score !== null && (
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs text-gray-500">
                               Final: {game.away_team} {game.away_score} -{" "}
                               {game.home_team} {game.home_score}
                             </div>
                           )}
                       </div>
-                      <div className="ml-4">
+                      <div className="ml-2 flex-shrink-0">
                         {result === "correct" && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            ✓ Correct
+                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                            ✓
                           </span>
                         )}
                         {result === "incorrect" && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            ✗ Incorrect
+                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                            ✗
                           </span>
                         )}
                         {result === "pending" && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
                             Pending
                           </span>
                         )}
@@ -530,6 +589,21 @@ export default function Profile() {
             )}
           </CardContent>
         </Card>
+
+        {/* Profile Edit Modal */}
+        <ProfileEditModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSave={updateProfile}
+          currentProfile={profileData}
+        />
+
+        {/* Password Reset Modal */}
+        <PasswordResetModal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+          userEmail={user.email}
+        />
       </div>
     </div>
   );

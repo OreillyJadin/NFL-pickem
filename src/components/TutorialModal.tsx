@@ -173,11 +173,32 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
               <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">
                 2
               </div>
-              <div className="min-w-0">
-                <p className="font-medium">Tap Share Button</p>
-                <p className="text-sm text-gray-600">
-                  Look for the share icon at the bottom
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">Tap Middle Share Button</p>
+                <p className="text-sm text-gray-600 mb-3">
+                  Look for the share icon in the middle of the bottom bar
                 </p>
+                {/* Mock iPhone screenshot showing share button */}
+                <div className="bg-black rounded-lg p-2 w-32 mx-auto">
+                  <div className="bg-white rounded-lg p-2 text-center">
+                    <div className="text-xs text-gray-500 mb-1">Safari</div>
+                    <div className="w-full h-16 bg-gray-100 rounded mb-2 flex items-center justify-center">
+                      <div className="text-xs text-gray-400">NFL Pick'em</div>
+                    </div>
+                    <div className="flex justify-center space-x-2">
+                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                      <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center border-2 border-blue-600">
+                        <div className="text-white text-xs">↗</div>
+                      </div>
+                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Middle share button (↗)
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -185,11 +206,39 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
               <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">
                 3
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="font-medium">Select "Add to Home Screen"</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 mb-3">
                   Scroll down and tap this option
                 </p>
+                {/* Mock iPhone screenshot showing share menu */}
+                <div className="bg-black rounded-lg p-2 w-40 mx-auto">
+                  <div className="bg-white rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-2">Share Menu</div>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2 p-1">
+                        <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                        <div className="text-xs text-gray-700">Copy Link</div>
+                      </div>
+                      <div className="flex items-center space-x-2 p-1">
+                        <div className="w-4 h-4 bg-green-500 rounded"></div>
+                        <div className="text-xs text-gray-700">AirDrop</div>
+                      </div>
+                      <div className="flex items-center space-x-2 p-1 bg-blue-50 rounded">
+                        <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
+                          <div className="text-white text-xs">+</div>
+                        </div>
+                        <div className="text-xs font-medium text-blue-800">
+                          Add to Home Screen
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 p-1">
+                        <div className="w-4 h-4 bg-gray-400 rounded"></div>
+                        <div className="text-xs text-gray-700">More...</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -197,11 +246,36 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
               <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">
                 4
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="font-medium">Tap "Add"</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 mb-3">
                   The app icon will appear on your home screen
                 </p>
+                {/* Mock iPhone screenshot showing home screen with app icon */}
+                <div className="bg-black rounded-lg p-2 w-36 mx-auto">
+                  <div className="bg-white rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-2">
+                      iPhone Home Screen
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <div className="text-xs text-blue-600">📱</div>
+                      </div>
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="text-xs text-gray-600">📧</div>
+                      </div>
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="text-xs text-gray-600">🌐</div>
+                      </div>
+                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center border-2 border-orange-300">
+                        <div className="text-xs text-orange-600">🏈</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 text-center">
+                      NFL Pick'em App
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
