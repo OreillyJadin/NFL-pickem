@@ -16,6 +16,7 @@ import { TutorialModal } from "@/components/TutorialModal";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { supabase } from "@/lib/supabase";
 import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
+import { syncAllCurrentGames, syncGameScore } from "@/lib/game-sync";
 
 interface Game {
   id: string;
@@ -61,6 +62,8 @@ export default function Dashboard() {
     profile_pic_url?: string;
     display_name?: string;
   } | null>(null);
+  const [syncingScores, setSyncingScores] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
 
   const loadUserProfile = useCallback(async () => {
     if (!user) return;
@@ -235,6 +238,46 @@ export default function Dashboard() {
     },
     [user, loadUserProfile]
   );
+
+  const handleSyncAllGames = async () => {
+    setSyncingScores(true);
+    setSyncMessage("");
+    
+    try {
+      const result = await syncAllCurrentGames();
+      setSyncMessage(result.message);
+      
+      if (result.success) {
+        // Reload games to show updated scores
+        loadGames();
+      }
+    } catch (error) {
+      setSyncMessage("Error syncing games");
+      console.error("Sync error:", error);
+    } finally {
+      setSyncingScores(false);
+    }
+  };
+
+  const handleSyncGame = async (gameId: string) => {
+    setSyncingScores(true);
+    setSyncMessage("");
+    
+    try {
+      const result = await syncGameScore(gameId);
+      setSyncMessage(result.success ? "Game synced successfully" : result.error || "Sync failed");
+      
+      if (result.success) {
+        // Reload games to show updated scores
+        loadGames();
+      }
+    } catch (error) {
+      setSyncMessage("Error syncing game");
+      console.error("Sync error:", error);
+    } finally {
+      setSyncingScores(false);
+    }
+  };
 
   // Function to toggle lock status for existing picks
   const toggleLock = async (gameId: string) => {
@@ -501,6 +544,25 @@ export default function Dashboard() {
               {games.length} games available
             </div>
           </div>
+        </div>
+
+        {/* Score Sync Controls */}
+        <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold mb-3">🔄 Score Sync</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={handleSyncAllGames}
+              disabled={syncingScores}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {syncingScores ? "Syncing..." : "🚀 Sync All Games"}
+            </Button>
+          </div>
+          {syncMessage && (
+            <div className="mt-3 p-2 bg-gray-50 rounded text-sm">
+              {syncMessage}
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4">

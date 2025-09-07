@@ -1,10 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabase } from "./supabase";
 
 // ESPN API integration for real-time scores
 async function fetchESPNGameData(espnId: string) {
@@ -26,7 +20,7 @@ async function fetchESPNGameData(espnId: string) {
 }
 
 // Sync scores for a specific game
-async function syncGameScore(gameId: string) {
+export async function syncGameScore(gameId: string) {
   try {
     // Get game data
     const { data: game, error: gameError } = await supabase
@@ -87,7 +81,6 @@ async function syncGameScore(gameId: string) {
         away_score: awayScore,
         status: status,
         quarter: quarter,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", gameId);
 
@@ -109,83 +102,72 @@ async function syncGameScore(gameId: string) {
   }
 }
 
-// Sync all games for a specific week and season type
-async function syncWeekScores(
-  week: number,
-  seasonType: string,
-  season: number = 2025
-) {
+// Sync all current games
+export async function syncAllCurrentGames() {
   try {
-    console.log(
-      `Syncing scores for ${seasonType} week ${week} (season ${season})`
-    );
+    console.log("🔄 Starting sync of all current games...");
 
-    // Get all games for the week
+    // Get all games that have ESPN IDs
     const { data: games, error: gamesError } = await supabase
       .from("games")
       .select("id, home_team, away_team, espn_id, status")
-      .eq("week", week)
-      .eq("season_type", seasonType)
-      .eq("season", season);
+      .not("espn_id", "is", null);
 
     if (gamesError) {
+      console.error("❌ Database query error:", gamesError);
       throw new Error(`Database query error: ${gamesError.message}`);
     }
 
     if (!games || games.length === 0) {
-      console.log(`No games found for ${seasonType} week ${week}`);
-      return { success: true, gamesProcessed: 0 };
+      console.log("ℹ️ No games found to sync");
+      return {
+        success: true,
+        message: "No games found to sync",
+        gamesProcessed: 0,
+      };
     }
 
-    console.log(`Found ${games.length} games to sync`);
+    console.log(
+      `📊 Found ${games.length} games to sync:`,
+      games.map((g) => `${g.away_team} @ ${g.home_team}`)
+    );
+
+    let successCount = 0;
+    let errorCount = 0;
 
     // Process each game
-    const results = [];
     for (const game of games) {
-      const result = await syncGameScore(game.id);
-      results.push({ gameId: game.id, ...result });
+      try {
+        const result = await syncGameScore(game.id);
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        errorCount++;
+      }
 
       // Add small delay to avoid rate limiting
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    const successful = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
-
-    console.log(`Sync completed: ${successful} successful, ${failed} failed`);
+    console.log(
+      `Sync completed: ${successCount} successful, ${errorCount} failed`
+    );
 
     return {
       success: true,
+      message: `Synced ${successCount} games successfully, ${errorCount} failed`,
       gamesProcessed: games.length,
-      successful,
-      failed,
-      results,
+      successful: successCount,
+      failed: errorCount,
     };
   } catch (error) {
-    console.error("Error syncing week scores:", error);
+    console.error("Error syncing all games:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
     };
   }
-}
-
-// Get current NFL week (simplified logic)
-function getCurrentWeek() {
-  const now = new Date();
-  const seasonStart = new Date("2025-09-04"); // NFL season start
-  const daysSinceStart = Math.floor(
-    (now.getTime() - seasonStart.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const week = Math.floor(daysSinceStart / 7) + 1;
-  return Math.max(1, Math.min(18, week)); // Clamp between 1 and 18
-}
-
-// Main cron job handler - DISABLED (requires upgraded Vercel account)
-export async function GET(request: NextRequest) {
-  return NextResponse.json({
-    success: false,
-    message:
-      "Cron jobs disabled - requires upgraded Vercel account. Use dashboard sync button instead.",
-  });
 }

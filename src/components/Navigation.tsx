@@ -3,20 +3,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { checkAdminAccess } from "@/lib/admin";
 import { useState, useEffect } from "react";
 
 export function Navigation() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      checkAdminAccess().then(setIsAdmin);
-    }
-  }, [user]);
 
   if (!user) return null;
 
@@ -50,15 +42,6 @@ export function Navigation() {
               >
                 Leaderboard
               </Button>
-              {isAdmin && (
-                <Button
-                  variant={pathname === "/admin" ? "default" : "ghost"}
-                  onClick={() => router.push("/admin")}
-                  className="text-sm"
-                >
-                  Admin
-                </Button>
-              )}
             </div>
           </div>
 
@@ -99,16 +82,6 @@ export function Navigation() {
             >
               👤 Profile
             </Button>
-            {isAdmin && (
-              <Button
-                variant={pathname === "/admin" ? "default" : "outline"}
-                onClick={() => router.push("/admin")}
-                size="sm"
-                className="text-xs"
-              >
-                ⚙️ Admin
-              </Button>
-            )}
           </div>
         </div>
       </div>

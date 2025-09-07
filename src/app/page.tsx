@@ -20,7 +20,7 @@ export default function Home() {
   const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
   const { user, signOut } = useAuth();
 
-  // Show tutorial automatically for new users
+  // Show tutorial for new users
   useEffect(() => {
     if (user && !hasSeenTutorial) {
       const tutorialShown = localStorage.getItem("nfl-pickem-tutorial-shown");
