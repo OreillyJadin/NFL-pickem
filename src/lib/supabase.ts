@@ -12,7 +12,6 @@ export interface User {
   id: string;
   email: string;
   username: string;
-  display_name?: string;
   bio?: string;
   profile_pic_url?: string;
   created_at: string;

@@ -1,203 +1,184 @@
-# NFL Pick'em Web App
+# NFL Pick'em
 
-A web application for NFL weekly pick'em where users can log in, view the NFL schedule, make picks for each game before kickoff, and track their records.
-
-## Features
-
-- **Authentication**: Supabase Auth with email/password
-- **Schedule & Picks**: Display weekly NFL schedule with pick functionality
-- **Game Locking**: Picks are locked once games start
-- **User Dashboard**: View upcoming games and make picks
-- **Profile Stats**: Track wins, losses, and win percentage
-- **Responsive Design**: Mobile-friendly interface
+A full-stack web application for NFL weekly pick'em games with real-time scoring and user management.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15 + React 19, Tailwind CSS
-- **Backend/DB/Auth**: Supabase (PostgreSQL + Auth)
-- **UI Components**: shadcn/ui
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
 - **Deployment**: Vercel (frontend), Supabase (backend)
+- **Analytics**: Vercel Analytics
 
-## Setup Instructions
+## Database Schema
 
-### 1. Clone and Install Dependencies
+### Core Tables
 
-```bash
-git clone <your-repo-url>
-cd my-supabase-app
-npm install
-```
+**profiles**
 
-### 2. Set up Supabase
+- `id` (UUID, PK) - References auth.users
+- `username` (TEXT, UNIQUE) - User's chosen username
+- `email` (TEXT, UNIQUE) - User's email address
+- `bio` (TEXT) - User's bio/description
+- `profile_pic_url` (TEXT) - Profile picture data URL
+- `is_admin` (BOOLEAN) - Admin privileges
+- `created_at` (TIMESTAMP)
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to Settings > API to get your project URL and anon key
-3. Create a `.env.local` file in the root directory:
+**games**
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-```
+- `id` (UUID, PK) - Unique game identifier
+- `week` (INTEGER) - Week number (1-18)
+- `preseason` (BOOLEAN) - Preseason vs regular season
+- `home_team` (TEXT) - Home team name
+- `away_team` (TEXT) - Away team name
+- `game_date` (TIMESTAMP) - Game start time
+- `home_score` (INTEGER) - Home team score
+- `away_score` (INTEGER) - Away team score
+- `status` (TEXT) - scheduled/in_progress/completed
+- `quarter` (INTEGER) - Current quarter (for live games)
+- `espn_id` (TEXT) - ESPN API identifier
+- `created_at` (TIMESTAMP)
 
-### 3. Set up Database Schema
+**picks**
 
-Run the SQL commands from `supabase-schema.sql` in your Supabase SQL editor:
+- `id` (UUID, PK) - Unique pick identifier
+- `user_id` (UUID, FK) - References auth.users
+- `game_id` (UUID, FK) - References games
+- `picked_team` (TEXT) - Team user picked
+- `is_lock` (BOOLEAN) - Lock pick (+2/-2 points)
+- `created_at` (TIMESTAMP)
 
-```sql
--- Enable Row Level Security
-ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+**awards**
 
--- Create profiles table
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- `id` (UUID, PK) - Unique award identifier
+- `user_id` (UUID, FK) - References auth.users
+- `award_type` (TEXT) - Type of award earned
+- `week` (INTEGER) - Week award was earned
+- `description` (TEXT) - Award description
+- `created_at` (TIMESTAMP)
 
--- Create games table
-CREATE TABLE IF NOT EXISTS public.games (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  week INTEGER NOT NULL,
-  home_team TEXT NOT NULL,
-  away_team TEXT NOT NULL,
-  game_time TIMESTAMP WITH TIME ZONE NOT NULL,
-  home_score INTEGER DEFAULT NULL,
-  away_score INTEGER DEFAULT NULL,
-  status TEXT DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'in_progress', 'completed')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+**user_scores**
 
--- Create picks table
-CREATE TABLE IF NOT EXISTS public.picks (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  game_id UUID REFERENCES public.games(id) ON DELETE CASCADE NOT NULL,
-  picked_team TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, game_id)
-);
+- `id` (UUID, PK) - Unique score identifier
+- `user_id` (UUID, FK) - References auth.users
+- `week` (INTEGER) - Week number
+- `preseason` (BOOLEAN) - Preseason vs regular season
+- `total_picks` (INTEGER) - Total picks made
+- `correct_picks` (INTEGER) - Correct picks
+- `incorrect_picks` (INTEGER) - Incorrect picks
+- `total_points` (INTEGER) - Total points earned
+- `lock_picks` (INTEGER) - Number of lock picks used
+- `lock_wins` (INTEGER) - Correct lock picks
+- `lock_losses` (INTEGER) - Incorrect lock picks
+- `created_at` (TIMESTAMP)
 
--- Row Level Security Policies
-CREATE POLICY "Users can view their own profile" ON public.profiles
-  FOR SELECT USING (auth.uid() = id);
+### Database Functions
 
-CREATE POLICY "Users can update their own profile" ON public.profiles
-  FOR UPDATE USING (auth.uid() = id);
+- `get_game_winner(game_id)` - Determines winner of a game
+- `update_user_scores(user_id, week, preseason)` - Calculates user scores
+- `sync_all_game_scores()` - Syncs all games with ESPN API
+- `update_game_score(game_id, home_score, away_score, status, quarter)` - Updates individual game
 
-CREATE POLICY "Users can insert their own profile" ON public.profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
+### Triggers
 
-CREATE POLICY "Anyone can view games" ON public.games
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can view their own picks" ON public.picks
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own picks" ON public.picks
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own picks" ON public.picks
-  FOR UPDATE USING (auth.uid() = user_id);
-
--- Function to automatically create profile on user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, username, email)
-  VALUES (NEW.id, NEW.email, NEW.email);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to create profile on user signup
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-```
-
-### 4. Run the Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+- `on_game_completed` - Updates user scores when game status changes to completed
+- `on_pick_created` - Validates pick creation and lock limits
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── dashboard/          # Dashboard page with games and picks
-│   ├── profile/            # User profile and stats
-│   ├── layout.tsx          # Root layout with AuthProvider
-│   └── page.tsx            # Landing page with auth forms
+│   ├── dashboard/           # Main dashboard with games and picks
+│   ├── leaderboard/         # Weekly and season standings
+│   ├── profile/             # User profile and stats
+│   ├── api/
+│   │   └── cron/           # Automated score syncing
+│   ├── layout.tsx          # Root layout with providers
+│   └── page.tsx            # Landing page with auth
 ├── components/
-│   ├── auth/               # Authentication components
-│   ├── ui/                 # shadcn/ui components
-│   └── Navigation.tsx      # Navigation component
+│   ├── auth/               # Login/Register forms
+│   ├── ui/                 # Reusable UI components
+│   ├── Navigation.tsx      # Main navigation
+│   ├── ProfileEditModal.tsx # Profile editing modal
+│   └── TutorialModal.tsx   # App tutorial
 ├── contexts/
-│   └── AuthContext.tsx     # Authentication context
+│   └── AuthContext.tsx     # Authentication state management
 └── lib/
-    └── supabase.ts         # Supabase client configuration
+    ├── supabase.ts         # Supabase client config
+    ├── game-sync.ts        # ESPN API integration
+    ├── scoring.ts          # Scoring calculations
+    ├── awards.ts           # Award system
+    └── team-colors.ts      # NFL team color schemes
 ```
 
-## Features Overview
+## Key Features
 
-### Authentication
+### Authentication & Profiles
 
-- Email/password registration and login
-- Automatic profile creation on signup
-- Protected routes with authentication checks
-
-### Dashboard
-
-- Display weekly NFL schedule
-- Make picks for upcoming games
-- Visual indication of locked games
-- Real-time pick status updates
-
-### Profile
-
-- User statistics (total picks, correct/incorrect, win percentage)
-- Pick history with results
-- Responsive stats cards
+- Email/password authentication via Supabase Auth
+- Unique username validation with real-time checking
+- Profile management (username, bio, profile picture)
+- Password reset functionality
 
 ### Game Management
 
-- Mock NFL schedule data (Week 1)
-- Game locking based on kickoff time
-- Pick validation and storage
+- Real-time NFL schedule from ESPN API
+- Live score updates every 15 minutes
+- Game status tracking (scheduled/in_progress/completed)
+- Quarter-by-quarter updates for live games
 
-## Future Enhancements
+### Pick System
 
-- [ ] ESPN API integration for real schedule data
-- [ ] Leaderboard functionality
-- [ ] Multiple weeks support
-- [ ] Real-time score updates
-- [ ] Push notifications for game starts
-- [ ] Social features (friends, groups)
+- Make picks for upcoming games
+- Lock picks system (up to 3 per week, +2/-2 points)
+- Pick switching until game starts
+- Visual lock indicators on dashboard
+
+### Scoring & Leaderboards
+
+- Point system: Normal picks (+1/0), Lock picks (+2/-2)
+- Weekly and season-long leaderboards
+- Win percentage calculations
+- Real-time score updates
+
+### Awards System
+
+- Weekly awards: Top Scorer, Lowest Scorer, Perfect Week, Cold Week
+- Permanent trophy wall on user profiles
+- Award history tracking
+
+### Mobile Optimization
+
+- Responsive design for iPhone users
+- Tutorial for "Add to Home Screen"
+- Mobile-friendly UI components
+- Touch-optimized interactions
+
+## Environment Variables
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+CRON_SECRET=your_cron_secret
+```
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
 
 ## Deployment
 
-### Frontend (Vercel)
-
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Backend (Supabase)
-
-- Database and authentication are already hosted on Supabase
-- No additional deployment needed
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- **Frontend**: Deployed on Vercel with automatic GitHub integration
+- **Backend**: Supabase handles database, auth, and real-time features
+- **Cron Jobs**: Disabled (requires Vercel Pro) - Manual sync available

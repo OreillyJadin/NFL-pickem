@@ -19,12 +19,12 @@ interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (profileData: {
-    display_name: string;
+    username: string;
     bio: string;
     profile_pic_url: string;
   }) => void;
   currentProfile: {
-    display_name?: string;
+    username?: string;
     bio?: string;
     profile_pic_url?: string;
   };
@@ -36,9 +36,7 @@ export function ProfileEditModal({
   onSave,
   currentProfile,
 }: ProfileEditModalProps) {
-  const [displayName, setDisplayName] = useState(
-    currentProfile.display_name || ""
-  );
+  const [username, setUsername] = useState(currentProfile.username || "");
   const [bio, setBio] = useState(currentProfile.bio || "");
   const [profilePicUrl, setProfilePicUrl] = useState(
     currentProfile.profile_pic_url || ""
@@ -110,7 +108,7 @@ export function ProfileEditModal({
         reader.onload = (e) => {
           const dataUrl = e.target?.result as string;
           onSave({
-            display_name: displayName.trim(),
+            username: username.trim(),
             bio: bio.trim(),
             profile_pic_url: dataUrl,
           });
@@ -126,7 +124,7 @@ export function ProfileEditModal({
 
       // If no file selected, save with current URL
       onSave({
-        display_name: displayName.trim(),
+        username: username.trim(),
         bio: bio.trim(),
         profile_pic_url: finalProfilePicUrl,
       });
@@ -230,16 +228,16 @@ export function ProfileEditModal({
             </div>
           </div>
 
-          {/* Display Name */}
+          {/* Username */}
           <div className="space-y-2">
-            <Label htmlFor="display-name">Display Name</Label>
+            <Label htmlFor="username">Username</Label>
             <Input
-              id="display-name"
+              id="username"
               type="text"
-              placeholder="Your display name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              maxLength={50}
+              placeholder="Your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              maxLength={30}
             />
             <p className="text-xs text-gray-500">
               This will be shown on the leaderboard

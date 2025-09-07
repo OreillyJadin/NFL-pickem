@@ -64,7 +64,7 @@ export default function Profile() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingAwards, setLoadingAwards] = useState(true);
   const [profileData, setProfileData] = useState({
-    display_name: "",
+    username: "",
     bio: "",
     profile_pic_url: "",
   });
@@ -76,14 +76,14 @@ export default function Profile() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, bio, profile_pic_url")
+        .select("username, bio, profile_pic_url")
         .eq("id", user.id)
         .single();
 
       if (error) throw error;
 
       setProfileData({
-        display_name: data?.display_name || "",
+        username: data?.username || "",
         bio: data?.bio || "",
         profile_pic_url: data?.profile_pic_url || "",
       });
@@ -93,7 +93,7 @@ export default function Profile() {
   }, [user]);
 
   const updateProfile = async (newProfileData: {
-    display_name: string;
+    username: string;
     bio: string;
     profile_pic_url: string;
   }) => {
@@ -378,7 +378,7 @@ export default function Profile() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {profileData.display_name || user.email}
+                  {profileData.username || user.email}
                 </h1>
                 {profileData.bio && (
                   <p className="text-sm text-gray-600 mt-1 max-w-md">

@@ -105,13 +105,29 @@ export async function syncGameScore(gameId: string) {
 // Sync all current games
 export async function syncAllCurrentGames() {
   try {
-    console.log("🔄 Starting sync of all current games...");
+    console.log("🔄 Starting sync of current week games...");
 
-    // Get all games that have ESPN IDs
+    // Get current date to determine which week's games to sync
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay()); // Start of current week (Sunday)
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // End of current week (Saturday)
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    console.log(
+      `📅 Syncing games from ${startOfWeek.toDateString()} to ${endOfWeek.toDateString()}`
+    );
+
+    // Get games from current week that have ESPN IDs
     const { data: games, error: gamesError } = await supabase
       .from("games")
-      .select("id, home_team, away_team, espn_id, status")
-      .not("espn_id", "is", null);
+      .select("id, home_team, away_team, espn_id, status, game_date")
+      .not("espn_id", "is", null)
+      .gte("game_date", startOfWeek.toISOString())
+      .lte("game_date", endOfWeek.toISOString());
 
     if (gamesError) {
       console.error("❌ Database query error:", gamesError);
@@ -119,17 +135,22 @@ export async function syncAllCurrentGames() {
     }
 
     if (!games || games.length === 0) {
-      console.log("ℹ️ No games found to sync");
+      console.log("ℹ️ No games found for current week to sync");
       return {
         success: true,
-        message: "No games found to sync",
+        message: "No games found for current week to sync",
         gamesProcessed: 0,
       };
     }
 
     console.log(
-      `📊 Found ${games.length} games to sync:`,
-      games.map((g) => `${g.away_team} @ ${g.home_team}`)
+      `📊 Found ${games.length} games for current week to sync:`,
+      games.map(
+        (g) =>
+          `${g.away_team} @ ${g.home_team} (${new Date(
+            g.game_date
+          ).toLocaleDateString()})`
+      )
     );
 
     let successCount = 0;
@@ -158,7 +179,7 @@ export async function syncAllCurrentGames() {
 
     return {
       success: true,
-      message: `Synced ${successCount} games successfully, ${errorCount} failed`,
+      message: `Synced ${successCount} current week games successfully, ${errorCount} failed`,
       gamesProcessed: games.length,
       successful: successCount,
       failed: errorCount,

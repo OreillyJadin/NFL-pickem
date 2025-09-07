@@ -58,9 +58,9 @@ export default function Dashboard() {
   const [showProfileSuggestion, setShowProfileSuggestion] = useState(false);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [userProfile, setUserProfile] = useState<{
+    username?: string;
     bio?: string;
     profile_pic_url?: string;
-    display_name?: string;
   } | null>(null);
   const [syncingScores, setSyncingScores] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
@@ -71,7 +71,7 @@ export default function Dashboard() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("bio, profile_pic_url, display_name")
+        .select("bio, profile_pic_url, username")
         .eq("id", user.id)
         .single();
 
@@ -216,7 +216,7 @@ export default function Dashboard() {
 
   const handleProfileUpdate = useCallback(
     async (profileData: {
-      display_name: string;
+      username: string;
       bio: string;
       profile_pic_url: string;
     }) => {
@@ -552,14 +552,14 @@ export default function Dashboard() {
 
         {/* Score Sync Controls */}
         <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-3">🔄 Score Sync</h3>
+          <h3 className="text-lg font-semibold mb-3">🔄 Sync Games</h3>
           <div className="flex flex-wrap gap-2">
             <Button
               onClick={handleSyncAllGames}
               disabled={syncingScores}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              {syncingScores ? "Syncing..." : "🚀 Sync All Games"}
+              {syncingScores ? "Syncing..." : "🚀 Sync Games"}
             </Button>
           </div>
           {syncMessage && (
@@ -943,7 +943,8 @@ export default function Dashboard() {
                     setShowProfileSuggestion(false);
                     setShowProfileEdit(true);
                   }}
-                  className="flex-1"
+                  className="px-6 py-3 text-base font-semibold"
+                  size="lg"
                 >
                   ✏️ Edit Profile
                 </Button>

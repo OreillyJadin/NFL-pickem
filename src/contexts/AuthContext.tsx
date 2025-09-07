@@ -70,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: data.user.id,
           username,
           email,
-          display_name: username,
           bio: bio || "this is my bio, I do not know ball.",
           profile_pic_url: profilePicUrl || null,
         });

@@ -18,7 +18,6 @@ interface LeaderboardEntry {
   user_id: string;
   username: string;
   email: string;
-  display_name?: string;
   profile_pic_url?: string;
   total_picks: number;
   correct_picks: number;
@@ -106,7 +105,7 @@ export default function Leaderboard() {
         // Get all user profiles
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, username, email, display_name, profile_pic_url");
+          .select("id, username, email, profile_pic_url");
 
         if (profilesError) throw profilesError;
 
@@ -115,7 +114,6 @@ export default function Leaderboard() {
           [key: string]: {
             username: string;
             email: string;
-            display_name?: string;
             profile_pic_url?: string;
           };
         } = {};
@@ -124,7 +122,6 @@ export default function Leaderboard() {
           userProfiles[profile.id] = {
             username: profile.username,
             email: profile.email,
-            display_name: profile.display_name,
             profile_pic_url: profile.profile_pic_url,
           };
         });
@@ -141,7 +138,6 @@ export default function Leaderboard() {
             user_id: userId,
             username: userProfiles[userId]?.username || "Unknown",
             email: userProfiles[userId]?.email || "",
-            display_name: userProfiles[userId]?.display_name,
             profile_pic_url: userProfiles[userId]?.profile_pic_url,
             total_picks: 0,
             correct_picks: 0,
@@ -214,7 +210,7 @@ export default function Leaderboard() {
         // Get all user profiles
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, username, email, display_name, profile_pic_url");
+          .select("id, username, email, profile_pic_url");
 
         if (profilesError) throw profilesError;
 
@@ -223,7 +219,6 @@ export default function Leaderboard() {
           [key: string]: {
             username: string;
             email: string;
-            display_name?: string;
             profile_pic_url?: string;
           };
         } = {};
@@ -232,7 +227,6 @@ export default function Leaderboard() {
           userProfiles[profile.id] = {
             username: profile.username,
             email: profile.email,
-            display_name: profile.display_name,
             profile_pic_url: profile.profile_pic_url,
           };
         });
@@ -249,7 +243,6 @@ export default function Leaderboard() {
             user_id: userId,
             username: userProfiles[userId]?.username || "Unknown",
             email: userProfiles[userId]?.email || "",
-            display_name: userProfiles[userId]?.display_name,
             profile_pic_url: userProfiles[userId]?.profile_pic_url,
             total_picks: 0,
             correct_picks: 0,
@@ -502,9 +495,7 @@ export default function Leaderboard() {
                                     : "text-gray-800"
                                 }`}
                               >
-                                {entry.display_name ||
-                                  entry.username ||
-                                  entry.email}
+                                {entry.username || entry.email}
                               </div>
                             </div>
                           </td>
