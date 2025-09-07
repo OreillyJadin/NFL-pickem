@@ -242,11 +242,11 @@ export default function Dashboard() {
   const handleSyncAllGames = async () => {
     setSyncingScores(true);
     setSyncMessage("");
-    
+
     try {
       const result = await syncAllCurrentGames();
-      setSyncMessage(result.message);
-      
+      setSyncMessage(result.message || "Sync completed");
+
       if (result.success) {
         // Reload games to show updated scores
         loadGames();
@@ -262,11 +262,15 @@ export default function Dashboard() {
   const handleSyncGame = async (gameId: string) => {
     setSyncingScores(true);
     setSyncMessage("");
-    
+
     try {
       const result = await syncGameScore(gameId);
-      setSyncMessage(result.success ? "Game synced successfully" : result.error || "Sync failed");
-      
+      setSyncMessage(
+        result.success
+          ? "Game synced successfully"
+          : result.error || "Sync failed"
+      );
+
       if (result.success) {
         // Reload games to show updated scores
         loadGames();
@@ -678,8 +682,11 @@ export default function Dashboard() {
                     <div className="space-y-3">
                       <div className="text-center">
                         <div className="text-xl font-bold text-blue-600 mb-2">
-                          LIVE: {game.away_team} {game.away_score || 0} -{" "}
-                          {game.home_team} {game.home_score || 0}
+                          <span className="inline-flex items-center">
+                            <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                            LIVE: {game.away_team} {game.away_score || 0} -{" "}
+                            {game.home_team} {game.home_score || 0}
+                          </span>
                         </div>
                         {game.quarter && (
                           <div className="text-sm text-blue-500 font-medium">
@@ -720,11 +727,16 @@ export default function Dashboard() {
                             // Game has started, show current score
                             return (
                               <div className="text-sm text-blue-600 font-medium">
-                                LIVE: {game.away_team} {game.away_score || 0} -{" "}
-                                {game.home_team} {game.home_score || 0}
-                                {game.quarter && (
-                                  <span className="ml-2">Q{game.quarter}</span>
-                                )}
+                                <span className="inline-flex items-center">
+                                  <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                                  LIVE: {game.away_team} {game.away_score || 0}{" "}
+                                  - {game.home_team} {game.home_score || 0}
+                                  {game.quarter && (
+                                    <span className="ml-2">
+                                      Q{game.quarter}
+                                    </span>
+                                  )}
+                                </span>
                               </div>
                             );
                           } else {
