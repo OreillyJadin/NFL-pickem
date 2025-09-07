@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { TutorialModal } from "@/components/TutorialModal";
+import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { supabase } from "@/lib/supabase";
 import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
 
@@ -52,6 +53,44 @@ export default function Dashboard() {
   >([]);
   const [locksUsed, setLocksUsed] = useState<number>(0);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showProfileSuggestion, setShowProfileSuggestion] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [userProfile, setUserProfile] = useState<{
+    bio?: string;
+    profile_pic_url?: string;
+    display_name?: string;
+  } | null>(null);
+
+  const loadUserProfile = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("bio, profile_pic_url, display_name")
+        .eq("id", user.id)
+        .single();
+
+      if (!error && data) {
+        setUserProfile(data);
+
+        // Check if user needs profile suggestions
+        const needsBio =
+          !data.bio || data.bio === "this is my bio, I do not know ball.";
+        const needsProfilePic = !data.profile_pic_url;
+
+        if (needsBio || needsProfilePic) {
+          // Randomly show suggestion (30% chance)
+          const shouldShow = Math.random() < 0.3;
+          if (shouldShow) {
+            setShowProfileSuggestion(true);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading user profile:", error);
+    }
+  }, [user]);
 
   const loadAvailableWeeks = useCallback(async () => {
     try {
@@ -164,6 +203,37 @@ export default function Dashboard() {
   useEffect(() => {
     calculateLocksUsed();
   }, [calculateLocksUsed]);
+
+  useEffect(() => {
+    if (user) {
+      loadUserProfile();
+    }
+  }, [user, loadUserProfile]);
+
+  const handleProfileUpdate = useCallback(
+    async (profileData: {
+      display_name: string;
+      bio: string;
+      profile_pic_url: string;
+    }) => {
+      if (!user) return;
+
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update(profileData)
+          .eq("id", user.id);
+
+        if (error) throw error;
+
+        // Reload profile data
+        await loadUserProfile();
+      } catch (error) {
+        console.error("Error updating profile:", error);
+      }
+    },
+    [user, loadUserProfile]
+  );
 
   // Function to toggle lock status for existing picks
   const toggleLock = async (gameId: string) => {
@@ -724,6 +794,65 @@ export default function Dashboard() {
         isOpen={showTutorial}
         onClose={() => setShowTutorial(false)}
         onSkip={() => setShowTutorial(false)}
+      />
+
+      {/* Profile Suggestion Popup */}
+      {showProfileSuggestion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <CardTitle className="text-xl">
+                🎨 Complete Your Profile!
+              </CardTitle>
+              <CardDescription>
+                Make your profile stand out on the leaderboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center space-y-2">
+                <p className="text-sm text-gray-600">
+                  {!userProfile?.profile_pic_url && !userProfile?.bio && (
+                    <>
+                      Add a profile picture and bio to personalize your
+                      experience!
+                    </>
+                  )}
+                  {!userProfile?.profile_pic_url && userProfile?.bio && (
+                    <>Add a profile picture to show on the leaderboard!</>
+                  )}
+                  {userProfile?.profile_pic_url && !userProfile?.bio && (
+                    <>Add a bio to tell others about yourself!</>
+                  )}
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => {
+                    setShowProfileSuggestion(false);
+                    setShowProfileEdit(true);
+                  }}
+                  className="flex-1"
+                >
+                  ✏️ Edit Profile
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowProfileSuggestion(false)}
+                  className="flex-1"
+                >
+                  Maybe Later
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <ProfileEditModal
+        isOpen={showProfileEdit}
+        onClose={() => setShowProfileEdit(false)}
+        onSave={handleProfileUpdate}
+        currentProfile={userProfile || {}}
       />
     </div>
   );

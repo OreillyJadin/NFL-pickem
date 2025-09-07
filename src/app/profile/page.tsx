@@ -16,9 +16,8 @@ import { supabase } from "@/lib/supabase";
 import { getUserAwards, getAwardDisplay } from "@/lib/awards";
 import { Award } from "@/lib/supabase";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
-import { PasswordResetModal } from "@/components/PasswordResetModal";
 import { Button } from "@/components/ui/button";
-import { Edit, Key, User } from "lucide-react";
+import { Edit, User } from "lucide-react";
 
 interface UserStats {
   totalPicks: number;
@@ -70,7 +69,6 @@ export default function Profile() {
     profile_pic_url: "",
   });
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const loadProfileData = useCallback(async () => {
     if (!user) return;
@@ -382,9 +380,8 @@ export default function Profile() {
                 <h1 className="text-xl font-bold text-gray-900">
                   {profileData.display_name || user.email}
                 </h1>
-                <p className="text-sm text-gray-600">{user.email}</p>
                 {profileData.bio && (
-                  <p className="text-xs text-gray-500 mt-1 max-w-md">
+                  <p className="text-sm text-gray-600 mt-1 max-w-md">
                     {profileData.bio}
                   </p>
                 )}
@@ -399,15 +396,6 @@ export default function Profile() {
               >
                 <Edit className="h-3 w-3" />
                 Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPasswordModal(true)}
-                className="flex items-center gap-1 text-xs px-2 py-1"
-              >
-                <Key className="h-3 w-3" />
-                Reset
               </Button>
             </div>
           </div>
@@ -596,13 +584,6 @@ export default function Profile() {
           onClose={() => setShowEditModal(false)}
           onSave={updateProfile}
           currentProfile={profileData}
-        />
-
-        {/* Password Reset Modal */}
-        <PasswordResetModal
-          isOpen={showPasswordModal}
-          onClose={() => setShowPasswordModal(false)}
-          userEmail={user.email}
         />
       </div>
     </div>

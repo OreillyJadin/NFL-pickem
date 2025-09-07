@@ -46,6 +46,9 @@ export function ProfileEditModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [passwordResetMessage, setPasswordResetMessage] = useState("");
 
   // Cleanup object URL when component unmounts or URL changes
   useEffect(() => {
@@ -69,6 +72,30 @@ export function ProfileEditModal({
       }
     }
   }, [isOpen]);
+
+  const handlePasswordReset = async () => {
+    setPasswordResetLoading(true);
+    setPasswordResetMessage("");
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        (await supabase.auth.getUser()).data.user?.email || "",
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        }
+      );
+
+      if (error) throw error;
+
+      setPasswordResetMessage("Password reset email sent! Check your inbox.");
+    } catch (error: any) {
+      setPasswordResetMessage(
+        error.message || "Failed to send password reset email"
+      );
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -233,6 +260,49 @@ export function ProfileEditModal({
               rows={3}
             />
             <p className="text-xs text-gray-500">{bio.length}/200 characters</p>
+          </div>
+
+          {/* Password Reset */}
+          <div className="space-y-2">
+            <Label>Password Reset</Label>
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowPasswordReset(!showPasswordReset)}
+                className="w-full"
+              >
+                🔒 Password Reset
+              </Button>
+
+              {showPasswordReset && (
+                <div className="space-y-2 p-3 bg-gray-50 rounded-md">
+                  <p className="text-sm text-gray-600">
+                    Send a password reset link to your email address
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={handlePasswordReset}
+                    disabled={passwordResetLoading}
+                    className="w-full"
+                    variant="destructive"
+                  >
+                    {passwordResetLoading ? "Sending..." : "Send Reset Email"}
+                  </Button>
+                  {passwordResetMessage && (
+                    <p
+                      className={`text-sm ${
+                        passwordResetMessage.includes("sent")
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {passwordResetMessage}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {error && (
