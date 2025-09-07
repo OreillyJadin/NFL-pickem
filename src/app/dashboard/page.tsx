@@ -502,25 +502,33 @@ export default function Dashboard() {
                           </div>
                         </div>
                         {pick && (
-                          <div
-                            className={`text-lg font-semibold ${
-                              (pick.picked_team === game.away_team &&
+                          <div className="space-y-2">
+                            <div
+                              className={`text-lg font-semibold ${
+                                (pick.picked_team === game.away_team &&
+                                  (game.away_score || 0) >
+                                    (game.home_score || 0)) ||
+                                (pick.picked_team === game.home_team &&
+                                  (game.home_score || 0) >
+                                    (game.away_score || 0))
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {pick.picked_team} -{" "}
+                              {(pick.picked_team === game.away_team &&
                                 (game.away_score || 0) >
                                   (game.home_score || 0)) ||
                               (pick.picked_team === game.home_team &&
                                 (game.home_score || 0) > (game.away_score || 0))
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {pick.picked_team} -{" "}
-                            {(pick.picked_team === game.away_team &&
-                              (game.away_score || 0) >
-                                (game.home_score || 0)) ||
-                            (pick.picked_team === game.home_team &&
-                              (game.home_score || 0) > (game.away_score || 0))
-                              ? "WIN"
-                              : "LOSS"}
+                                ? "WIN"
+                                : "LOSS"}
+                            </div>
+                            {pick.is_lock && (
+                              <div className="flex items-center justify-center gap-1 text-sm font-medium text-yellow-600">
+                                🔒 LOCKED PICK
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -533,8 +541,15 @@ export default function Dashboard() {
                           {game.home_team} {game.home_score || 0}
                         </div>
                         {pick && (
-                          <div className="text-sm text-blue-600 font-medium">
-                            Your pick: {pick.picked_team}
+                          <div className="space-y-1">
+                            <div className="text-sm text-blue-600 font-medium">
+                              Your pick: {pick.picked_team}
+                            </div>
+                            {pick.is_lock && (
+                              <div className="text-xs text-yellow-600 font-medium">
+                                🔒 LOCKED
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
