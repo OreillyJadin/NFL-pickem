@@ -2,7 +2,10 @@
   "crons": [
     {
       "path": "/api/cron/sync-scores",
-      "schedule": "0 * * * *"
+      "schedule": "0 * * * *",
+      "headers": {
+        "Authorization": "Bearer nfl-pickem-cron-2025"
+      }
     }
   ]
 }
