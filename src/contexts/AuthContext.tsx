@@ -11,7 +11,9 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    username: string
+    username: string,
+    bio?: string,
+    profilePicUrl?: string
   ) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -44,7 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, username: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    username: string,
+    bio?: string,
+    profilePicUrl?: string
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -62,6 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: data.user.id,
           username,
           email,
+          display_name: username,
+          bio: bio || "this is my bio, I do not know ball.",
+          profile_pic_url: profilePicUrl || null,
         });
       } catch (profileError: any) {
         console.error("Error creating profile:", profileError);

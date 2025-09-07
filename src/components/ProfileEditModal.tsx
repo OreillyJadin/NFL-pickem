@@ -176,14 +176,6 @@ export function ProfileEditModal({
               </div>
               <div className="flex-1 space-y-2">
                 <div className="flex space-x-2">
-                  <Input
-                    id="profile-pic"
-                    type="url"
-                    placeholder="Or enter image URL"
-                    value={profilePicUrl}
-                    onChange={(e) => setProfilePicUrl(e.target.value)}
-                    className="flex-1"
-                  />
                   <input
                     type="file"
                     accept="image/*"
@@ -198,14 +190,14 @@ export function ProfileEditModal({
                     onClick={() =>
                       document.getElementById("file-upload")?.click()
                     }
-                    className="flex items-center gap-1"
+                    className="flex-1 flex items-center gap-1"
                   >
                     <Upload className="h-4 w-4" />
-                    Upload
+                    Choose Photo
                   </Button>
                 </div>
                 <p className="text-xs text-gray-500">
-                  Upload from device or enter a URL (max 5MB)
+                  Upload a photo from your device (max 5MB)
                 </p>
               </div>
             </div>

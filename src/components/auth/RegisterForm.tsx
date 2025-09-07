@@ -21,12 +21,17 @@ interface RegisterFormProps {
 export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [profilePicUrl, setProfilePicUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [checkingUsername, setCheckingUsername] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   const { signUp } = useAuth();
 
   const checkUsernameAvailability = async (username: string) => {
@@ -72,6 +77,43 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
     return () => clearTimeout(timeoutId);
   }, [username]);
 
+  const validatePasswords = () => {
+    if (password && confirmPassword && password !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return false;
+    }
+    if (password && confirmPassword && password === confirmPassword) {
+      setPasswordError("");
+      return true;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        setError("Please select an image file");
+        return;
+      }
+
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image must be smaller than 5MB");
+        return;
+      }
+
+      setSelectedFile(file);
+      setError("");
+
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setProfilePicUrl(previewUrl);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -80,10 +122,47 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
       return;
     }
 
+    if (!validatePasswords()) {
+      setError("Please fix the password error before submitting");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
-    const { error } = await signUp(email, password, username);
+    // Convert file to data URL if selected
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string;
+
+        const { error } = await signUp(
+          email,
+          password,
+          username,
+          bio || undefined,
+          dataUrl || undefined
+        );
+
+        if (error) {
+          setError(error.message);
+        } else {
+          setSuccess(true);
+        }
+
+        setLoading(false);
+      };
+      reader.readAsDataURL(selectedFile);
+      return; // Exit early, the rest will be handled in the reader.onload
+    }
+
+    const { error } = await signUp(
+      email,
+      password,
+      username,
+      bio || undefined,
+      profilePicUrl || undefined
+    );
 
     if (error) {
       setError(error.message);
@@ -161,10 +240,75 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                validatePasswords();
+              }}
               required
               minLength={6}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                validatePasswords();
+              }}
+              required
+              minLength={6}
+              className={passwordError ? "border-red-500" : ""}
+            />
+            {passwordError && (
+              <p className="text-sm text-red-600">{passwordError}</p>
+            )}
+            {!passwordError &&
+              password &&
+              confirmPassword &&
+              password === confirmPassword && (
+                <p className="text-sm text-green-600">✓ Passwords match</p>
+              )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bio">Bio (Optional)</Label>
+            <textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell us about yourself..."
+              maxLength={200}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+            <p className="text-xs text-gray-500">{bio.length}/200 characters</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="profilePic">Profile Picture (Optional)</Label>
+            <input
+              id="profilePic"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {profilePicUrl && (
+              <div className="mt-2">
+                <img
+                  src={profilePicUrl}
+                  alt="Profile preview"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Preview of selected image
+                </p>
+              </div>
+            )}
+            <p className="text-xs text-gray-500">
+              You can add a profile picture later if you prefer
+            </p>
           </div>
           {error && (
             <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
@@ -174,7 +318,9 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
           <Button
             type="submit"
             className="w-full"
-            disabled={loading || !!usernameError || checkingUsername}
+            disabled={
+              loading || !!usernameError || checkingUsername || !!passwordError
+            }
           >
             {loading ? "Creating account..." : "Sign Up"}
           </Button>
