@@ -28,6 +28,7 @@ interface Game {
   status: string;
   home_score?: number;
   away_score?: number;
+  quarter?: number;
   espn_id?: string;
 }
 
@@ -618,6 +619,11 @@ export default function Dashboard() {
                           LIVE: {game.away_team} {game.away_score || 0} -{" "}
                           {game.home_team} {game.home_score || 0}
                         </div>
+                        {game.quarter && (
+                          <div className="text-sm text-blue-500 font-medium">
+                            Q{game.quarter}
+                          </div>
+                        )}
                         {pick && (
                           <div className="space-y-1">
                             <div className="text-sm text-blue-600 font-medium flex items-center justify-center gap-2">
@@ -637,6 +643,38 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      <div className="text-center mb-4">
+                        <div className="text-lg font-semibold text-gray-700">
+                          {formatGameTime(game.game_time)}
+                        </div>
+                        {(() => {
+                          const gameTime = new Date(game.game_time).getTime();
+                          const now = new Date().getTime();
+                          const minutesUntilStart = Math.floor(
+                            (gameTime - now) / (1000 * 60)
+                          );
+
+                          if (minutesUntilStart <= 0) {
+                            // Game has started, show current score
+                            return (
+                              <div className="text-sm text-blue-600 font-medium">
+                                LIVE: {game.away_team} {game.away_score || 0} -{" "}
+                                {game.home_team} {game.home_score || 0}
+                                {game.quarter && (
+                                  <span className="ml-2">Q{game.quarter}</span>
+                                )}
+                              </div>
+                            );
+                          } else {
+                            // Game hasn't started, show countdown
+                            return (
+                              <div className="text-sm text-gray-500">
+                                Game starts in {minutesUntilStart} minutes
+                              </div>
+                            );
+                          }
+                        })()}
+                      </div>
                       <div className="grid grid-cols-2 gap-3">
                         {/* Away Team Button */}
                         <button

@@ -179,11 +179,13 @@ function getCurrentWeek() {
 export async function GET(request: NextRequest) {
   try {
     // Verify this is a legitimate cron request
-    const authHeader = request.headers.get("authorization");
+    const authHeader = request.headers.get("Authorization");
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.log("Unauthorized cron request - missing or invalid auth header");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    console.log("✅ Cron job triggered successfully!");
     console.log("Starting automated score sync...");
 
     const currentWeek = getCurrentWeek();
