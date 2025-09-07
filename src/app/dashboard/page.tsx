@@ -441,7 +441,12 @@ export default function Dashboard() {
               <Card key={game.id} className={locked ? "opacity-75" : ""}>
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <CardTitle className="text-lg">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      {pick?.is_lock && (
+                        <span className="text-yellow-600" title="Locked Pick">
+                          🔒
+                        </span>
+                      )}
                       {game.away_team} @ {game.home_team}
                     </CardTitle>
                     <div className="text-sm text-gray-500">
@@ -504,7 +509,7 @@ export default function Dashboard() {
                         {pick && (
                           <div className="space-y-2">
                             <div
-                              className={`text-lg font-semibold ${
+                              className={`text-lg font-semibold flex items-center justify-center gap-2 ${
                                 (pick.picked_team === game.away_team &&
                                   (game.away_score || 0) >
                                     (game.home_score || 0)) ||
@@ -515,6 +520,9 @@ export default function Dashboard() {
                                   : "text-red-600"
                               }`}
                             >
+                              {pick.is_lock && (
+                                <span className="text-yellow-600">🔒</span>
+                              )}
                               {pick.picked_team} -{" "}
                               {(pick.picked_team === game.away_team &&
                                 (game.away_score || 0) >
@@ -542,7 +550,10 @@ export default function Dashboard() {
                         </div>
                         {pick && (
                           <div className="space-y-1">
-                            <div className="text-sm text-blue-600 font-medium">
+                            <div className="text-sm text-blue-600 font-medium flex items-center justify-center gap-2">
+                              {pick.is_lock && (
+                                <span className="text-yellow-600">🔒</span>
+                              )}
                               Your pick: {pick.picked_team}
                             </div>
                             {pick.is_lock && (
