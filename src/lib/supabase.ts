@@ -47,7 +47,14 @@ export interface Award {
   week: number;
   season: number;
   season_type: string;
-  award_type: "top_scorer" | "lowest_scorer" | "perfect_week" | "cold_week";
+  award_type:
+    | "top_scorer"
+    | "second_scorer"
+    | "third_scorer"
+    | "lowest_scorer"
+    | "perfect_week"
+    | "cold_week";
   points: number;
+  record?: string;
   created_at: string;
 }

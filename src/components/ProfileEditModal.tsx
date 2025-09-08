@@ -49,6 +49,14 @@ export function ProfileEditModal({
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
   const [passwordResetMessage, setPasswordResetMessage] = useState("");
 
+  // Update form fields when modal opens or currentProfile changes
+  useEffect(() => {
+    if (isOpen) {
+      setUsername(currentProfile.username || "");
+      setBio(currentProfile.bio || "");
+    }
+  }, [isOpen, currentProfile]);
+
   // Load current profile picture when modal opens
   useEffect(() => {
     const loadCurrentProfilePicture = async () => {

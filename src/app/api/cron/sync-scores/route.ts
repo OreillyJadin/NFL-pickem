@@ -102,7 +102,10 @@ async function syncGameScore(gameId: string) {
     return { success: true, homeScore, awayScore, status };
   } catch (error) {
     console.error(`Error syncing game ${gameId}:`, error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -160,7 +163,10 @@ async function syncWeekScores(
     };
   } catch (error) {
     console.error("Error syncing week scores:", error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -203,7 +209,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       currentWeek,
       season: currentSeason,
-      weeksProcessed: [],
+      weeksProcessed: [] as any[],
     };
 
     // Process each week
@@ -250,7 +256,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Cron job error:", error);
     return NextResponse.json(
-      { error: "Internal server error", details: error.message },
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

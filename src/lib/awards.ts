@@ -7,6 +7,16 @@ export const AWARD_TYPES = {
     name: "Top Scorer",
     description: "Highest points this week",
   },
+  second_scorer: {
+    emoji: "🥈",
+    name: "Second Place",
+    description: "Second highest points this week",
+  },
+  third_scorer: {
+    emoji: "🥉",
+    name: "Third Place",
+    description: "Third highest points this week",
+  },
   lowest_scorer: {
     emoji: "🥶",
     name: "Lowest Scorer",
@@ -30,7 +40,8 @@ export async function createAward(
   season: number,
   seasonType: string,
   awardType: keyof typeof AWARD_TYPES,
-  points: number
+  points: number,
+  record: string
 ) {
   try {
     const { data, error } = await supabase
@@ -42,6 +53,7 @@ export async function createAward(
         season_type: seasonType,
         award_type: awardType,
         points,
+        record,
       })
       .select()
       .single();
@@ -149,18 +161,51 @@ export async function processWeeklyAwards(
       userId: string;
       awardType: keyof typeof AWARD_TYPES;
       points: number;
+      record: string;
     }[] = [];
 
     if (users.length > 0) {
-      // Top Scorer
-      const topScorer = users.reduce((max, current) =>
-        current[1].points > max[1].points ? current : max
-      );
-      awards.push({
-        userId: topScorer[0],
-        awardType: "top_scorer",
-        points: topScorer[1].points,
-      });
+      // Sort users by points (descending)
+      const sortedUsers = users.sort((a, b) => b[1].points - a[1].points);
+
+      // Top Scorer (1st place)
+      if (sortedUsers.length >= 1) {
+        const topScorer = sortedUsers[0];
+        awards.push({
+          userId: topScorer[0],
+          awardType: "top_scorer",
+          points: topScorer[1].points,
+          record: `${topScorer[1].correct}-${
+            topScorer[1].total - topScorer[1].correct
+          }`,
+        });
+      }
+
+      // Second Place
+      if (sortedUsers.length >= 2) {
+        const secondScorer = sortedUsers[1];
+        awards.push({
+          userId: secondScorer[0],
+          awardType: "second_scorer",
+          points: secondScorer[1].points,
+          record: `${secondScorer[1].correct}-${
+            secondScorer[1].total - secondScorer[1].correct
+          }`,
+        });
+      }
+
+      // Third Place
+      if (sortedUsers.length >= 3) {
+        const thirdScorer = sortedUsers[2];
+        awards.push({
+          userId: thirdScorer[0],
+          awardType: "third_scorer",
+          points: thirdScorer[1].points,
+          record: `${thirdScorer[1].correct}-${
+            thirdScorer[1].total - thirdScorer[1].correct
+          }`,
+        });
+      }
 
       // Lowest Scorer
       const lowestScorer = users.reduce((min, current) =>
@@ -170,6 +215,9 @@ export async function processWeeklyAwards(
         userId: lowestScorer[0],
         awardType: "lowest_scorer",
         points: lowestScorer[1].points,
+        record: `${lowestScorer[1].correct}-${
+          lowestScorer[1].total - lowestScorer[1].correct
+        }`,
       });
 
       // Perfect Week (all picks correct)
@@ -179,6 +227,7 @@ export async function processWeeklyAwards(
             userId,
             awardType: "perfect_week",
             points: stats.points,
+            record: `${stats.correct}-${stats.total - stats.correct}`,
           });
         }
       });
@@ -190,6 +239,7 @@ export async function processWeeklyAwards(
             userId,
             awardType: "cold_week",
             points: stats.points,
+            record: `${stats.correct}-${stats.total - stats.correct}`,
           });
         }
       });
@@ -204,7 +254,8 @@ export async function processWeeklyAwards(
         season,
         seasonType,
         award.awardType,
-        award.points
+        award.points,
+        award.record
       );
 
       if (error) {
@@ -229,5 +280,6 @@ export function getAwardDisplay(award: Award) {
     points: award.points,
     week: award.week,
     seasonType: award.season_type,
+    record: award.record || "0-0",
   };
 }

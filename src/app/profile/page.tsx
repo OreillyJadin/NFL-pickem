@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/lib/storage";
 import { getUserAwards, getAwardDisplay } from "@/lib/awards";
 import { Award } from "@/lib/supabase";
+import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { Button } from "@/components/ui/button";
 import { Edit, User } from "lucide-react";
@@ -72,6 +73,25 @@ export default function Profile() {
     null
   );
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState<number | "all">("all");
+  const [availableWeeks, setAvailableWeeks] = useState<number[]>([]);
+
+  const loadAvailableWeeks = useCallback(async () => {
+    try {
+      const { data: weeksData, error } = await supabase
+        .from("games")
+        .select("week")
+        .eq("season", 2025)
+        .order("week", { ascending: true });
+
+      if (!error && weeksData) {
+        const uniqueWeeks = [...new Set(weeksData.map((g) => g.week))];
+        setAvailableWeeks(uniqueWeeks);
+      }
+    } catch (error) {
+      console.error("Error loading available weeks:", error);
+    }
+  }, []);
 
   const loadProfileData = useCallback(async () => {
     if (!user) return;
@@ -130,7 +150,7 @@ export default function Profile() {
         .select(
           `
           *,
-          game:games(*)
+          game:games(week, home_team, away_team, home_score, away_score, status, game_time)
         `
         )
         .eq("user_id", user.id);
@@ -265,8 +285,16 @@ export default function Profile() {
       loadUserStats();
       loadPickHistory();
       loadAwards();
+      loadAvailableWeeks();
     }
-  }, [user, loadProfileData, loadUserStats, loadPickHistory, loadAwards]);
+  }, [
+    user,
+    loadProfileData,
+    loadUserStats,
+    loadPickHistory,
+    loadAwards,
+    loadAvailableWeeks,
+  ]);
 
   const getPickResult = (pick: PickHistory) => {
     const game = pick.game;
@@ -285,6 +313,12 @@ export default function Profile() {
       game.home_score > game.away_score ? game.home_team : game.away_team;
     return pick.picked_team === winner ? "correct" : "incorrect";
   };
+
+  // Filter pick history by selected week
+  const filteredPickHistory = pickHistory.filter((pick) => {
+    if (selectedWeek === "all") return true;
+    return (pick.game as any)?.week === selectedWeek;
+  });
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -507,6 +541,9 @@ export default function Profile() {
                             : "Regular Season"}{" "}
                           • {award.points} pts
                         </div>
+                        <div className="text-xs font-medium text-gray-700 mt-1">
+                          {display.record} record
+                        </div>
                       </div>
                     </div>
                   );
@@ -519,61 +556,204 @@ export default function Profile() {
         {/* Pick History */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Pick History</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Pick History</CardTitle>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Week:
+                </label>
+                <select
+                  value={selectedWeek}
+                  onChange={(e) =>
+                    setSelectedWeek(
+                      e.target.value === "all"
+                        ? "all"
+                        : parseInt(e.target.value)
+                    )
+                  }
+                  className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Weeks</option>
+                  {availableWeeks.map((week) => (
+                    <option key={week} value={week}>
+                      Week {week}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="pt-0">
-            {pickHistory.length === 0 ? (
+            {filteredPickHistory.length === 0 ? (
               <p className="text-gray-500 text-center py-4 text-sm">
-                No picks made yet
+                {pickHistory.length === 0
+                  ? "No picks made yet"
+                  : `No picks found for Week ${selectedWeek}`}
               </p>
             ) : (
               <div className="space-y-2">
-                {pickHistory.map((pick) => {
+                {filteredPickHistory.map((pick) => {
                   const result = getPickResult(pick);
                   const game = pick.game;
 
                   return (
-                    <div
-                      key={pick.id}
-                      className="flex items-center justify-between p-3 border rounded text-sm"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">
-                          {game?.away_team} @ {game?.home_team}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          Picked: {pick.picked_team} •{" "}
-                          {formatPickTime(pick.created_at)}
+                    <div key={pick.id} className="border rounded-lg mb-2">
+                      {/* Header with Week and Game Info */}
+                      <div className="bg-gray-50 px-3 py-2 border-b">
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium text-sm">
+                            Week {(game as any)?.week} • {game?.away_team} @{" "}
+                            {game?.home_team}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {formatPickTime(game?.game_time)}
+                          </div>
                         </div>
                         {pick.is_lock && (
-                          <div className="text-xs text-yellow-600 font-medium">
+                          <div className="text-xs text-yellow-600 font-medium mt-1">
                             🔒 LOCKED
                           </div>
                         )}
-                        {game?.status === "completed" &&
-                          game.home_score !== null &&
-                          game.away_score !== null && (
-                            <div className="text-xs text-gray-500">
-                              Final: {game.away_team} {game.away_score} -{" "}
-                              {game.home_team} {game.home_score}
-                            </div>
-                          )}
                       </div>
-                      <div className="ml-2 flex-shrink-0">
-                        {result === "correct" && (
-                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                            ✓
-                          </span>
-                        )}
-                        {result === "incorrect" && (
-                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                            ✗
-                          </span>
-                        )}
-                        {result === "pending" && (
-                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                            Pending
-                          </span>
+
+                      {/* Team Display */}
+                      <div className="p-3">
+                        {game?.status === "completed" &&
+                        game.home_score !== null &&
+                        game.away_score !== null ? (
+                          // Completed Game - Show scores
+                          <div className="space-y-1.5">
+                            {/* Away Team - Top */}
+                            <div className="flex items-center justify-between py-1.5 border-b border-gray-200">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                                  style={{
+                                    backgroundColor: getTeamColors(
+                                      game.away_team
+                                    ).primary,
+                                  }}
+                                >
+                                  {getTeamAbbreviation(game.away_team)}
+                                </div>
+                                <span className="font-semibold text-sm">
+                                  {game.away_team}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {pick.picked_team === game.away_team && (
+                                  <span
+                                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                      result === "correct"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
+                                    }`}
+                                  >
+                                    {result === "correct" ? "✓" : "✗"}
+                                  </span>
+                                )}
+                                <span className="text-lg font-bold">
+                                  {game.away_score}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Home Team - Bottom */}
+                            <div className="flex items-center justify-between py-1.5">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                                  style={{
+                                    backgroundColor: getTeamColors(
+                                      game.home_team
+                                    ).primary,
+                                  }}
+                                >
+                                  {getTeamAbbreviation(game.home_team)}
+                                </div>
+                                <span className="font-semibold text-sm">
+                                  {game.home_team}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {pick.picked_team === game.home_team && (
+                                  <span
+                                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                      result === "correct"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
+                                    }`}
+                                  >
+                                    {result === "correct" ? "✓" : "✗"}
+                                  </span>
+                                )}
+                                <span className="text-lg font-bold">
+                                  {game.home_score}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          // Pending Game - Show pick without scores
+                          <div className="space-y-1.5">
+                            {/* Away Team - Top */}
+                            <div className="flex items-center justify-between py-1.5 border-b border-gray-200">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                                  style={{
+                                    backgroundColor: getTeamColors(
+                                      game.away_team
+                                    ).primary,
+                                  }}
+                                >
+                                  {getTeamAbbreviation(game.away_team)}
+                                </div>
+                                <span className="font-semibold text-sm">
+                                  {game.away_team}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {pick.picked_team === game.away_team && (
+                                  <span className="text-blue-600 text-lg">
+                                    ●
+                                  </span>
+                                )}
+                                <span className="text-lg font-bold text-gray-400">
+                                  -
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Home Team - Bottom */}
+                            <div className="flex items-center justify-between py-1.5">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                                  style={{
+                                    backgroundColor: getTeamColors(
+                                      game.home_team
+                                    ).primary,
+                                  }}
+                                >
+                                  {getTeamAbbreviation(game.home_team)}
+                                </div>
+                                <span className="font-semibold text-sm">
+                                  {game.home_team}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {pick.picked_team === game.home_team && (
+                                  <span className="text-blue-600 text-lg">
+                                    ●
+                                  </span>
+                                )}
+                                <span className="text-lg font-bold text-gray-400">
+                                  -
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
