@@ -30,30 +30,6 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
 
   const steps = [
     {
-      title: "Welcome to NFL Pick'em!",
-      description: "Learn how to make picks and compete with friends",
-      content: (
-        <div className="text-center space-y-4">
-          <div className="text-6xl mb-4">🏈</div>
-          <p className="text-lg text-gray-600">
-            Make your picks for NFL games each week and compete with friends!
-          </p>
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl mb-2">📱</div>
-              <h3 className="font-semibold">Mobile Friendly</h3>
-              <p className="text-sm text-gray-600">Works great on your phone</p>
-            </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl mb-2">🏆</div>
-              <h3 className="font-semibold">Compete</h3>
-              <p className="text-sm text-gray-600">See who's winning</p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
       title: "Making Picks",
       description: "How to select your teams",
       content: (
@@ -146,144 +122,119 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
     },
     {
       title: "Add to Home Screen",
-      description: "Get the app experience on your iPhone",
+      description: "Get quick access to NFL Pick'em on your iPhone",
       content: (
-        <div className="space-y-4">
-          <div className="text-center">
-            <Smartphone className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
-              Add to iPhone Home Screen
-            </h3>
-          </div>
+        <div className="text-center space-y-6">
+          <p className="text-lg text-gray-600 mb-6">
+            Add NFL Pick'em to your home screen for easy access!
+          </p>
 
-          <div className="space-y-3">
-            <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-              <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                1
-              </div>
-              <div className="min-w-0">
-                <p className="font-medium">Open in Safari</p>
-                <p className="text-sm text-gray-600">
-                  Make sure you're using Safari browser
-                </p>
-              </div>
-            </div>
+          <div className="flex justify-center space-x-10">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="relative mb-4">
+                <div className="w-40 h-72 bg-gray-800 rounded-2xl p-3 mx-auto">
+                  <div className="w-full h-full bg-white rounded-xl relative overflow-hidden">
+                    {/* iPhone notch */}
+                    <div className="w-20 h-8 bg-gray-800 rounded-b-2xl mx-auto"></div>
 
-            <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-              <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                2
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">Tap Middle Share Button</p>
-                <p className="text-sm text-gray-600 mb-3">
-                  Look for the share icon in the middle of the bottom bar
-                </p>
-                {/* Mock iPhone screenshot showing share button */}
-                <div className="bg-black rounded-lg p-2 w-32 mx-auto">
-                  <div className="bg-white rounded-lg p-2 text-center">
-                    <div className="text-xs text-gray-500 mb-1">Safari</div>
-                    <div className="w-full h-16 bg-gray-100 rounded mb-2 flex items-center justify-center">
-                      <div className="text-xs text-gray-400">NFL Pick'em</div>
-                    </div>
-                    <div className="flex justify-center space-x-2">
-                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                      <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center border-2 border-blue-600">
-                        <div className="text-white text-xs">↗</div>
+                    {/* Browser content */}
+                    <div className="p-2 space-y-2">
+                      {/* Address bar */}
+                      <div className="bg-blue-100 rounded-lg p-2 text-xs">
+                        {/* EDIT THIS: Browser text size - change text-xs to text-sm, text-base, etc. */}
+                        www.WhoKnowsBall.app
                       </div>
-                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Middle share button (↗)
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-              <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                3
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">Select "Add to Home Screen"</p>
-                <p className="text-sm text-gray-600 mb-3">
-                  Scroll down and tap this option
-                </p>
-                {/* Mock iPhone screenshot showing share menu */}
-                <div className="bg-black rounded-lg p-2 w-40 mx-auto">
-                  <div className="bg-white rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-2">Share Menu</div>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2 p-1">
-                        <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                        <div className="text-xs text-gray-700">Copy Link</div>
-                      </div>
-                      <div className="flex items-center space-x-2 p-1">
-                        <div className="w-4 h-4 bg-green-500 rounded"></div>
-                        <div className="text-xs text-gray-700">AirDrop</div>
-                      </div>
-                      <div className="flex items-center space-x-2 p-1 bg-blue-50 rounded">
-                        <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                          <div className="text-white text-xs">+</div>
+                      {/* Content area */}
+                      <div className="bg-gray-100 rounded-lg h-20"></div>
+
+                      {/* Bottom navigation */}
+                      <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-8">
+                        <div className="w-6 h-6 bg-gray-300 rounded"></div>
+                        <div className="relative">
+                          <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              {/* EDIT THIS: Upload icon - simple arrow pointing up */}
+                              <path
+                                d="M10 3 L10 13 M6 7 L10 3 L14 7"
+                                stroke="white"
+                                strokeWidth="2"
+                                fill="none"
+                              />
+                            </svg>
+                          </div>
+                          {/* EDIT THIS: Red circle around share button - change -inset-2 and border-2 to make bigger/smaller */}
+                          <div className="absolute -inset-2 border-2 border-red-500 rounded-full animate-pulse"></div>
                         </div>
-                        <div className="text-xs font-medium text-blue-800">
-                          Add to Home Screen
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2 p-1">
-                        <div className="w-4 h-4 bg-gray-400 rounded"></div>
-                        <div className="text-xs text-gray-700">More...</div>
+                        <div className="w-6 h-6 bg-gray-300 rounded"></div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+              <p className="text-sm font-semibold text-gray-700">
+                Step 1: Tap the Share icon
+              </p>
             </div>
 
-            <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-              <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                4
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">Tap "Add"</p>
-                <p className="text-sm text-gray-600 mb-3">
-                  The app icon will appear on your home screen
-                </p>
-                {/* Mock iPhone screenshot showing home screen with app icon */}
-                <div className="bg-black rounded-lg p-2 w-36 mx-auto">
-                  <div className="bg-white rounded-lg p-3">
-                    <div className="text-xs text-gray-500 mb-2">
-                      iPhone Home Screen
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <div className="text-xs text-blue-600">📱</div>
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="relative mb-4">
+                <div className="w-40 h-72 bg-gray-800 rounded-2xl p-3 mx-auto">
+                  <div className="w-full h-full bg-white rounded-xl relative overflow-hidden">
+                    {/* iPhone notch */}
+                    <div className="w-20 h-8 bg-gray-800 rounded-b-2xl mx-auto"></div>
+
+                    {/* Share sheet overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-end">
+                      <div className="w-full bg-white rounded-t-2xl p-2 space-y-1">
+                        <div className="h-1 w-8 bg-gray-300 rounded mx-auto"></div>
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded">
+                            <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                            {/* EDIT THIS: Menu text size - change text-xs to text-sm, text-base, etc. */}
+                            <span className="text-xs">Add to Favorites</span>
+                          </div>
+                          <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded">
+                            <div className="w-5 h-5 bg-blue-500 rounded flex items-center justify-center">
+                              <svg
+                                className="w-3 h-3 text-white"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                              </svg>
+                            </div>
+                            {/* EDIT THIS: "Add to Home Screen" text size - change text-xs to text-sm, text-base, etc. */}
+                            <span className="text-xs font-semibold text-blue-600">
+                              Add to Home Screen
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded">
+                            <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                            <span className="text-xs">Find on Page</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <div className="text-xs text-gray-600">📧</div>
-                      </div>
-                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <div className="text-xs text-gray-600">🌐</div>
-                      </div>
-                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center border-2 border-orange-300">
-                        <div className="text-xs text-orange-600">🏈</div>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500 mt-2 text-center">
-                      NFL Pick'em App
                     </div>
                   </div>
                 </div>
               </div>
+              <p className="text-sm font-semibold text-gray-700">
+                Step 2: Select "Add to Home Screen"
+              </p>
             </div>
           </div>
 
-          <div className="p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-green-800">
-              ✨ <strong>Pro Tip:</strong> Once added, it works like a native
-              app with no browser bar!
+          <div className="bg-blue-50 rounded-lg p-4 mt-6">
+            <p className="text-sm text-blue-800">
+              💡 <strong>Pro tip:</strong> This will add NFL Pick'em to your
+              home screen like a IOS app!
             </p>
           </div>
         </div>

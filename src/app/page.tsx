@@ -95,6 +95,28 @@ export default function Home() {
         ) : (
           <RegisterForm onToggleMode={() => setIsLogin(true)} />
         )}
+
+        {/* Subtle home screen reminder */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
+            <span>📱</span>
+            <span>Add to home screen for quick access</span>
+          </p>
+          <div className="mt-2 flex justify-center">
+            <svg
+              className="w-4 h-4 text-red-500 animate-bounce"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                d="M10 3 L10 13 M6 9 L10 13 L14 9"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+              />
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   );
