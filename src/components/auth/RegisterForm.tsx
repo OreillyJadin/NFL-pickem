@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { uploadProfilePicture } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,9 +100,9 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
         return;
       }
 
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Image must be smaller than 5MB");
+      // Validate file size (50MB max for Supabase Storage)
+      if (file.size > 50 * 1024 * 1024) {
+        setError("Image must be smaller than 50MB");
         return;
       }
 
@@ -130,39 +131,61 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
     setLoading(true);
     setError("");
 
-    // Convert file to data URL if selected
+    // Upload profile picture to Supabase Storage if selected
+    let finalProfilePicUrl = profilePicUrl || undefined;
+
     if (selectedFile) {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const dataUrl = e.target?.result as string;
+      // First create the user account
+      const { error: signupError } = await signUp(
+        email,
+        password,
+        username,
+        bio || undefined
+      );
 
-        const { error } = await signUp(
-          email,
-          password,
-          username,
-          bio || undefined,
-          dataUrl || undefined
-        );
-
-        if (error) {
-          setError(error.message);
-        } else {
-          setSuccess(true);
-        }
-
+      if (signupError) {
+        setError(signupError.message);
         setLoading(false);
-      };
-      reader.readAsDataURL(selectedFile);
-      return; // Exit early, the rest will be handled in the reader.onload
+        return;
+      }
+
+      // Get the newly created user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setError("Failed to get user after signup");
+        setLoading(false);
+        return;
+      }
+
+      // Upload the profile picture
+      const uploadResult = await uploadProfilePicture(selectedFile, user.id);
+
+      if (uploadResult.success) {
+        // Update the profile with the uploaded image URL
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ profile_pic_url: uploadResult.url })
+          .eq("id", user.id);
+
+        if (updateError) {
+          console.error(
+            "Failed to update profile with image URL:",
+            updateError
+          );
+        }
+      } else {
+        console.error("Failed to upload profile picture:", uploadResult.error);
+      }
+
+      setSuccess(true);
+      setLoading(false);
+      return;
     }
 
-    const { error } = await signUp(
-      email,
-      password,
-      username,
-      bio || undefined,
-      profilePicUrl || undefined
-    );
+    // No file selected, proceed with normal signup
+    const { error } = await signUp(email, password, username, bio || undefined);
 
     if (error) {
       setError(error.message);

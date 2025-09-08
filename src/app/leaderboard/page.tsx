@@ -18,7 +18,6 @@ interface LeaderboardEntry {
   user_id: string;
   username: string;
   email: string;
-  profile_pic_url?: string;
   total_picks: number;
   correct_picks: number;
   incorrect_picks: number;
@@ -105,7 +104,7 @@ export default function Leaderboard() {
         // Get all user profiles
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, username, email, profile_pic_url");
+          .select("id, username, email");
 
         if (profilesError) throw profilesError;
 
@@ -114,7 +113,6 @@ export default function Leaderboard() {
           [key: string]: {
             username: string;
             email: string;
-            profile_pic_url?: string;
           };
         } = {};
 
@@ -122,7 +120,6 @@ export default function Leaderboard() {
           userProfiles[profile.id] = {
             username: profile.username,
             email: profile.email,
-            profile_pic_url: profile.profile_pic_url,
           };
         });
 
@@ -138,7 +135,6 @@ export default function Leaderboard() {
             user_id: userId,
             username: userProfiles[userId]?.username || "Unknown",
             email: userProfiles[userId]?.email || "",
-            profile_pic_url: userProfiles[userId]?.profile_pic_url,
             total_picks: 0,
             correct_picks: 0,
             incorrect_picks: 0,
@@ -210,7 +206,7 @@ export default function Leaderboard() {
         // Get all user profiles
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, username, email, profile_pic_url");
+          .select("id, username, email");
 
         if (profilesError) throw profilesError;
 
@@ -219,7 +215,6 @@ export default function Leaderboard() {
           [key: string]: {
             username: string;
             email: string;
-            profile_pic_url?: string;
           };
         } = {};
 
@@ -227,7 +222,6 @@ export default function Leaderboard() {
           userProfiles[profile.id] = {
             username: profile.username,
             email: profile.email,
-            profile_pic_url: profile.profile_pic_url,
           };
         });
 
@@ -243,7 +237,6 @@ export default function Leaderboard() {
             user_id: userId,
             username: userProfiles[userId]?.username || "Unknown",
             email: userProfiles[userId]?.email || "",
-            profile_pic_url: userProfiles[userId]?.profile_pic_url,
             total_picks: 0,
             correct_picks: 0,
             incorrect_picks: 0,
@@ -476,15 +469,7 @@ export default function Leaderboard() {
                           <td className="py-2 px-1 sm:px-2">
                             <div className="flex items-center space-x-2">
                               <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                                {entry.profile_pic_url ? (
-                                  <img
-                                    src={entry.profile_pic_url}
-                                    alt="Profile"
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                                )}
+                                <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
                               </div>
                               <div
                                 className={`font-bold text-sm sm:text-base ${

@@ -66,7 +66,6 @@ export default function Profile() {
   const [profileData, setProfileData] = useState({
     username: "",
     bio: "",
-    profile_pic_url: "",
   });
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -76,7 +75,7 @@ export default function Profile() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("username, bio, profile_pic_url")
+        .select("username, bio")
         .eq("id", user.id)
         .single();
 
@@ -85,7 +84,6 @@ export default function Profile() {
       setProfileData({
         username: data?.username || "",
         bio: data?.bio || "",
-        profile_pic_url: data?.profile_pic_url || "",
       });
     } catch (error) {
       console.error("Error loading profile data:", error);
@@ -95,7 +93,6 @@ export default function Profile() {
   const updateProfile = async (newProfileData: {
     username: string;
     bio: string;
-    profile_pic_url: string;
   }) => {
     if (!user) return;
 
@@ -366,15 +363,7 @@ export default function Profile() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                {profileData.profile_pic_url ? (
-                  <img
-                    src={profileData.profile_pic_url}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="h-6 w-6 text-gray-400" />
-                )}
+                <User className="h-6 w-6 text-gray-400" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">

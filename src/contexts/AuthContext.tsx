@@ -12,8 +12,7 @@ interface AuthContextType {
     email: string,
     password: string,
     username: string,
-    bio?: string,
-    profilePicUrl?: string
+    bio?: string
   ) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -50,8 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     username: string,
-    bio?: string,
-    profilePicUrl?: string
+    bio?: string
   ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -71,7 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           username,
           email,
           bio: bio || "this is my bio, I do not know ball.",
-          profile_pic_url: profilePicUrl || null,
         });
       } catch (profileError: any) {
         console.error("Error creating profile:", profileError);

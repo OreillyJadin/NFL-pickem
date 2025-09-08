@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { uploadProfilePicture, deleteFile } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,15 +19,10 @@ import { X, Upload, User } from "lucide-react";
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (profileData: {
-    username: string;
-    bio: string;
-    profile_pic_url: string;
-  }) => void;
+  onSave: (profileData: { username: string; bio: string }) => void;
   currentProfile: {
     username?: string;
     bio?: string;
-    profile_pic_url?: string;
   };
 }
 
@@ -38,9 +34,7 @@ export function ProfileEditModal({
 }: ProfileEditModalProps) {
   const [username, setUsername] = useState(currentProfile.username || "");
   const [bio, setBio] = useState(currentProfile.bio || "");
-  const [profilePicUrl, setProfilePicUrl] = useState(
-    currentProfile.profile_pic_url || ""
-  );
+  const [profilePicUrl, setProfilePicUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -102,31 +96,40 @@ export function ProfileEditModal({
     try {
       let finalProfilePicUrl = profilePicUrl.trim();
 
-      // If a file was selected, convert it to a data URL
+      // If a file was selected, upload to Supabase Storage
       if (selectedFile) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = e.target?.result as string;
-          onSave({
-            username: username.trim(),
-            bio: bio.trim(),
-            profile_pic_url: dataUrl,
-          });
-          onClose();
-        };
-        reader.onerror = () => {
-          setError("Failed to process image");
+        // Get current user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setError("User not authenticated");
           setLoading(false);
-        };
-        reader.readAsDataURL(selectedFile);
-        return;
+          return;
+        }
+
+        // Upload the file to Supabase Storage
+        const uploadResult = await uploadProfilePicture(selectedFile, user.id);
+
+        if (!uploadResult.success) {
+          setError(uploadResult.error || "Failed to upload image");
+          setLoading(false);
+          return;
+        }
+
+        // Delete old profile picture if it exists and is from storage
+        if (profilePicUrl && profilePicUrl.includes("supabase")) {
+          const oldPath = profilePicUrl.split("/").slice(-2).join("/"); // Get user-id/filename
+          await deleteFile("profile-pictures", oldPath);
+        }
+
+        finalProfilePicUrl = uploadResult.url!;
       }
 
-      // If no file selected, save with current URL
+      // Save profile
       onSave({
         username: username.trim(),
         bio: bio.trim(),
-        profile_pic_url: finalProfilePicUrl,
       });
       onClose();
     } catch (err) {
@@ -148,9 +151,9 @@ export function ProfileEditModal({
       return;
     }
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be smaller than 5MB");
+    // Check file size (max 50MB for Supabase Storage)
+    if (file.size > 50 * 1024 * 1024) {
+      setError("Image must be smaller than 50MB");
       return;
     }
 
@@ -222,7 +225,7 @@ export function ProfileEditModal({
                   </Button>
                 </div>
                 <p className="text-xs text-gray-500">
-                  Upload a photo from your device (max 5MB)
+                  Upload a photo from your device (max 50MB)
                 </p>
               </div>
             </div>

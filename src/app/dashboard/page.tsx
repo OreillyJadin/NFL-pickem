@@ -60,7 +60,6 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<{
     username?: string;
     bio?: string;
-    profile_pic_url?: string;
   } | null>(null);
   const [syncingScores, setSyncingScores] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
@@ -71,7 +70,7 @@ export default function Dashboard() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("bio, profile_pic_url, username")
+        .select("bio, username")
         .eq("id", user.id)
         .single();
 
@@ -81,7 +80,7 @@ export default function Dashboard() {
         // Check if user needs profile suggestions
         const needsBio =
           !data.bio || data.bio === "this is my bio, I do not know ball.";
-        const needsProfilePic = !data.profile_pic_url;
+        const needsProfilePic = false; // Profile pics are handled via Supabase Storage
 
         if (needsBio || needsProfilePic) {
           // Randomly show suggestion (30% chance)
@@ -215,11 +214,7 @@ export default function Dashboard() {
   }, [user, loadUserProfile]);
 
   const handleProfileUpdate = useCallback(
-    async (profileData: {
-      username: string;
-      bio: string;
-      profile_pic_url: string;
-    }) => {
+    async (profileData: { username: string; bio: string }) => {
       if (!user) return;
 
       try {
@@ -923,16 +918,7 @@ export default function Dashboard() {
             <CardContent className="space-y-4">
               <div className="text-center space-y-2">
                 <p className="text-sm text-gray-600">
-                  {!userProfile?.profile_pic_url && !userProfile?.bio && (
-                    <>
-                      Add a profile picture and bio to personalize your
-                      experience!
-                    </>
-                  )}
-                  {!userProfile?.profile_pic_url && userProfile?.bio && (
-                    <>Add a profile picture to show on the leaderboard!</>
-                  )}
-                  {userProfile?.profile_pic_url && !userProfile?.bio && (
+                  {!userProfile?.bio && (
                     <>Add a bio to tell others about yourself!</>
                   )}
                 </p>
