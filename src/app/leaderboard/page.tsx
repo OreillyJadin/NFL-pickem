@@ -13,6 +13,47 @@ import {
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
+import { getProfilePictureUrl } from "@/lib/storage";
+
+// Profile Picture Component
+function ProfilePicture({ userId }: { userId: string }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const url = await getProfilePictureUrl(userId);
+        setImageUrl(url);
+      } catch (error) {
+        console.error("Error loading profile picture:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadImage();
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <div className="w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
+    );
+  }
+
+  if (!imageUrl) {
+    return <div className="w-4 h-4 bg-gray-400 rounded-full"></div>;
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt="Profile"
+      className="w-full h-full object-cover"
+      onError={() => setImageUrl(null)}
+    />
+  );
+}
 
 interface LeaderboardEntry {
   user_id: string;
@@ -469,7 +510,7 @@ export default function Leaderboard() {
                           <td className="py-2 px-1 sm:px-2">
                             <div className="flex items-center space-x-2">
                               <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                                <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
+                                <ProfilePicture userId={entry.user_id} />
                               </div>
                               <div
                                 className={`font-bold text-sm sm:text-base ${

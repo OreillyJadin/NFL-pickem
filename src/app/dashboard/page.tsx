@@ -15,8 +15,10 @@ import { Navigation } from "@/components/Navigation";
 import { TutorialModal } from "@/components/TutorialModal";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { supabase } from "@/lib/supabase";
+import { getProfilePictureUrl } from "@/lib/storage";
 import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
 import { syncAllCurrentGames, syncGameScore } from "@/lib/game-sync";
+import { User } from "lucide-react";
 
 interface Game {
   id: string;
@@ -61,6 +63,9 @@ export default function Dashboard() {
     username?: string;
     bio?: string;
   } | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
+    null
+  );
   const [syncingScores, setSyncingScores] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
 
@@ -76,6 +81,10 @@ export default function Dashboard() {
 
       if (!error && data) {
         setUserProfile(data);
+
+        // Load profile picture from storage
+        const pictureUrl = await getProfilePictureUrl(user.id);
+        setProfilePictureUrl(pictureUrl);
 
         // Check if user needs profile suggestions
         const needsBio =
@@ -908,6 +917,20 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                  {profilePictureUrl ? (
+                    <img
+                      src={profilePictureUrl}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={() => setProfilePictureUrl(null)}
+                    />
+                  ) : (
+                    <User className="h-8 w-8 text-gray-400" />
+                  )}
+                </div>
+              </div>
               <CardTitle className="text-xl">
                 🎨 Complete Your Profile!
               </CardTitle>

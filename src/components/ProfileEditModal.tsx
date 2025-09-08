@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { uploadProfilePicture, deleteFile } from "@/lib/storage";
+import {
+  uploadProfilePicture,
+  deleteFile,
+  getProfilePictureUrl,
+} from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,12 +39,36 @@ export function ProfileEditModal({
   const [username, setUsername] = useState(currentProfile.username || "");
   const [bio, setBio] = useState(currentProfile.bio || "");
   const [profilePicUrl, setProfilePicUrl] = useState("");
+  const [currentProfilePicUrl, setCurrentProfilePicUrl] = useState<
+    string | null
+  >(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
   const [passwordResetMessage, setPasswordResetMessage] = useState("");
+
+  // Load current profile picture when modal opens
+  useEffect(() => {
+    const loadCurrentProfilePicture = async () => {
+      if (isOpen) {
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (user) {
+            const currentPicUrl = await getProfilePictureUrl(user.id);
+            setCurrentProfilePicUrl(currentPicUrl);
+          }
+        } catch (error) {
+          console.error("Error loading current profile picture:", error);
+        }
+      }
+    };
+
+    loadCurrentProfilePicture();
+  }, [isOpen]);
 
   // Cleanup object URL when component unmounts or URL changes
   useEffect(() => {
@@ -195,7 +223,13 @@ export function ProfileEditModal({
                 {profilePicUrl ? (
                   <img
                     src={profilePicUrl}
-                    alt="Profile"
+                    alt="Profile preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : currentProfilePicUrl ? (
+                  <img
+                    src={currentProfilePicUrl}
+                    alt="Current profile"
                     className="w-full h-full object-cover"
                   />
                 ) : (

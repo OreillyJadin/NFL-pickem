@@ -13,6 +13,7 @@ import {
 
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
+import { getProfilePictureUrl } from "@/lib/storage";
 import { getUserAwards, getAwardDisplay } from "@/lib/awards";
 import { Award } from "@/lib/supabase";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
@@ -67,6 +68,9 @@ export default function Profile() {
     username: "",
     bio: "",
   });
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
+    null
+  );
   const [showEditModal, setShowEditModal] = useState(false);
 
   const loadProfileData = useCallback(async () => {
@@ -85,6 +89,10 @@ export default function Profile() {
         username: data?.username || "",
         bio: data?.bio || "",
       });
+
+      // Load profile picture from storage
+      const pictureUrl = await getProfilePictureUrl(user.id);
+      setProfilePictureUrl(pictureUrl);
     } catch (error) {
       console.error("Error loading profile data:", error);
     }
@@ -363,7 +371,16 @@ export default function Profile() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                <User className="h-6 w-6 text-gray-400" />
+                {profilePictureUrl ? (
+                  <img
+                    src={profilePictureUrl}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={() => setProfilePictureUrl(null)}
+                  />
+                ) : (
+                  <User className="h-6 w-6 text-gray-400" />
+                )}
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">

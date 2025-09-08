@@ -88,10 +88,10 @@ export async function uploadProfilePicture(
   file: File,
   userId: string
 ): Promise<UploadResult> {
-  // Generate a unique filename with timestamp
-  const timestamp = Date.now();
+  // Use consistent filename for each user (avatar.jpg)
+  // This allows us to easily retrieve it later
   const fileExtension = file.name.split(".").pop() || "jpg";
-  const fileName = `avatar-${timestamp}.${fileExtension}`;
+  const fileName = `avatar.${fileExtension}`;
   const path = `${userId}/${fileName}`;
 
   return uploadFile(file, "profile-pictures", path);
@@ -100,15 +100,43 @@ export async function uploadProfilePicture(
 /**
  * Get the public URL for a profile picture
  * @param userId - The user's ID
- * @param fileName - The file name (optional, will use latest if not provided)
- * @returns string
+ * @returns Promise<string | null>
  */
-export function getProfilePictureUrl(
-  userId: string,
-  fileName?: string
-): string {
-  const path = fileName ? `${userId}/${fileName}` : `${userId}/avatar`;
-  const { data } = supabase.storage.from("profile-pictures").getPublicUrl(path);
+export async function getProfilePictureUrl(
+  userId: string
+): Promise<string | null> {
+  try {
+    // List files in the user's folder to find the avatar
+    const { data: files, error } = await supabase.storage
+      .from("profile-pictures")
+      .list(userId, {
+        limit: 10,
+        sortBy: { column: "created_at", order: "desc" },
+      });
 
-  return data.publicUrl;
+    if (error) {
+      console.error("Error listing profile pictures:", error);
+      return null;
+    }
+
+    // Find the avatar file (look for both new format 'avatar.*' and old format 'avatar-*')
+    const avatarFile = files?.find(
+      (file) =>
+        file.name.startsWith("avatar.") || file.name.startsWith("avatar-")
+    );
+
+    if (!avatarFile) {
+      return null;
+    }
+
+    // Get the public URL
+    const { data } = supabase.storage
+      .from("profile-pictures")
+      .getPublicUrl(`${userId}/${avatarFile.name}`);
+
+    return data.publicUrl;
+  } catch (error) {
+    console.error("Error getting profile picture URL:", error);
+    return null;
+  }
 }
