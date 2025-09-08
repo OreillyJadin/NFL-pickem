@@ -547,14 +547,14 @@ export default function Dashboard() {
 
         {/* Score Sync Controls */}
         <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-3">🔄 Sync Games</h3>
+          <h3 className="text-lg font-semibold mb-3">🔄 Sync Recent Games</h3>
           <div className="flex flex-wrap gap-2">
             <Button
               onClick={handleSyncAllGames}
               disabled={syncingScores}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              {syncingScores ? "Syncing..." : "🚀 Sync Games"}
+              {syncingScores ? "Syncing..." : "🚀 Sync Recent Games"}
             </Button>
           </div>
           {syncMessage && (
