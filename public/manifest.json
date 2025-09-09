@@ -8,15 +8,15 @@
   "theme_color": "#1a365d",
   "icons": [
     {
-      "src": "/WhoKnowsBall.jpeg",
+      "src": "/WhoKnowsBall.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/WhoKnowsBall.jpeg",
+      "src": "/WhoKnowsBall.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
