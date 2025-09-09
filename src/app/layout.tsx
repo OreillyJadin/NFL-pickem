@@ -21,17 +21,17 @@ export const metadata: Metadata = {
   icons: {
     // Main app icon - used in browser tabs and bookmarks
     icon: [
-      { url: "/WhoKnowsBall.png?v=3", sizes: "32x32", type: "image/png" },
-      { url: "/WhoKnowsBall.png?v=3", sizes: "16x16", type: "image/png" },
+      { url: "/WhoKnowsBall.jpeg?v=4", sizes: "32x32", type: "image/jpeg" },
+      { url: "/WhoKnowsBall.jpeg?v=4", sizes: "16x16", type: "image/jpeg" },
     ],
     // Apple devices (iPhone/iPad home screen icon) - needs specific sizes
     apple: [
-      { url: "/WhoKnowsBall.png?v=3", sizes: "180x180", type: "image/png" },
-      { url: "/WhoKnowsBall.png?v=3", sizes: "152x152", type: "image/png" },
-      { url: "/WhoKnowsBall.png?v=3", sizes: "120x120", type: "image/png" },
+      { url: "/WhoKnowsBall.jpeg?v=4", sizes: "180x180", type: "image/jpeg" },
+      { url: "/WhoKnowsBall.jpeg?v=4", sizes: "152x152", type: "image/jpeg" },
+      { url: "/WhoKnowsBall.jpeg?v=4", sizes: "120x120", type: "image/jpeg" },
     ],
     // Shortcut icon for older browsers
-    shortcut: "/WhoKnowsBall.png?v=3",
+    shortcut: "/WhoKnowsBall.jpeg?v=4",
   },
 };
 
