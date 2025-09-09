@@ -18,6 +18,7 @@ import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/lib/storage";
 import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
 import { syncAllCurrentGames, syncGameScore } from "@/lib/game-sync";
+import { getCurrentWeekStatus } from "@/lib/auto-awards";
 import { User } from "lucide-react";
 
 interface Game {
@@ -68,6 +69,18 @@ export default function Dashboard() {
   );
   const [syncingScores, setSyncingScores] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
+  const [weekStatus, setWeekStatus] = useState<{
+    totalGames: number;
+    completedGames: number;
+    pendingGames: number;
+    allCompleted: boolean;
+    awardsProcessed: boolean;
+    nextWeek: number | null;
+    nextSeasonType: string | null;
+    hasNextWeek: boolean;
+  } | null>(null);
+  const [processingAwards, setProcessingAwards] = useState(false);
+  const [awardsMessage, setAwardsMessage] = useState("");
 
   const loadUserProfile = useCallback(async () => {
     if (!user) return;
@@ -103,6 +116,85 @@ export default function Dashboard() {
       console.error("Error loading user profile:", error);
     }
   }, [user]);
+
+  const loadWeekStatus = useCallback(async () => {
+    try {
+      const status = await getCurrentWeekStatus(
+        selectedWeek,
+        selectedSeasonType,
+        2025
+      );
+      setWeekStatus(status);
+    } catch (error) {
+      console.error("Error loading week status:", error);
+    }
+  }, [selectedWeek, selectedSeasonType]);
+
+  const handleProcessAwards = async () => {
+    setProcessingAwards(true);
+    setAwardsMessage("");
+
+    try {
+      const response = await fetch("/api/process-awards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setAwardsMessage(result.message);
+        // Reload week status to show updated awards status
+        const updatedStatus = await getCurrentWeekStatus(
+          selectedWeek,
+          selectedSeasonType,
+          2025
+        );
+        setWeekStatus(updatedStatus);
+
+        // Check if we should auto-advance to next week
+        if (
+          updatedStatus.allCompleted &&
+          updatedStatus.awardsProcessed &&
+          updatedStatus.hasNextWeek
+        ) {
+          // Auto-advance to next week
+          setSelectedWeek(updatedStatus.nextWeek!);
+          setSelectedSeasonType(
+            updatedStatus.nextSeasonType as "preseason" | "regular"
+          );
+          setAwardsMessage(
+            `Awards processed! Automatically advanced to Week ${updatedStatus.nextWeek} (${updatedStatus.nextSeasonType}).`
+          );
+        }
+      } else {
+        setAwardsMessage(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      setAwardsMessage("Error processing awards");
+      console.error("Error processing awards:", error);
+    } finally {
+      setProcessingAwards(false);
+    }
+  };
+
+  const handleAdvanceToNextWeek = () => {
+    if (
+      weekStatus?.hasNextWeek &&
+      weekStatus?.nextWeek &&
+      weekStatus?.nextSeasonType
+    ) {
+      setSelectedWeek(weekStatus.nextWeek);
+      setSelectedSeasonType(
+        weekStatus.nextSeasonType as "preseason" | "regular"
+      );
+      setAwardsMessage(
+        `Advanced to Week ${weekStatus.nextWeek} (${weekStatus.nextSeasonType}).`
+      );
+    }
+  };
 
   const loadAvailableWeeks = useCallback(async () => {
     try {
@@ -192,11 +284,20 @@ export default function Dashboard() {
       // Get all picks for the current week from database (not just visible games)
       const { data: weekPicks, error } = await supabase
         .from("picks")
-        .select("is_lock, game:games(week, season_type, season)")
+        .select(
+          `
+          is_lock,
+          game:games!inner(
+            week,
+            season_type,
+            season
+          )
+        `
+        )
         .eq("user_id", user.id)
-        .eq("game.week", selectedWeek)
-        .eq("game.season_type", selectedSeasonType)
-        .eq("game.season", 2025);
+        .eq("games.week", selectedWeek)
+        .eq("games.season_type", selectedSeasonType)
+        .eq("games.season", 2025);
 
       if (error) {
         console.error("Error loading week picks:", error);
@@ -206,6 +307,18 @@ export default function Dashboard() {
 
       const currentWeekLocks =
         weekPicks?.filter((pick) => pick.is_lock).length || 0;
+
+      console.log(`Week ${selectedWeek} (${selectedSeasonType}) locks:`, {
+        totalPicks: weekPicks?.length || 0,
+        lockedPicks: currentWeekLocks,
+        weekPicks: weekPicks?.map((p: any) => ({
+          gameId: p.game_id,
+          isLock: p.is_lock,
+          gameWeek: p.game?.week,
+          gameSeasonType: p.game?.season_type,
+        })),
+      });
+
       setLocksUsed(currentWeekLocks);
     } catch (error) {
       console.error("Error calculating locks used:", error);
@@ -236,11 +349,24 @@ export default function Dashboard() {
     calculateLocksUsed();
   }, [calculateLocksUsed]);
 
+  // Recalculate locks when week or season type changes
+  useEffect(() => {
+    if (user) {
+      calculateLocksUsed();
+    }
+  }, [selectedWeek, selectedSeasonType, calculateLocksUsed]);
+
   useEffect(() => {
     if (user) {
       loadUserProfile();
     }
   }, [user, loadUserProfile]);
+
+  useEffect(() => {
+    if (user) {
+      loadWeekStatus();
+    }
+  }, [user, loadWeekStatus]);
 
   const handleProfileUpdate = useCallback(
     async (profileData: { username: string; bio: string }) => {
@@ -274,6 +400,15 @@ export default function Dashboard() {
       if (result.success) {
         // Reload games to show updated scores
         loadGames();
+        // Check if week is now completed and process awards if needed
+        await loadWeekStatus();
+
+        // If all games are completed and awards haven't been processed, show a notification
+        if (weekStatus?.allCompleted && !weekStatus?.awardsProcessed) {
+          setAwardsMessage(
+            "Week completed! Click 'Process Weekly Awards' to distribute awards."
+          );
+        }
       }
     } catch (error) {
       setSyncMessage("Error syncing games");
@@ -584,6 +719,133 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* Week Status and Awards Processing */}
+        {weekStatus && (
+          <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
+            <h3 className="text-lg font-semibold mb-3">
+              🏆 Week Status & Awards
+            </h3>
+
+            {/* Week Progress */}
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Week {selectedWeek} Progress
+                </span>
+                <span className="text-sm text-gray-500">
+                  {weekStatus.completedGames}/{weekStatus.totalGames} games
+                  completed
+                </span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width:
+                      weekStatus.totalGames > 0
+                        ? `${
+                            (weekStatus.completedGames /
+                              weekStatus.totalGames) *
+                            100
+                          }%`
+                        : "0%",
+                  }}
+                ></div>
+              </div>
+
+              {/* Status Messages */}
+              <div className="text-xs text-gray-600 space-y-1">
+                {weekStatus.allCompleted ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-600">✅</span>
+                    <span>All games completed!</span>
+                    {weekStatus.awardsProcessed ? (
+                      <span className="text-blue-600">
+                        Awards already processed
+                      </span>
+                    ) : (
+                      <span className="text-orange-600">
+                        Awards ready to process
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-600">⏳</span>
+                    <span>{weekStatus.pendingGames} games still pending</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Awards Processing Button */}
+            {weekStatus.allCompleted && !weekStatus.awardsProcessed && (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={handleProcessAwards}
+                  disabled={processingAwards}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  {processingAwards
+                    ? "Processing..."
+                    : "🏆 Process Weekly Awards"}
+                </Button>
+                <div className="text-xs text-gray-500 flex items-center">
+                  <span className="mr-1">ℹ️</span>
+                  <span>This will calculate and distribute weekly awards</span>
+                </div>
+              </div>
+            )}
+
+            {/* Next Week Information and Advance Button */}
+            {weekStatus.allCompleted && weekStatus.awardsProcessed && (
+              <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-600">✅</span>
+                    <span className="text-sm font-medium text-green-800">
+                      Week {selectedWeek} Complete!
+                    </span>
+                  </div>
+                  {weekStatus.hasNextWeek && (
+                    <span className="text-xs text-green-600">
+                      Next: Week {weekStatus.nextWeek} (
+                      {weekStatus.nextSeasonType})
+                    </span>
+                  )}
+                </div>
+
+                {weekStatus.hasNextWeek ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      onClick={handleAdvanceToNextWeek}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      ➡️ Advance to Week {weekStatus.nextWeek}
+                    </Button>
+                    <div className="text-xs text-green-600 flex items-center">
+                      <span className="mr-1">ℹ️</span>
+                      <span>Ready to make picks for the next week!</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-green-600">
+                    🎉 This is the final week of the season!
+                  </div>
+                )}
+              </div>
+            )}
+
+            {awardsMessage && (
+              <div className="mt-3 p-2 bg-gray-50 rounded text-sm">
+                {awardsMessage}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="grid gap-3">
           {games.map((game) => {

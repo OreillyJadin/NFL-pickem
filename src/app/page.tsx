@@ -46,7 +46,7 @@ export default function Home() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Welcome to NFL Pick&apos;em!
+              Welcome to Who Knows Ball
             </CardTitle>
             <CardDescription>
               You&apos;re signed in as {user.email}
@@ -83,7 +83,7 @@ export default function Home() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            NFL Pick&apos;em
+            Who Knows Ball?
           </h1>
           <p className="text-gray-600">
             Make your picks and compete with friends

@@ -15,8 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NFL Pick'em",
-  description: "Make your NFL picks and compete with friends",
+  title: "Who Knows Ball?",
+  description: "Make your NFL picks and find out who knows ball.",
+  icons: {
+    // Main app icon - used in browser tabs and bookmarks
+    icon: "/WhoKnowsBall.png?v=2",
+    // Apple devices (iPhone/iPad home screen icon)
+    apple: "/WhoKnowsBall.png?v=2",
+  },
 };
 
 export default function RootLayout({

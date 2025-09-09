@@ -122,11 +122,11 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
     },
     {
       title: "Add to Home Screen",
-      description: "Get quick access to NFL Pick'em on your iPhone",
+      description: "Get quick access to Who Knows Ball? on your iPhone",
       content: (
         <div className="text-center space-y-6">
           <p className="text-lg text-gray-600 mb-6">
-            Add NFL Pick'em to your home screen for easy access!
+            Add Who Knows Ball? to your home screen for easy access!
           </p>
 
           <div className="flex justify-center space-x-10">
@@ -233,7 +233,7 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
 
           <div className="bg-blue-50 rounded-lg p-4 mt-6">
             <p className="text-sm text-blue-800">
-              💡 <strong>Pro tip:</strong> This will add NFL Pick'em to your
+              💡 <strong>Pro tip:</strong> This will add Who Knows Ball? to your
               home screen like a IOS app!
             </p>
           </div>
