@@ -1,0 +1,23 @@
+{
+  "name": "Who Knows Ball?",
+  "short_name": "Who Knows Ball?",
+  "description": "Make your NFL picks and find out who knows ball.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a365d",
+  "icons": [
+    {
+      "src": "/WhoKnowsBall.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/WhoKnowsBall.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
