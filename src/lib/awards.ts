@@ -165,8 +165,28 @@ export async function processWeeklyAwards(
     }[] = [];
 
     if (users.length > 0) {
-      // Sort users by points (descending)
-      const sortedUsers = users.sort((a, b) => b[1].points - a[1].points);
+      // Sort users by the same logic as leaderboard: points, win%, wins, lowest losses
+      const sortedUsers = users.sort((a, b) => {
+        // 1. Points (descending)
+        if (b[1].points !== a[1].points) {
+          return b[1].points - a[1].points;
+        }
+
+        // 2. Win percentage (descending)
+        const aWinPercentage = a[1].total > 0 ? a[1].correct / a[1].total : 0;
+        const bWinPercentage = b[1].total > 0 ? b[1].correct / b[1].total : 0;
+        if (bWinPercentage !== aWinPercentage) {
+          return bWinPercentage - aWinPercentage;
+        }
+
+        // 3. Wins (descending)
+        if (b[1].correct !== a[1].correct) {
+          return b[1].correct - a[1].correct;
+        }
+
+        // 4. Lowest losses (ascending)
+        return a[1].total - a[1].correct - (b[1].total - b[1].correct);
+      });
 
       // Top Scorer (1st place)
       if (sortedUsers.length >= 1) {

@@ -128,6 +128,7 @@ export async function processCompletedWeeks(): Promise<{
     // Check each week
     for (const weekInfo of uniqueWeeks) {
       const { week, season_type, season } = weekInfo;
+      console.log(`Checking Week ${week} (${season_type})...`);
 
       // Check if all games are completed
       const completionStatus = await checkWeekCompletion(
@@ -135,6 +136,7 @@ export async function processCompletedWeeks(): Promise<{
         season_type,
         season
       );
+      console.log(`Week ${week} completion status:`, completionStatus);
 
       if (!completionStatus.allCompleted) {
         console.log(
@@ -149,6 +151,7 @@ export async function processCompletedWeeks(): Promise<{
         season_type,
         season
       );
+      console.log(`Week ${week} awards processed:`, awardsProcessed);
 
       if (awardsProcessed) {
         console.log(`Week ${week} (${season_type}) awards already processed`);
