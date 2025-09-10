@@ -34,26 +34,26 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
       description: "How to select your teams",
       content: (
         <div className="space-y-4">
-          <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg">
-            <Target className="h-6 w-6 text-blue-600" />
+          <div className="flex items-center space-x-3 p-4 bg-blue-900/20 rounded-lg border border-blue-600">
+            <Target className="h-6 w-6 text-blue-400" />
             <div>
-              <h3 className="font-semibold">Regular Picks</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-semibold text-white">Regular Picks</h3>
+              <p className="text-sm text-gray-300">
                 +1 point for correct, 0 for wrong
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-3 p-4 bg-yellow-50 rounded-lg">
-            <Lock className="h-6 w-6 text-yellow-600" />
+          <div className="flex items-center space-x-3 p-4 bg-yellow-900/20 rounded-lg border border-yellow-600">
+            <Lock className="h-6 w-6 text-yellow-400" />
             <div>
-              <h3 className="font-semibold">Lock Picks</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-semibold text-white">Lock Picks</h3>
+              <p className="text-sm text-gray-300">
                 +2 points for correct, -2 for wrong (max 3 per week)
               </p>
             </div>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">
+          <div className="p-4 bg-gray-800 rounded-lg border border-gray-600">
+            <p className="text-sm text-gray-300">
               💡 <strong>Tip:</strong> You can change your picks until the game
               starts!
             </p>
@@ -66,54 +66,54 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
       description: "Track your performance",
       content: (
         <div className="space-y-4">
-          <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg">
-            <Trophy className="h-6 w-6 text-green-600" />
+          <div className="flex items-center space-x-3 p-4 bg-green-900/20 rounded-lg border border-green-600">
+            <Trophy className="h-6 w-6 text-green-400" />
             <div>
-              <h3 className="font-semibold">Leaderboard</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-semibold text-white">Leaderboard</h3>
+              <p className="text-sm text-gray-300">
                 See how you rank against other players
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-gray-50 rounded-lg text-center">
-              <div className="text-2xl font-bold text-blue-600">W/L</div>
-              <p className="text-xs text-gray-600">Win/Loss Record</p>
+            <div className="p-3 bg-gray-800 rounded-lg text-center border border-gray-600">
+              <div className="text-2xl font-bold text-blue-400">W/L</div>
+              <p className="text-xs text-gray-300">Win/Loss Record</p>
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg text-center">
-              <div className="text-2xl font-bold text-green-600">PTS</div>
-              <p className="text-xs text-gray-600">Total Points</p>
+            <div className="p-3 bg-gray-800 rounded-lg text-center border border-gray-600">
+              <div className="text-2xl font-bold text-green-400">PTS</div>
+              <p className="text-xs text-gray-300">Total Points</p>
             </div>
           </div>
-          <div className="p-4 bg-yellow-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-3">
+          <div className="p-4 bg-yellow-900/20 rounded-lg border border-yellow-600">
+            <p className="text-sm text-gray-300 mb-3">
               🏆 <strong>Weekly Awards:</strong> Earn trophies for perfect
               weeks, top scores, and more!
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              <div className="bg-white p-2 rounded border">
-                <div className="font-semibold text-yellow-700">
+              <div className="bg-gray-800 p-2 rounded border border-gray-600">
+                <div className="font-semibold text-yellow-300">
                   🏆 Top Scorer
                 </div>
-                <div className="text-gray-600">Highest points</div>
+                <div className="text-gray-300">Highest points</div>
               </div>
-              <div className="bg-white p-2 rounded border">
-                <div className="font-semibold text-yellow-700">
+              <div className="bg-gray-800 p-2 rounded border border-gray-600">
+                <div className="font-semibold text-yellow-300">
                   🥶 Lowest Scorer
                 </div>
-                <div className="text-gray-600">Lowest points</div>
+                <div className="text-gray-300">Lowest points</div>
               </div>
-              <div className="bg-white p-2 rounded border">
-                <div className="font-semibold text-yellow-700">
+              <div className="bg-gray-800 p-2 rounded border border-gray-600">
+                <div className="font-semibold text-yellow-300">
                   💯 Perfect Week
                 </div>
-                <div className="text-gray-600">All picks correct</div>
+                <div className="text-gray-300">All picks correct</div>
               </div>
-              <div className="bg-white p-2 rounded border">
-                <div className="font-semibold text-yellow-700">
+              <div className="bg-gray-800 p-2 rounded border border-gray-600">
+                <div className="font-semibold text-yellow-300">
                   🧊 Cold Week
                 </div>
-                <div className="text-gray-600">All picks wrong</div>
+                <div className="text-gray-300">All picks wrong</div>
               </div>
             </div>
           </div>
@@ -125,7 +125,7 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
       description: "Get quick access to Who Knows Ball? on your iPhone",
       content: (
         <div className="text-center space-y-6">
-          <p className="text-lg text-gray-600 mb-6">
+          <p className="text-lg text-gray-300 mb-6">
             Add Who Knows Ball? to your home screen for easy access!
           </p>
 
@@ -177,7 +177,7 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
                   </div>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-700">
+              <p className="text-sm font-semibold text-gray-300">
                 Step 1: Tap the Share icon
               </p>
             </div>
@@ -225,14 +225,14 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
                   </div>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-700">
+              <p className="text-sm font-semibold text-gray-300">
                 Step 2: Select "Add to Home Screen"
               </p>
             </div>
           </div>
 
-          <div className="bg-blue-50 rounded-lg p-4 mt-6">
-            <p className="text-sm text-blue-800">
+          <div className="bg-blue-900/20 rounded-lg p-4 mt-6 border border-blue-600">
+            <p className="text-sm text-blue-300">
               💡 <strong>Pro tip:</strong> This will add Who Knows Ball? to your
               home screen like a IOS app!
             </p>
@@ -258,15 +258,22 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-      <Card className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+      <Card className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden bg-gray-800 border-gray-600">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
-            <CardTitle className="text-xl">
+            <CardTitle className="text-xl text-white">
               {steps[currentStep].title}
             </CardTitle>
-            <CardDescription>{steps[currentStep].description}</CardDescription>
+            <CardDescription className="text-gray-300">
+              {steps[currentStep].description}
+            </CardDescription>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="text-gray-300 hover:bg-gray-700"
+          >
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
@@ -275,13 +282,13 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
           {steps[currentStep].content}
         </CardContent>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between p-3 sm:p-4 border-t bg-gray-50 space-y-2 sm:space-y-0">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-3 sm:p-4 border-t border-gray-600 bg-gray-800 space-y-2 sm:space-y-0">
           <div className="flex items-center space-x-2 w-full sm:w-auto justify-center sm:justify-start">
             <Button
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 0}
-              className="flex items-center space-x-2 text-sm"
+              className="flex items-center space-x-2 text-sm border-gray-600 text-gray-300 hover:bg-gray-700"
             >
               <ChevronLeft className="h-4 w-4" />
               <span className="hidden sm:inline">Previous</span>
@@ -290,7 +297,7 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
               <Button
                 variant="ghost"
                 onClick={onSkip}
-                className="text-sm text-gray-500"
+                className="text-sm text-gray-400 hover:bg-gray-700"
               >
                 Skip Tour
               </Button>
@@ -302,7 +309,7 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
               <div
                 key={index}
                 className={`w-2 h-2 rounded-full ${
-                  index === currentStep ? "bg-blue-600" : "bg-gray-300"
+                  index === currentStep ? "bg-blue-400" : "bg-gray-600"
                 }`}
               />
             ))}
@@ -312,14 +319,14 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
             {currentStep === steps.length - 1 ? (
               <Button
                 onClick={onClose}
-                className="flex items-center space-x-2 text-sm w-full sm:w-auto"
+                className="flex items-center space-x-2 text-sm w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
               >
                 <span>Get Started</span>
               </Button>
             ) : (
               <Button
                 onClick={nextStep}
-                className="flex items-center space-x-2 text-sm w-full sm:w-auto"
+                className="flex items-center space-x-2 text-sm w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
               >
                 <span>Next</span>
                 <ChevronRight className="h-4 w-4" />

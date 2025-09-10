@@ -45,10 +45,10 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
+  --background: oklch(0.147 0.004 49.25);
+  --foreground: oklch(0.985 0.001 106.423);
+  --card: oklch(0.216 0.006 56.043);
+  --card-foreground: oklch(0.985 0.001 106.423);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.147 0.004 49.25);
   --primary: oklch(0.216 0.006 56.043);
@@ -118,5 +118,34 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Hide scrollbar for horizontal week selector */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Enhanced horizontal scrolling for week selector */
+.week-selector-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 1rem; /* Add padding for better snap alignment */
+}
+
+.week-selector-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure proper touch scrolling on mobile */
+@media (hover: none) and (pointer: coarse) {
+  .week-selector-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 }

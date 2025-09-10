@@ -39,41 +39,51 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md bg-gray-800 border-gray-600">
       <CardHeader>
-        <CardTitle>Sign In</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-white">Sign In</CardTitle>
+        <CardDescription className="text-gray-300">
           Enter your credentials to access your picks
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-gray-300">
+              Email
+            </Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-gray-300">
+              Password
+            </Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
             />
           </div>
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+            <div className="text-sm text-red-400 bg-red-900/20 border border-red-600 p-2 rounded">
               {error}
             </div>
           )}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700"
+            disabled={loading}
+          >
             {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
@@ -81,7 +91,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
           <button
             type="button"
             onClick={onToggleMode}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
           >
             Don&apos;t have an account? Sign up
           </button>

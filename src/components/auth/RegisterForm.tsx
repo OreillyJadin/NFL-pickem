@@ -213,12 +213,12 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
   if (success) {
     return (
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-gray-800 border-gray-600">
         <CardHeader>
-          <CardTitle>Check your email</CardTitle>
+          <CardTitle className="text-white">Check your email</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-300">
             We&apos;ve sent you a confirmation link. Please check your email and
             click the link to complete your registration.
           </p>
@@ -228,17 +228,19 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md bg-gray-800 border-gray-600">
       <CardHeader>
-        <CardTitle>Sign Up</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-white">Sign Up</CardTitle>
+        <CardDescription className="text-gray-300">
           Create your account to start making picks
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="username" className="text-gray-300">
+              Username
+            </Label>
             <div className="relative">
               <Input
                 id="username"
@@ -246,34 +248,41 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className={usernameError ? "border-red-500" : ""}
+                className={`bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${
+                  usernameError ? "border-red-500" : ""
+                }`}
                 minLength={3}
               />
               {checkingUsername && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
                 </div>
               )}
             </div>
             {usernameError && (
-              <p className="text-sm text-red-600">{usernameError}</p>
+              <p className="text-sm text-red-400">{usernameError}</p>
             )}
             {!usernameError && username.length >= 3 && !checkingUsername && (
-              <p className="text-sm text-green-600">✓ Username available</p>
+              <p className="text-sm text-green-400">✓ Username available</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-gray-300">
+              Email
+            </Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-gray-300">
+              Password
+            </Label>
             <Input
               id="password"
               type="password"
@@ -284,10 +293,13 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               }}
               required
               minLength={6}
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword" className="text-gray-300">
+              Confirm Password
+            </Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -298,20 +310,24 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               }}
               required
               minLength={6}
-              className={passwordError ? "border-red-500" : ""}
+              className={`bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${
+                passwordError ? "border-red-500" : ""
+              }`}
             />
             {passwordError && (
-              <p className="text-sm text-red-600">{passwordError}</p>
+              <p className="text-sm text-red-400">{passwordError}</p>
             )}
             {!passwordError &&
               password &&
               confirmPassword &&
               password === confirmPassword && (
-                <p className="text-sm text-green-600">✓ Passwords match</p>
+                <p className="text-sm text-green-400">✓ Passwords match</p>
               )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bio">Bio (Optional)</Label>
+            <Label htmlFor="bio" className="text-gray-300">
+              Bio (Optional)
+            </Label>
             <textarea
               id="bio"
               value={bio}
@@ -319,43 +335,45 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               placeholder="Tell us about yourself..."
               maxLength={200}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
-            <p className="text-xs text-gray-500">{bio.length}/200 characters</p>
+            <p className="text-xs text-gray-400">{bio.length}/200 characters</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="profilePic">Profile Picture (Optional)</Label>
+            <Label htmlFor="profilePic" className="text-gray-300">
+              Profile Picture (Optional)
+            </Label>
             <input
               id="profilePic"
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
             />
             {profilePicUrl && (
               <div className="mt-2">
                 <img
                   src={profilePicUrl}
                   alt="Profile preview"
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-600"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-400 mt-1">
                   Preview of selected image
                 </p>
               </div>
             )}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-400">
               You can add a profile picture later if you prefer
             </p>
           </div>
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+            <div className="text-sm text-red-400 bg-red-900/20 border border-red-600 p-2 rounded">
               {error}
             </div>
           )}
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-blue-600 hover:bg-blue-700"
             disabled={
               loading || !!usernameError || checkingUsername || !!passwordError
             }
@@ -367,7 +385,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
           <button
             type="button"
             onClick={onToggleMode}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
           >
             Already have an account? Sign in
           </button>

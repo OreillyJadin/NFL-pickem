@@ -71,6 +71,18 @@ async function syncGameScore(gameId: string) {
     const gameStatus = competition.status?.type?.name || "scheduled";
     const quarter = competition.status?.period || null;
 
+    // Extract TV information from broadcasts
+    let tvInfo = "TBD";
+    if (competition.broadcasts && competition.broadcasts.length > 0) {
+      const broadcastNames = competition.broadcasts
+        .map((broadcast: any) => broadcast.names?.[0])
+        .filter(Boolean);
+
+      if (broadcastNames.length > 0) {
+        tvInfo = broadcastNames.join(", ");
+      }
+    }
+
     // Map ESPN status to our status
     let status = "scheduled";
     if (gameStatus === "STATUS_FINAL") {
@@ -87,6 +99,7 @@ async function syncGameScore(gameId: string) {
         away_score: awayScore,
         status: status,
         quarter: quarter,
+        tv: tvInfo,
         updated_at: new Date().toISOString(),
       })
       .eq("id", gameId);

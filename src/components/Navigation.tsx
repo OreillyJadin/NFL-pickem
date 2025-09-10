@@ -13,41 +13,55 @@ export function Navigation() {
   if (!user) return null;
 
   return (
-    <nav className="bg-white shadow-sm border-b">
+    <nav className="bg-gray-800 shadow-sm border-b border-gray-600">
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
-            <h1 className="text-xl font-bold text-gray-900">Who Knows Ball?</h1>
-            <div className="hidden md:flex space-x-4">
-              <Button
-                variant={pathname === "/dashboard" ? "default" : "ghost"}
+            <h1 className="text-xl font-bold text-white">Who Knows Ball?</h1>
+            <div className="hidden md:flex space-x-1">
+              <button
                 onClick={() => router.push("/dashboard")}
-                className="text-sm"
+                className={`px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
+                  pathname === "/dashboard"
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                }`}
               >
                 Dashboard
-              </Button>
-              <Button
-                variant={pathname === "/profile" ? "default" : "ghost"}
+              </button>
+              <button
                 onClick={() => router.push("/profile")}
-                className="text-sm"
+                className={`px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
+                  pathname === "/profile"
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                }`}
               >
                 Profile
-              </Button>
-              <Button
-                variant={pathname === "/leaderboard" ? "default" : "ghost"}
+              </button>
+              <button
                 onClick={() => router.push("/leaderboard")}
-                className="text-sm"
+                className={`px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
+                  pathname === "/leaderboard"
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                }`}
               >
                 Leaderboard
-              </Button>
+              </button>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <span className="hidden sm:block text-sm text-gray-600">
+            <span className="hidden sm:block text-sm text-gray-300">
               {user.email}
             </span>
-            <Button variant="outline" size="sm" onClick={signOut}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={signOut}
+              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+            >
               Sign Out
             </Button>
           </div>
@@ -56,30 +70,36 @@ export function Navigation() {
         {/* Mobile navigation */}
         <div className="md:hidden pb-4">
           <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant={pathname === "/dashboard" ? "default" : "outline"}
+            <button
               onClick={() => router.push("/dashboard")}
-              size="sm"
-              className="text-xs"
+              className={`px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium ${
+                pathname === "/dashboard"
+                  ? "bg-gray-700 text-white"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700 border border-gray-600"
+              }`}
             >
               📊 Dashboard
-            </Button>
-            <Button
-              variant={pathname === "/leaderboard" ? "default" : "outline"}
+            </button>
+            <button
               onClick={() => router.push("/leaderboard")}
-              size="sm"
-              className="text-xs"
+              className={`px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium ${
+                pathname === "/leaderboard"
+                  ? "bg-gray-700 text-white"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700 border border-gray-600"
+              }`}
             >
               🏆 Leaderboard
-            </Button>
-            <Button
-              variant={pathname === "/profile" ? "default" : "outline"}
+            </button>
+            <button
               onClick={() => router.push("/profile")}
-              size="sm"
-              className="text-xs"
+              className={`px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium ${
+                pathname === "/profile"
+                  ? "bg-gray-700 text-white"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700 border border-gray-600"
+              }`}
             >
               👤 Profile
-            </Button>
+            </button>
           </div>
         </div>
       </div>

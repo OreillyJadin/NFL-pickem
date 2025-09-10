@@ -33,7 +33,6 @@ interface Game {
   away_score?: number;
   quarter?: number;
   espn_id?: string;
-  tv?: string;
 }
 
 interface Pick {
@@ -50,9 +49,6 @@ export default function Dashboard() {
   const [picks, setPicks] = useState<Pick[]>([]);
   const [loadingGames, setLoadingGames] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
-  const [selectedSeasonType, setSelectedSeasonType] = useState<
-    "preseason" | "regular"
-  >("regular");
   const [availableWeeks, setAvailableWeeks] = useState<
     { week: number; season_type: string; season: number }[]
   >([]);
@@ -69,9 +65,6 @@ export default function Dashboard() {
   );
   const [syncingScores, setSyncingScores] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
-  const [teamRecords, setTeamRecords] = useState<
-    Record<string, { wins: number; losses: number }>
-  >({});
 
   const loadUserProfile = useCallback(async () => {
     if (!user) return;
@@ -137,52 +130,6 @@ export default function Dashboard() {
     }
   }, []);
 
-  const loadTeamRecords = useCallback(async () => {
-    try {
-      const { data: completedGames, error } = await supabase
-        .from("games")
-        .select("home_team, away_team, home_score, away_score, status")
-        .eq("season", 2025)
-        .eq("status", "completed");
-
-      if (error) {
-        console.error("Error loading team records:", error);
-        return;
-      }
-
-      const records: Record<string, { wins: number; losses: number }> = {};
-
-      completedGames?.forEach((game) => {
-        const homeTeam = game.home_team;
-        const awayTeam = game.away_team;
-        const homeScore = game.home_score || 0;
-        const awayScore = game.away_score || 0;
-
-        // Initialize teams if not already in records
-        if (!records[homeTeam]) {
-          records[homeTeam] = { wins: 0, losses: 0 };
-        }
-        if (!records[awayTeam]) {
-          records[awayTeam] = { wins: 0, losses: 0 };
-        }
-
-        // Determine winner and update records
-        if (homeScore > awayScore) {
-          records[homeTeam].wins += 1;
-          records[awayTeam].losses += 1;
-        } else if (awayScore > homeScore) {
-          records[awayTeam].wins += 1;
-          records[homeTeam].losses += 1;
-        }
-        // Ties are not counted in wins/losses for now
-      });
-
-      setTeamRecords(records);
-    } catch (error) {
-      console.error("Error loading team records:", error);
-    }
-  }, []);
-
   const loadGames = useCallback(async () => {
     try {
       setLoadingGames(true);
@@ -192,14 +139,14 @@ export default function Dashboard() {
         .from("games")
         .select("*")
         .eq("week", selectedWeek)
-        .eq("season_type", selectedSeasonType)
+        .eq("season_type", "regular")
         .eq("season", 2025)
         .in("status", ["scheduled", "in_progress"])
         .order("game_time", { ascending: true });
 
       if (error || !dbGames || dbGames.length === 0) {
         // Fallback to mock data if no games in database
-        if (selectedWeek === 1 && selectedSeasonType === "regular") {
+        if (selectedWeek === 1) {
           const response = await fetch("/data/week1.json");
           const data = await response.json();
           setGames(data.games);
@@ -214,7 +161,7 @@ export default function Dashboard() {
     } finally {
       setLoadingGames(false);
     }
-  }, [selectedWeek, selectedSeasonType]);
+  }, [selectedWeek]);
 
   const loadPicks = useCallback(async () => {
     if (!user) return;
@@ -254,7 +201,7 @@ export default function Dashboard() {
         )
         .eq("user_id", user.id)
         .eq("games.week", selectedWeek)
-        .eq("games.season_type", selectedSeasonType)
+        .eq("games.season_type", "regular")
         .eq("games.season", 2025);
 
       if (error) {
@@ -266,7 +213,7 @@ export default function Dashboard() {
       const currentWeekLocks =
         weekPicks?.filter((pick) => pick.is_lock).length || 0;
 
-      console.log(`Week ${selectedWeek} (${selectedSeasonType}) locks:`, {
+      console.log(`Week ${selectedWeek} (regular) locks:`, {
         totalPicks: weekPicks?.length || 0,
         lockedPicks: currentWeekLocks,
         weekPicks: weekPicks?.map((p: any) => ({
@@ -282,7 +229,7 @@ export default function Dashboard() {
       console.error("Error calculating locks used:", error);
       setLocksUsed(0);
     }
-  }, [user, selectedWeek, selectedSeasonType]);
+  }, [user, selectedWeek]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -293,9 +240,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadAvailableWeeks();
-      loadTeamRecords();
     }
-  }, [user, loadAvailableWeeks, loadTeamRecords]);
+  }, [user, loadAvailableWeeks]);
 
   useEffect(() => {
     if (user) {
@@ -313,7 +259,7 @@ export default function Dashboard() {
     if (user) {
       calculateLocksUsed();
     }
-  }, [selectedWeek, selectedSeasonType, calculateLocksUsed]);
+  }, [selectedWeek, calculateLocksUsed]);
 
   useEffect(() => {
     if (user) {
@@ -541,10 +487,10 @@ export default function Dashboard() {
 
   if (loading || loadingGames) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-300">Loading...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -555,7 +501,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <Navigation />
 
       {/* Horizontal Scrollable Week Selector - Top of Page */}
@@ -622,39 +568,43 @@ export default function Dashboard() {
 
       <div className="max-w-4xl mx-auto p-4">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="mt-2 p-3 bg-gray-800 rounded-lg border border-gray-600">
+          <div className="flex items-center justify-between mt-1">
+          </div>
+          <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-300">
-                  🔒 Locks: {locksUsed}/3: +2 Correct, -2 Wrong
+                <span className="text-sm font-medium text-blue-800">
+                  🔒 Locks Used:
+                </span>
+                <span className="text-lg font-bold text-blue-900">
+                  {locksUsed}/3
                 </span>
               </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSyncAllGames}
-                disabled={syncingScores}
-                className="bg-green-700 hover:bg-green-800 text-white text-xs"
-              >
-                {syncingScores ? "Syncing..." : "🚀 Sync Games"}
-              </Button>
-              <Button
-                onClick={() => setShowTutorial(true)}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                📚 Help
-              </Button>
+              <div className="text-xs text-blue-600">
+                Lock picks: +2 points if correct, -2 points if wrong
+              </div>
             </div>
           </div>
         </div>
 
-        {syncMessage && (
-          <div className="mb-6 p-3 bg-gray-800 rounded-lg border border-gray-600">
-            <div className="text-sm text-gray-300">{syncMessage}</div>
+        {/* Score Sync Controls */}
+        <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold mb-3">🔄 Sync Recent Games</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={handleSyncAllGames}
+              disabled={syncingScores}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {syncingScores ? "Syncing..." : "🚀 Sync Recent Games"}
+            </Button>
           </div>
-        )}
+          {syncMessage && (
+            <div className="mt-3 p-2 bg-gray-50 rounded text-sm">
+              {syncMessage}
+            </div>
+          )}
+        </div>
 
         <div className="grid gap-3">
           {games.map((game) => {
@@ -662,20 +612,45 @@ export default function Dashboard() {
             const locked = isGameLocked(game.game_time);
 
             return (
-              <Card
-                key={game.id}
-                className={`${locked ? "opacity-75" : ""} bg-gray-900`}
-              >
-                <CardContent className="p-3">
-                  <div className="text-white">
+              <Card key={game.id} className={locked ? "opacity-75" : ""}>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      {pick?.is_lock && (
+                        <span className="text-yellow-600" title="Locked Pick">
+                          🔒
+                        </span>
+                      )}
+                      {game.away_team} @ {game.home_team}
+                    </CardTitle>
+                    <div className="text-xs text-gray-500">
+                      {formatGameTime(game.game_time)}
+                    </div>
+                  </div>
+                  {locked ? (
+                    <CardDescription className="text-red-600 text-xs">
+                      Game locked - picks no longer accepted
+                    </CardDescription>
+                  ) : pick ? (
+                    <CardDescription className="text-green-600 text-xs">
+                      You can change your pick until the game starts
+                    </CardDescription>
+                  ) : (
+                    <CardDescription className="text-blue-600 text-xs">
+                      Make your pick - you can change it until the game starts
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-gray-900 rounded-lg p-4 text-white">
                     {/* Team Matchup Section */}
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-4">
                       {/* Left Side - Team Info */}
                       <div className="flex-1">
                         {/* Away Team */}
-                        <div className="flex items-center gap-3 mb-1">
+                        <div className="flex items-center gap-3 mb-2">
                           <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
                             style={{
                               backgroundColor: getTeamColors(game.away_team)
                                 .primary,
@@ -683,46 +658,21 @@ export default function Dashboard() {
                           >
                             {getTeamAbbreviation(game.away_team)}
                           </div>
-                          <div className="flex-1">
+                          <div>
+                            <div className="text-sm font-medium text-blue-300">
+                              {getTeamAbbreviation(game.away_team)}
+                            </div>
                             <div className="text-sm font-medium text-white">
-                              {game.away_team.split(" ").pop()}
+                              {game.away_team}
                             </div>
                           </div>
-                          <div className="text-sm text-gray-400 mr-2">
-                            {teamRecords[game.away_team]
-                              ? `${teamRecords[game.away_team].wins}-${
-                                  teamRecords[game.away_team].losses
-                                }`
-                              : "0-0"}
+                          <div className="text-sm text-gray-400 ml-auto">
+                            {game.status === "completed" ? "1-0" : "0-0"}
                           </div>
-                          {game.status === "scheduled" && (
-                            <button
-                              onClick={() =>
-                                !locked &&
-                                makePick(game.id, game.away_team, false)
-                              }
-                              disabled={locked}
-                              className={`
-                                px-3 py-1 rounded text-xs font-medium transition-all duration-200
-                                ${
-                                  locked
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : "cursor-pointer hover:bg-gray-700"
-                                }
-                                ${
-                                  pick?.picked_team === game.away_team
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                                }
-                              `}
-                            >
-                              Pick
-                            </button>
-                          )}
                         </div>
 
                         {/* @ Symbol with Line */}
-                        <div className="flex items-center justify-center mb-1">
+                        <div className="flex items-center justify-center mb-2">
                           <span className="text-gray-400 text-lg mr-2">@</span>
                           <div className="flex-1 h-px bg-gray-600"></div>
                         </div>
@@ -730,7 +680,7 @@ export default function Dashboard() {
                         {/* Home Team */}
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
                             style={{
                               backgroundColor: getTeamColors(game.home_team)
                                 .primary,
@@ -738,69 +688,38 @@ export default function Dashboard() {
                           >
                             {getTeamAbbreviation(game.home_team)}
                           </div>
-                          <div className="flex-1">
+                          <div>
+                            <div className="text-sm font-medium text-blue-300">
+                              {getTeamAbbreviation(game.home_team)}
+                            </div>
                             <div className="text-sm font-medium text-white">
-                              {game.home_team.split(" ").pop()}
+                              {game.home_team}
                             </div>
                           </div>
-                          <div className="text-sm text-gray-400 mr-2">
-                            {teamRecords[game.home_team]
-                              ? `${teamRecords[game.home_team].wins}-${
-                                  teamRecords[game.home_team].losses
-                                }`
-                              : "0-0"}
+                          <div className="text-sm text-gray-400 ml-auto">
+                            {game.status === "completed" ? "1-0" : "0-0"}
                           </div>
-                          {game.status === "scheduled" && (
-                            <button
-                              onClick={() =>
-                                !locked &&
-                                makePick(game.id, game.home_team, false)
-                              }
-                              disabled={locked}
-                              className={`
-                                px-3 py-1 rounded text-xs font-medium transition-all duration-200
-                                ${
-                                  locked
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : "cursor-pointer hover:bg-gray-700"
-                                }
-                                ${
-                                  pick?.picked_team === game.home_team
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                                }
-                              `}
-                            >
-                              Pick
-                            </button>
-                          )}
                         </div>
                       </div>
 
                       {/* Right Side - Game Details */}
                       <div className="ml-6 text-right">
                         <div className="text-sm text-gray-400 mb-1">
-                          {new Date(game.game_time).toLocaleDateString(
-                            "en-US",
-                            {
-                              weekday: "short",
-                              month: "numeric",
-                              day: "numeric",
-                            }
-                          )}
+                          {new Date(game.game_time).toLocaleDateString("en-US", {
+                            weekday: "short",
+                            month: "numeric",
+                            day: "numeric",
+                          })}
                         </div>
                         <div className="text-sm text-gray-400 mb-1">
-                          {new Date(game.game_time).toLocaleTimeString(
-                            "en-US",
-                            {
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
-                            }
-                          )}
+                          {new Date(game.game_time).toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
                         </div>
                         <div className="text-sm text-gray-400">
-                          {game.tv || "TBD"}
+                          {game.week === 1 ? "Prime Video" : "NFL Network"}
                         </div>
                       </div>
                     </div>
@@ -820,8 +739,7 @@ export default function Dashboard() {
                           </div>
                         )}
                         <div className="text-lg font-bold text-white mb-2">
-                          {game.away_team} {game.away_score || 0} -{" "}
-                          {game.home_team} {game.home_score || 0}
+                          {game.away_team} {game.away_score || 0} - {game.home_team} {game.home_score || 0}
                         </div>
                         {pick && (
                           <div className="space-y-1">
@@ -842,8 +760,7 @@ export default function Dashboard() {
                     ) : game.status === "completed" ? (
                       <div className="text-center">
                         <div className="text-lg font-bold text-white mb-2">
-                          {game.away_team} {game.away_score} - {game.home_team}{" "}
-                          {game.home_score}
+                          {game.away_team} {game.away_score} - {game.home_team} {game.home_score}
                         </div>
                         {pick && (
                           <div className="space-y-1">
@@ -853,20 +770,12 @@ export default function Dashboard() {
                               )}
                               Your pick: {pick.picked_team}
                             </div>
-                            <div
-                              className={`text-sm font-medium ${
-                                pick.picked_team ===
-                                ((game.away_score || 0) > (game.home_score || 0)
-                                  ? game.away_team
-                                  : game.home_team)
-                                  ? "text-green-400"
-                                  : "text-red-400"
-                              }`}
-                            >
-                              {pick.picked_team ===
-                              ((game.away_score || 0) > (game.home_score || 0)
-                                ? game.away_team
-                                : game.home_team)
+                            <div className={`text-sm font-medium ${
+                              pick.picked_team === (game.away_score > game.home_score ? game.away_team : game.home_team)
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }`}>
+                              {pick.picked_team === (game.away_score > game.home_score ? game.away_team : game.home_team)
                                 ? "✓ Correct"
                                 : "✗ Incorrect"}
                             </div>
@@ -875,45 +784,192 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       <div className="text-center">
-                        {pick && (
-                          <div className="space-y-2">
-                            <div className="text-sm text-blue-300">
-                              {pick.is_lock && (
-                                <span className="text-yellow-400 mr-1">🔒</span>
-                              )}
-                              Picked: {pick.picked_team.split(" ").pop()}
+                        <div className="text-sm text-gray-400 mb-4">
+                          {formatGameTime(game.game_time)}
+                        </div>
+                        {(() => {
+                          const gameTime = new Date(game.game_time).getTime();
+                          const now = new Date().getTime();
+                          const minutesUntilStart = Math.floor(
+                            (gameTime - now) / (1000 * 60)
+                          );
+
+                          if (minutesUntilStart <= 0) {
+                            // Game has started, show current score
+                            return (
+                              <div className="text-xs text-blue-600 font-medium">
+                                <span className="inline-flex items-center">
+                                  <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                                  LIVE: {game.away_team} {game.away_score || 0}{" "}
+                                  - {game.home_team} {game.home_score || 0}
+                                  {game.quarter && (
+                                    <span className="ml-2">
+                                      Q{game.quarter}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            );
+                          } else {
+                            // Game hasn't started, show countdown
+                            return (
+                              <div className="text-xs text-gray-500">
+                                Game starts in {minutesUntilStart} minutes
+                              </div>
+                            );
+                          }
+                        })()}
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        {/* Away Team - Top */}
+                        <button
+                          onClick={() =>
+                            !locked && makePick(game.id, game.away_team, false)
+                          }
+                          disabled={locked}
+                          className={`
+                            w-full flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200
+                            ${
+                              locked
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer hover:bg-gray-100"
+                            }
+                            ${
+                              pick?.picked_team === game.away_team
+                                ? "bg-blue-50 border-2 border-blue-300"
+                                : "hover:bg-gray-100"
+                            }
+                          `}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                              style={{
+                                backgroundColor: getTeamColors(game.away_team)
+                                  .primary,
+                              }}
+                            >
+                              {getTeamAbbreviation(game.away_team)}
                             </div>
-                            {!locked && (
-                              <button
-                                onClick={() => toggleLock(game.id)}
-                                disabled={!pick.picked_team || locked}
-                                className={`
-                                  flex items-center gap-2 px-3 py-1 rounded text-xs font-medium transition-all duration-200 mx-auto
-                                  ${
-                                    pick.is_lock
-                                      ? "bg-red-700 text-white hover:bg-red-800"
-                                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                                  }
-                                  ${
-                                    !pick.picked_team || locked
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : "cursor-pointer"
-                                  }
-                                `}
-                              >
-                                <span className="text-sm">
-                                  {pick.is_lock ? "🔒" : "🔓"}
-                                </span>
-                                <span>
-                                  {pick.is_lock ? "Remove Lock" : "Lock Pick"}
-                                </span>
-                              </button>
+                            <span className="font-semibold text-sm">
+                              {game.away_team}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {pick?.picked_team === game.away_team && (
+                              <span className="text-blue-600 text-lg">●</span>
                             )}
                           </div>
-                        )}
+                        </button>
+
+                        {/* Home Team - Bottom */}
+                        <button
+                          onClick={() =>
+                            !locked && makePick(game.id, game.home_team, false)
+                          }
+                          disabled={locked}
+                          className={`
+                            w-full flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200
+                            ${
+                              locked
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer hover:bg-gray-100"
+                            }
+                            ${
+                              pick?.picked_team === game.home_team
+                                ? "bg-blue-50 border-2 border-blue-300"
+                                : "hover:bg-gray-100"
+                            }
+                          `}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                              style={{
+                                backgroundColor: getTeamColors(game.home_team)
+                                  .primary,
+                              }}
+                            >
+                              {getTeamAbbreviation(game.home_team)}
+                            </div>
+                            <span className="font-semibold text-sm">
+                              {game.home_team}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {pick?.picked_team === game.home_team &&
+                              game.status === "completed" && (
+                                <span
+                                  className={`text-lg ${
+                                    (game.home_score || 0) >
+                                    (game.away_score || 0)
+                                      ? "text-green-600"
+                                      : "text-red-600"
+                                  }`}
+                                >
+                                  {(game.home_score || 0) >
+                                  (game.away_score || 0)
+                                    ? "✓"
+                                    : "✗"}
+                                </span>
+                              )}
+                            {pick?.picked_team === game.home_team && (
+                              <span className="text-blue-600 text-lg">●</span>
+                            )}
+                          </div>
+                        </button>
                       </div>
-                    )}
-                  </div>
+
+                      {/* Lock Toggle */}
+                      {pick && !locked && (
+                        <div className="flex items-center justify-center">
+                          <button
+                            onClick={() => toggleLock(game.id)}
+                            disabled={!pick.picked_team || locked}
+                            className={`
+                              flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200
+                              ${
+                                pick.is_lock
+                                  ? "bg-red-100 border-red-300 text-red-700 hover:bg-red-200"
+                                  : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
+                              }
+                              ${
+                                !pick.picked_team || locked
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "cursor-pointer"
+                              }
+                            `}
+                          >
+                            <span className="text-lg">
+                              {pick.is_lock ? "🔒" : "🔓"}
+                            </span>
+                            <span className="text-sm font-medium">
+                              {pick.is_lock ? "Remove Lock" : "Lock This Pick"}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+                      {pick && !locked && (
+                        <p className="text-xs text-gray-500 text-center">
+                          Click either team to change your pick
+                        </p>
+                      )}
+                      {pick && (
+                        <p className="text-sm text-gray-600 text-center">
+                          Your pick:{" "}
+                          <span className="font-semibold">
+                            {pick.picked_team}
+                          </span>
+                          {pick.is_lock && (
+                            <span className="ml-2 text-red-600 font-bold">
+                              🔒 LOCKED
+                            </span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

@@ -29,6 +29,8 @@ export interface Game {
   away_score?: number;
   status: "scheduled" | "in_progress" | "completed";
   espn_id?: string;
+  tv?: string;
+  quarter?: number;
   created_at: string;
 }
 

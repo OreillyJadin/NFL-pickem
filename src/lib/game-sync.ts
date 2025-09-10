@@ -65,6 +65,18 @@ export async function syncGameScore(gameId: string) {
     const gameStatus = competition.status?.type?.name || "scheduled";
     const quarter = competition.status?.period || null;
 
+    // Extract TV information from broadcasts
+    let tvInfo = "TBD";
+    if (competition.broadcasts && competition.broadcasts.length > 0) {
+      const broadcastNames = competition.broadcasts
+        .map((broadcast: any) => broadcast.names?.[0])
+        .filter(Boolean);
+
+      if (broadcastNames.length > 0) {
+        tvInfo = broadcastNames.join(", ");
+      }
+    }
+
     // Map ESPN status to our status
     let status = "scheduled";
     if (gameStatus === "STATUS_FINAL") {
@@ -81,6 +93,7 @@ export async function syncGameScore(gameId: string) {
         away_score: awayScore,
         status: status,
         quarter: quarter,
+        tv: tvInfo,
       })
       .eq("id", gameId);
 
@@ -102,6 +115,73 @@ export async function syncGameScore(gameId: string) {
   }
 }
 
+// Sync TV information for all games
+export async function syncAllGamesTV() {
+  try {
+    console.log("🔄 Starting TV sync for all games...");
+
+    // Get all games that have ESPN IDs
+    const { data: games, error: gamesError } = await supabase
+      .from("games")
+      .select("id, home_team, away_team, espn_id, tv")
+      .not("espn_id", "is", null);
+
+    if (gamesError) {
+      console.error("❌ Database query error:", gamesError);
+      throw new Error(`Database query error: ${gamesError.message}`);
+    }
+
+    if (!games || games.length === 0) {
+      console.log("ℹ️ No games with ESPN IDs found");
+      return {
+        success: true,
+        message: "No games with ESPN IDs found",
+        gamesProcessed: 0,
+      };
+    }
+
+    console.log(`📊 Found ${games.length} games to sync TV info for`);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Process each game
+    for (const game of games) {
+      try {
+        const result = await syncGameScore(game.id);
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        errorCount++;
+      }
+
+      // Add small delay to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    console.log(
+      `TV sync completed: ${successCount} successful, ${errorCount} failed`
+    );
+
+    return {
+      success: true,
+      message: `Synced TV info for ${successCount} games successfully, ${errorCount} failed`,
+      gamesProcessed: games.length,
+      successful: successCount,
+      failed: errorCount,
+    };
+  } catch (error) {
+    console.error("Error syncing all games TV:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 // Sync all current games
 export async function syncAllCurrentGames() {
   try {
@@ -112,7 +192,7 @@ export async function syncAllCurrentGames() {
     const threeDaysAgo = new Date(now);
     threeDaysAgo.setDate(now.getDate() - 3);
     threeDaysAgo.setHours(0, 0, 0, 0);
-    
+
     const oneDayFromNow = new Date(now);
     oneDayFromNow.setDate(now.getDate() + 1);
     oneDayFromNow.setHours(23, 59, 59, 999);

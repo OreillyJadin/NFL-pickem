@@ -341,10 +341,10 @@ export default function Leaderboard() {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading leaderboard...</p>
+          <p className="text-gray-300">Loading leaderboard...</p>
         </div>
       </div>
     );
@@ -355,31 +355,39 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       <Navigation />
       <div className="max-w-6xl mx-auto p-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Leaderboard</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
+          <p className="text-gray-300">
             See how you stack up against other players
           </p>
         </div>
 
         {/* View Mode Toggle */}
-        <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
+        <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
           <div className="space-y-4">
             <div className="flex gap-2">
               <Button
                 onClick={() => setViewMode("season")}
                 variant={viewMode === "season" ? "default" : "outline"}
-                className="flex-1 text-sm"
+                className={`flex-1 text-sm ${
+                  viewMode === "season"
+                    ? "bg-gray-700 text-white"
+                    : "border-gray-600 text-gray-300 hover:bg-gray-700"
+                }`}
               >
                 Season
               </Button>
               <Button
                 onClick={() => setViewMode("weekly")}
                 variant={viewMode === "weekly" ? "default" : "outline"}
-                className="flex-1 text-sm"
+                className={`flex-1 text-sm ${
+                  viewMode === "weekly"
+                    ? "bg-gray-700 text-white"
+                    : "border-gray-600 text-gray-300 hover:bg-gray-700"
+                }`}
               >
                 Weekly
               </Button>
@@ -388,7 +396,7 @@ export default function Leaderboard() {
             {viewMode === "weekly" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Season Type
                   </label>
                   <select
@@ -398,20 +406,20 @@ export default function Leaderboard() {
                         e.target.value as "preseason" | "regular"
                       )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
                   >
                     <option value="regular">Regular Season</option>
                     <option value="preseason">Preseason</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Week
                   </label>
                   <select
                     value={selectedWeek}
                     onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
                   >
                     {Array.from({ length: 18 }, (_, i) => i + 1).map((week) => (
                       <option key={week} value={week}>
@@ -426,9 +434,9 @@ export default function Leaderboard() {
         </div>
 
         {/* Leaderboard Table */}
-        <Card>
+        <Card className="bg-gray-800 border-gray-600">
           <CardHeader>
-            <CardTitle className="text-xl sm:text-2xl">
+            <CardTitle className="text-xl sm:text-2xl text-white">
               {viewMode === "season"
                 ? "Season Standings"
                 : `${
@@ -437,7 +445,7 @@ export default function Leaderboard() {
                       : "Regular Season"
                   } Week ${selectedWeek}`}
             </CardTitle>
-            <CardDescription className="text-sm sm:text-base">
+            <CardDescription className="text-sm sm:text-base text-gray-300">
               {viewMode === "season"
                 ? "Overall points across all weeks - All players who have made picks"
                 : `Points for this week only - All players who have made picks`}
@@ -445,30 +453,30 @@ export default function Leaderboard() {
           </CardHeader>
           <CardContent>
             {leaderboard.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-gray-400 text-center py-8">
                 No data available for this period
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[400px]">
                   <thead>
-                    <tr className="border-b-2 border-gray-200">
-                      <th className="text-left py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
+                    <tr className="border-b-2 border-gray-600">
+                      <th className="text-left py-2 px-1 sm:px-2 font-bold text-gray-300 text-xs sm:text-sm">
                         Rank
                       </th>
-                      <th className="text-left py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
+                      <th className="text-left py-2 px-1 sm:px-2 font-bold text-gray-300 text-xs sm:text-sm">
                         Player
                       </th>
-                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
+                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-300 text-xs sm:text-sm">
                         Points
                       </th>
-                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
+                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-300 text-xs sm:text-sm">
                         Wins
                       </th>
-                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
+                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-300 text-xs sm:text-sm">
                         Losses
                       </th>
-                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-700 text-xs sm:text-sm">
+                      <th className="text-center py-2 px-1 sm:px-2 font-bold text-gray-300 text-xs sm:text-sm">
                         Win %
                       </th>
                     </tr>
@@ -482,13 +490,13 @@ export default function Leaderboard() {
                         <tr
                           key={entry.user_id}
                           className={`
-                            border-b transition-colors duration-200
+                            border-b border-gray-600 transition-colors duration-200
                             ${
                               isTopThree
-                                ? "bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100"
+                                ? "bg-gradient-to-r from-yellow-900/30 to-orange-900/30 hover:from-yellow-900/40 hover:to-orange-900/40"
                                 : isLast
-                                ? "bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100"
-                                : "hover:bg-gray-50"
+                                ? "bg-gradient-to-r from-red-900/30 to-pink-900/30 hover:from-red-900/40 hover:to-pink-900/40"
+                                : "hover:bg-gray-700"
                             }
                           `}
                         >
@@ -497,10 +505,10 @@ export default function Leaderboard() {
                               <span
                                 className={`font-bold text-sm sm:text-base ${
                                   isTopThree
-                                    ? "text-yellow-800"
+                                    ? "text-yellow-300"
                                     : isLast
-                                    ? "text-red-600"
-                                    : "text-gray-700"
+                                    ? "text-red-400"
+                                    : "text-gray-300"
                                 }`}
                               >
                                 #{index + 1}
@@ -509,16 +517,16 @@ export default function Leaderboard() {
                           </td>
                           <td className="py-2 px-1 sm:px-2">
                             <div className="flex items-center space-x-2">
-                              <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                              <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                                 <ProfilePicture userId={entry.user_id} />
                               </div>
                               <div
                                 className={`font-bold text-sm sm:text-base ${
                                   isTopThree
-                                    ? "text-yellow-800"
+                                    ? "text-yellow-300"
                                     : isLast
-                                    ? "text-red-600"
-                                    : "text-gray-800"
+                                    ? "text-red-400"
+                                    : "text-white"
                                 }`}
                               >
                                 {entry.username || entry.email}
@@ -529,10 +537,10 @@ export default function Leaderboard() {
                             <span
                               className={`font-bold text-sm sm:text-base ${
                                 entry.total_points > 0
-                                  ? "text-green-600"
+                                  ? "text-green-400"
                                   : entry.total_points < 0
-                                  ? "text-red-600"
-                                  : "text-gray-600"
+                                  ? "text-red-400"
+                                  : "text-gray-400"
                               }`}
                             >
                               {entry.total_points < 0 ? "-" : ""}
@@ -540,17 +548,17 @@ export default function Leaderboard() {
                             </span>
                           </td>
                           <td className="py-2 px-1 sm:px-2 text-center">
-                            <span className="text-green-600 font-bold text-sm sm:text-base">
+                            <span className="text-green-400 font-bold text-sm sm:text-base">
                               {entry.correct_picks}
                             </span>
                           </td>
                           <td className="py-2 px-1 sm:px-2 text-center">
-                            <span className="text-red-600 font-bold text-sm sm:text-base">
+                            <span className="text-red-400 font-bold text-sm sm:text-base">
                               {entry.incorrect_picks}
                             </span>
                           </td>
                           <td className="py-2 px-1 sm:px-2 text-center">
-                            <span className="font-bold text-sm sm:text-base">
+                            <span className="font-bold text-sm sm:text-base text-white">
                               {entry.total_picks > 0
                                 ? Math.round(
                                     (entry.correct_picks / entry.total_picks) *
@@ -571,42 +579,44 @@ export default function Leaderboard() {
         </Card>
 
         {/* Scoring Info */}
-        <Card className="mt-4">
+        <Card className="mt-4 bg-gray-800 border-gray-600">
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">Scoring System</CardTitle>
+            <CardTitle className="text-lg sm:text-xl text-white">
+              Scoring System
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                <h4 className="font-bold text-green-800 mb-2 text-sm sm:text-base">
+              <div className="p-3 bg-green-900/20 rounded-lg border border-green-600">
+                <h4 className="font-bold text-green-300 mb-2 text-sm sm:text-base">
                   Normal Picks
                 </h4>
-                <ul className="text-xs sm:text-sm text-green-700 space-y-1">
+                <ul className="text-xs sm:text-sm text-green-200 space-y-1">
                   <li className="flex items-center gap-2">
-                    <span className="text-green-600">✓</span>
+                    <span className="text-green-400">✓</span>
                     Correct: +1 point
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-red-500">✗</span>
+                    <span className="text-red-400">✗</span>
                     Incorrect: 0 points
                   </li>
                 </ul>
               </div>
-              <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                <h4 className="font-bold text-yellow-800 mb-2 text-sm sm:text-base">
+              <div className="p-3 bg-yellow-900/20 rounded-lg border border-yellow-600">
+                <h4 className="font-bold text-yellow-300 mb-2 text-sm sm:text-base">
                   Lock Picks
                 </h4>
-                <ul className="text-xs sm:text-sm text-yellow-700 space-y-1">
+                <ul className="text-xs sm:text-sm text-yellow-200 space-y-1">
                   <li className="flex items-center gap-2">
-                    <span className="text-green-600">✓</span>
+                    <span className="text-green-400">✓</span>
                     Correct: +2 points
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-red-500">✗</span>
+                    <span className="text-red-400">✗</span>
                     Incorrect: -2 points
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-blue-500">#</span>
+                    <span className="text-blue-400">#</span>
                     Max 3 locks per week
                   </li>
                 </ul>

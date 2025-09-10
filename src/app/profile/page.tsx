@@ -384,10 +384,10 @@ export default function Profile() {
 
   if (loading || loadingStats) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-300">Loading...</p>
         </div>
       </div>
     );
@@ -398,13 +398,13 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       <Navigation />
       <div className="max-w-4xl mx-auto p-4">
         <div className="mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+              <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
                 {profilePictureUrl ? (
                   <img
                     src={profilePictureUrl}
@@ -413,15 +413,15 @@ export default function Profile() {
                     onError={() => setProfilePictureUrl(null)}
                   />
                 ) : (
-                  <User className="h-6 w-6 text-gray-400" />
+                  <User className="h-6 w-6 text-gray-300" />
                 )}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-xl font-bold text-white">
                   {profileData.username || user.email}
                 </h1>
                 {profileData.bio && (
-                  <p className="text-sm text-gray-600 mt-1 max-w-md">
+                  <p className="text-sm text-gray-300 mt-1 max-w-md">
                     {profileData.bio}
                   </p>
                 )}
@@ -432,7 +432,7 @@ export default function Profile() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-1 text-xs px-2 py-1"
+                className="flex items-center gap-1 text-xs px-2 py-1 border-gray-600 text-gray-300 hover:bg-gray-700"
               >
                 <Edit className="h-3 w-3" />
                 Edit
@@ -443,28 +443,30 @@ export default function Profile() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-4 gap-1 mb-4">
-          <Card className="p-2 text-center">
-            <div className="text-xs text-gray-600">Total</div>
-            <div className="text-sm font-bold">{stats.totalPicks}</div>
+          <Card className="p-2 text-center bg-gray-800 border-gray-600">
+            <div className="text-xs text-gray-300">Total</div>
+            <div className="text-sm font-bold text-white">
+              {stats.totalPicks}
+            </div>
           </Card>
 
-          <Card className="p-2 text-center">
-            <div className="text-xs text-gray-600">Correct</div>
-            <div className="text-sm font-bold text-green-600">
+          <Card className="p-2 text-center bg-gray-800 border-gray-600">
+            <div className="text-xs text-gray-300">Correct</div>
+            <div className="text-sm font-bold text-green-400">
               {stats.correctPicks}
             </div>
           </Card>
 
-          <Card className="p-2 text-center">
-            <div className="text-xs text-gray-600">Wrong</div>
-            <div className="text-sm font-bold text-red-600">
+          <Card className="p-2 text-center bg-gray-800 border-gray-600">
+            <div className="text-xs text-gray-300">Wrong</div>
+            <div className="text-sm font-bold text-red-400">
               {stats.incorrectPicks}
             </div>
           </Card>
 
-          <Card className="p-2 text-center">
-            <div className="text-xs text-gray-600">Win %</div>
-            <div className="text-sm font-bold text-blue-600">
+          <Card className="p-2 text-center bg-gray-800 border-gray-600">
+            <div className="text-xs text-gray-300">Win %</div>
+            <div className="text-sm font-bold text-blue-400">
               {stats.winPercentage}%
             </div>
           </Card>
@@ -472,39 +474,39 @@ export default function Profile() {
 
         {/* Lock Stats Cards */}
         <div className="grid grid-cols-4 gap-1 mb-4">
-          <Card className="border-yellow-200 bg-yellow-50 p-2 text-center">
-            <div className="text-xs text-yellow-700">🔒 Locks</div>
-            <div className="text-sm font-bold text-yellow-800">
+          <Card className="border-yellow-600 bg-yellow-900/20 p-2 text-center">
+            <div className="text-xs text-yellow-300">🔒 Locks</div>
+            <div className="text-sm font-bold text-yellow-200">
               {stats.lockPicks}
             </div>
           </Card>
 
-          <Card className="border-green-200 bg-green-50 p-2 text-center">
-            <div className="text-xs text-green-700">Lock W</div>
-            <div className="text-sm font-bold text-green-800">
+          <Card className="border-green-600 bg-green-900/20 p-2 text-center">
+            <div className="text-xs text-green-300">Lock W</div>
+            <div className="text-sm font-bold text-green-200">
               {stats.lockWins}
             </div>
           </Card>
 
-          <Card className="border-red-200 bg-red-50 p-2 text-center">
-            <div className="text-xs text-red-700">Lock L</div>
-            <div className="text-sm font-bold text-red-800">
+          <Card className="border-red-600 bg-red-900/20 p-2 text-center">
+            <div className="text-xs text-red-300">Lock L</div>
+            <div className="text-sm font-bold text-red-200">
               {stats.lockLosses}
             </div>
           </Card>
 
-          <Card className="border-purple-200 bg-purple-50 p-2 text-center">
-            <div className="text-xs text-purple-700">Lock %</div>
-            <div className="text-sm font-bold text-purple-800">
+          <Card className="border-purple-600 bg-purple-900/20 p-2 text-center">
+            <div className="text-xs text-purple-300">Lock %</div>
+            <div className="text-sm font-bold text-purple-200">
               {stats.lockWinPercentage}%
             </div>
           </Card>
         </div>
 
         {/* Trophy Wall */}
-        <Card className="mb-4">
+        <Card className="mb-4 bg-gray-800 border-gray-600">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-lg text-white">
               🏆 Trophy Wall
             </CardTitle>
           </CardHeader>
@@ -512,10 +514,10 @@ export default function Profile() {
             {loadingAwards ? (
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-sm text-gray-600">Loading awards...</p>
+                <p className="text-sm text-gray-300">Loading awards...</p>
               </div>
             ) : awards.length === 0 ? (
-              <p className="text-gray-500 text-center py-4 text-sm">
+              <p className="text-gray-400 text-center py-4 text-sm">
                 No awards yet. Keep playing to earn trophies!
               </p>
             ) : (
@@ -525,23 +527,23 @@ export default function Profile() {
                   return (
                     <div
                       key={award.id}
-                      className="p-2 border rounded bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200"
+                      className="p-2 border rounded bg-gradient-to-br from-yellow-900/30 to-orange-900/30 border-yellow-600"
                     >
                       <div className="text-center">
                         <div className="text-2xl mb-1">{display.emoji}</div>
-                        <div className="font-semibold text-gray-800 text-xs mb-1">
+                        <div className="font-semibold text-yellow-200 text-xs mb-1">
                           {display.name}
                         </div>
-                        <div className="text-xs text-gray-600 mb-1">
+                        <div className="text-xs text-gray-300 mb-1">
                           {display.description}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-400">
                           {award.season_type === "preseason"
                             ? "Preseason"
                             : "Regular Season"}{" "}
                           • {award.points} pts
                         </div>
-                        <div className="text-xs font-medium text-gray-700 mt-1">
+                        <div className="text-xs font-medium text-yellow-300 mt-1">
                           {display.record} record
                         </div>
                       </div>
@@ -554,12 +556,12 @@ export default function Profile() {
         </Card>
 
         {/* Pick History */}
-        <Card>
+        <Card className="bg-gray-800 border-gray-600">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Pick History</CardTitle>
+              <CardTitle className="text-lg text-white">Pick History</CardTitle>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-300">
                   Week:
                 </label>
                 <select
@@ -571,7 +573,7 @@ export default function Profile() {
                         : parseInt(e.target.value)
                     )
                   }
-                  className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-2 py-1 text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white"
                 >
                   <option value="all">All Weeks</option>
                   {availableWeeks.map((week) => (
@@ -585,7 +587,7 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="pt-0">
             {filteredPickHistory.length === 0 ? (
-              <p className="text-gray-500 text-center py-4 text-sm">
+              <p className="text-gray-400 text-center py-4 text-sm">
                 {pickHistory.length === 0
                   ? "No picks made yet"
                   : `No picks found for Week ${selectedWeek}`}
@@ -597,20 +599,23 @@ export default function Profile() {
                   const game = pick.game;
 
                   return (
-                    <div key={pick.id} className="border rounded-lg mb-2">
+                    <div
+                      key={pick.id}
+                      className="border border-gray-600 rounded-lg mb-2 bg-gray-700"
+                    >
                       {/* Header with Week and Game Info */}
-                      <div className="bg-gray-50 px-3 py-2 border-b">
+                      <div className="bg-gray-600 px-3 py-2 border-b border-gray-500">
                         <div className="flex items-center justify-between">
-                          <div className="font-medium text-sm">
+                          <div className="font-medium text-sm text-white">
                             Week {(game as any)?.week} • {game?.away_team} @{" "}
                             {game?.home_team}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-300">
                             {formatPickTime(game?.game_time)}
                           </div>
                         </div>
                         {pick.is_lock && (
-                          <div className="text-xs text-yellow-600 font-medium mt-1">
+                          <div className="text-xs text-yellow-400 font-medium mt-1">
                             🔒 LOCKED
                           </div>
                         )}
