@@ -4,17 +4,17 @@ import { Award } from "./supabase";
 export const AWARD_TYPES = {
   top_scorer: {
     emoji: "🏆",
-    name: "Top Scorer",
+    name: "1st Place",
     description: "Highest points this week",
   },
   second_scorer: {
     emoji: "🥈",
-    name: "Second Place",
+    name: "2nd Place",
     description: "Second highest points this week",
   },
   third_scorer: {
     emoji: "🥉",
-    name: "Third Place",
+    name: "3rd Place",
     description: "Third highest points this week",
   },
   lowest_scorer: {

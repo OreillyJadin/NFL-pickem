@@ -22,7 +22,6 @@ interface RegisterFormProps {
 export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [profilePicUrl, setProfilePicUrl] = useState("");
@@ -32,7 +31,6 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   const [success, setSuccess] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [checkingUsername, setCheckingUsername] = useState(false);
-  const [passwordError, setPasswordError] = useState("");
   const { signUp } = useAuth();
 
   const checkUsernameAvailability = async (username: string) => {
@@ -78,23 +76,6 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
     return () => clearTimeout(timeoutId);
   }, [username]);
 
-  const validatePasswords = () => {
-    // Only validate if both fields have content
-    if (password && confirmPassword) {
-      if (password !== confirmPassword) {
-        setPasswordError("Passwords do not match");
-        return false;
-      } else {
-        setPasswordError("");
-        return true;
-      }
-    }
-
-    // If either field is empty, clear error and allow (validation happens on submit)
-    setPasswordError("");
-    return true;
-  };
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -127,19 +108,9 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
       return;
     }
 
-    // Check if passwords are provided and match
-    if (!password || !confirmPassword) {
-      setError("Please enter both password and confirm password");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (!validatePasswords()) {
-      setError("Please fix the password error before submitting");
+    // Check if password is provided
+    if (!password) {
+      setError("Please enter a password");
       return;
     }
 
@@ -287,42 +258,11 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                validatePasswords();
-              }}
+              onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
               className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-gray-300">
-              Confirm Password
-            </Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                validatePasswords();
-              }}
-              required
-              minLength={6}
-              className={`bg-gray-700 border-gray-600 text-white placeholder-gray-400 ${
-                passwordError ? "border-red-500" : ""
-              }`}
-            />
-            {passwordError && (
-              <p className="text-sm text-red-400">{passwordError}</p>
-            )}
-            {!passwordError &&
-              password &&
-              confirmPassword &&
-              password === confirmPassword && (
-                <p className="text-sm text-green-400">✓ Passwords match</p>
-              )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="bio" className="text-gray-300">
@@ -374,9 +314,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={
-              loading || !!usernameError || checkingUsername || !!passwordError
-            }
+            disabled={loading || !!usernameError || checkingUsername}
           >
             {loading ? "Creating account..." : "Sign Up"}
           </Button>

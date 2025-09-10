@@ -620,21 +620,21 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="mt-2 p-3 bg-gray-800 rounded-lg border border-gray-600">
+      <div className="w-full">
+        <div className="mb-6 px-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-300">
                   🔒 Locks: {locksUsed}/3: +2 Correct, -2 Wrong
                 </span>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 onClick={handleSyncAllGames}
                 disabled={syncingScores}
-                className="bg-green-700 hover:bg-green-800 text-white text-xs"
+                className="bg-green-700 hover:bg-green-800 text-white text-xs px-4 py-2"
               >
                 {syncingScores ? "Syncing..." : "🚀 Sync Games"}
               </Button>
@@ -642,7 +642,7 @@ export default function Dashboard() {
                 onClick={() => setShowTutorial(true)}
                 variant="outline"
                 size="sm"
-                className="text-xs"
+                className="text-xs px-4 py-2 border-gray-600 text-gray-300 hover:bg-gray-700"
               >
                 📚 Help
               </Button>
@@ -651,25 +651,31 @@ export default function Dashboard() {
         </div>
 
         {syncMessage && (
-          <div className="mb-6 p-3 bg-gray-800 rounded-lg border border-gray-600">
-            <div className="text-sm text-gray-300">{syncMessage}</div>
+          <div className="mb-6 px-4">
+            <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
+              <div className="text-sm text-gray-300">{syncMessage}</div>
+            </div>
           </div>
         )}
 
-        <div className="grid gap-3">
-          {games.map((game) => {
+        <div className="space-y-0">
+          {games.map((game, index) => {
             const pick = getPickForGame(game.id);
             const locked = isGameLocked(game.game_time);
 
             return (
-              <Card
+              <div
                 key={game.id}
-                className={`${locked ? "opacity-75" : ""} bg-gray-900`}
+                className={`${
+                  locked ? "opacity-75" : ""
+                } bg-gray-900 border-t border-gray-600 ${
+                  index === 0 ? "rounded-t-lg" : ""
+                } ${index === games.length - 1 ? "rounded-b-lg" : ""}`}
               >
-                <CardContent className="p-3">
+                <div className="p-4">
                   <div className="text-white">
                     {/* Team Matchup Section */}
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-2">
                       {/* Left Side - Team Info */}
                       <div className="flex-1">
                         {/* Away Team */}
@@ -684,7 +690,7 @@ export default function Dashboard() {
                             {getTeamAbbreviation(game.away_team)}
                           </div>
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-white">
+                            <div className="text-md font-bold text-white">
                               {game.away_team.split(" ").pop()}
                             </div>
                           </div>
@@ -739,7 +745,7 @@ export default function Dashboard() {
                             {getTeamAbbreviation(game.home_team)}
                           </div>
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-white">
+                            <div className="text-md font-bold text-white">
                               {game.home_team.split(" ").pop()}
                             </div>
                           </div>
@@ -914,13 +920,13 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 px-4 text-center">
           <p className="text-sm text-gray-500">
             Make your picks before game time. Once a game starts, your pick is
             locked.
