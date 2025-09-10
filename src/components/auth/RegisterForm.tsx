@@ -79,14 +79,18 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   }, [username]);
 
   const validatePasswords = () => {
-    if (password && confirmPassword && password !== confirmPassword) {
-      setPasswordError("Passwords do not match");
-      return false;
+    // Only validate if both fields have content
+    if (password && confirmPassword) {
+      if (password !== confirmPassword) {
+        setPasswordError("Passwords do not match");
+        return false;
+      } else {
+        setPasswordError("");
+        return true;
+      }
     }
-    if (password && confirmPassword && password === confirmPassword) {
-      setPasswordError("");
-      return true;
-    }
+
+    // If either field is empty, clear error and allow (validation happens on submit)
     setPasswordError("");
     return true;
   };
@@ -120,6 +124,17 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
     if (usernameError) {
       setError("Please fix the username error before submitting");
+      return;
+    }
+
+    // Check if passwords are provided and match
+    if (!password || !confirmPassword) {
+      setError("Please enter both password and confirm password");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
       return;
     }
 
