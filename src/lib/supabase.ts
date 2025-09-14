@@ -33,6 +33,7 @@ export interface Game {
   quarter?: number;
   time_remaining?: string;
   possession?: string;
+  halftime?: boolean;
   created_at: string;
 }
 

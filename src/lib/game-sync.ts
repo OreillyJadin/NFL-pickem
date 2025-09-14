@@ -77,6 +77,10 @@ export async function syncGameScore(gameId: string) {
       }
     }
 
+    // Detect halftime (quarter 2 with no time remaining)
+    const isHalftime =
+      quarter === 2 && (!timeRemaining || timeRemaining === "0:00");
+
     // Extract TV information from broadcasts
     let tvInfo = "TBD";
     if (competition.broadcasts && competition.broadcasts.length > 0) {
@@ -107,6 +111,7 @@ export async function syncGameScore(gameId: string) {
         quarter: quarter,
         time_remaining: timeRemaining,
         possession: possession,
+        halftime: isHalftime,
         tv: tvInfo,
       })
       .eq("id", gameId);

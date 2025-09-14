@@ -34,6 +34,7 @@ interface Game {
   quarter?: number;
   time_remaining?: string;
   possession?: string;
+  halftime?: boolean;
   espn_id?: string;
   tv?: string;
 }
@@ -815,9 +816,21 @@ export default function Dashboard() {
                               <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
                               LIVE
                             </div>
+                            {game.halftime && (
+                              <div className="text-sm font-bold text-orange-400 mb-1 text-right">
+                                HALF
+                              </div>
+                            )}
                             <div className="text-sm font-medium text-blue-300 mb-1">
-                              {game.quarter ? `Q${game.quarter}` : ""}
-                              {game.time_remaining && ` ${game.time_remaining}`}
+                              {game.halftime ? (
+                                ""
+                              ) : (
+                                <>
+                                  {game.quarter ? `Q${game.quarter}` : ""}
+                                  {game.time_remaining &&
+                                    ` ${game.time_remaining}`}
+                                </>
+                              )}
                             </div>
                             <div className="text-xs text-gray-400">
                               {game.tv || "TBD"}
