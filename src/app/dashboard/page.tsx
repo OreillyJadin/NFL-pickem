@@ -826,7 +826,13 @@ export default function Dashboard() {
                                 ""
                               ) : (
                                 <>
-                                  {game.quarter ? `Q${game.quarter}` : ""}
+                                  {game.quarter
+                                    ? game.quarter <= 4
+                                      ? `Q${game.quarter}`
+                                      : game.quarter === 5
+                                      ? "OT"
+                                      : `${game.quarter - 4}OT`
+                                    : ""}
                                   {game.time_remaining &&
                                     ` ${game.time_remaining}`}
                                 </>

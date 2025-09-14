@@ -30,7 +30,7 @@ export interface Game {
   status: "scheduled" | "in_progress" | "completed";
   espn_id?: string;
   tv?: string;
-  quarter?: number;
+  quarter?: number; // 1-4 for regular quarters, 5+ for overtime (5=1OT, 6=2OT, etc.)
   time_remaining?: string;
   possession?: string;
   halftime?: boolean;
