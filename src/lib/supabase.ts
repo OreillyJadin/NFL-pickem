@@ -31,6 +31,8 @@ export interface Game {
   espn_id?: string;
   tv?: string;
   quarter?: number;
+  time_remaining?: string;
+  possession?: string;
   created_at: string;
 }
 

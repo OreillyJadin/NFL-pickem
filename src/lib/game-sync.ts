@@ -64,6 +64,18 @@ export async function syncGameScore(gameId: string) {
     const awayScore = parseInt(awayTeam.score) || 0;
     const gameStatus = competition.status?.type?.name || "scheduled";
     const quarter = competition.status?.period || null;
+    const timeRemaining = competition.status?.displayClock || null;
+
+    // Extract possession data
+    let possession = null;
+    if (competition.situation?.possession) {
+      const possessionTeamId = competition.situation.possession;
+      if (possessionTeamId === homeTeam.team.id) {
+        possession = homeTeam.team.abbreviation;
+      } else if (possessionTeamId === awayTeam.team.id) {
+        possession = awayTeam.team.abbreviation;
+      }
+    }
 
     // Extract TV information from broadcasts
     let tvInfo = "TBD";
@@ -93,6 +105,8 @@ export async function syncGameScore(gameId: string) {
         away_score: awayScore,
         status: status,
         quarter: quarter,
+        time_remaining: timeRemaining,
+        possession: possession,
         tv: tvInfo,
       })
       .eq("id", gameId);

@@ -32,6 +32,8 @@ interface Game {
   home_score?: number;
   away_score?: number;
   quarter?: number;
+  time_remaining?: string;
+  possession?: string;
   espn_id?: string;
   tv?: string;
 }
@@ -690,8 +692,19 @@ export default function Dashboard() {
                             {getTeamAbbreviation(game.away_team)}
                           </div>
                           <div className="flex-1">
-                            <div className="text-md font-bold text-white">
+                            <div className="text-md font-bold text-white flex items-center gap-2">
                               {game.away_team.split(" ").pop()}
+                              {(game.status === "in_progress" ||
+                                game.status === "completed") && (
+                                <span className="text-lg font-bold text-blue-400">
+                                  {game.away_score || 0}
+                                </span>
+                              )}
+                              {game.possession &&
+                                game.possession ===
+                                  getTeamAbbreviation(game.away_team) && (
+                                  <span className="text-lg">🏈</span>
+                                )}
                             </div>
                           </div>
                           <div className="text-sm text-gray-400 mr-2">
@@ -745,8 +758,19 @@ export default function Dashboard() {
                             {getTeamAbbreviation(game.home_team)}
                           </div>
                           <div className="flex-1">
-                            <div className="text-md font-bold text-white">
+                            <div className="text-md font-bold text-white flex items-center gap-2">
                               {game.home_team.split(" ").pop()}
+                              {(game.status === "in_progress" ||
+                                game.status === "completed") && (
+                                <span className="text-lg font-bold text-blue-400">
+                                  {game.home_score || 0}
+                                </span>
+                              )}
+                              {game.possession &&
+                                game.possession ===
+                                  getTeamAbbreviation(game.home_team) && (
+                                  <span className="text-lg">🏈</span>
+                                )}
                             </div>
                           </div>
                           <div className="text-sm text-gray-400 mr-2">
@@ -785,50 +809,62 @@ export default function Dashboard() {
 
                       {/* Right Side - Game Details */}
                       <div className="ml-6 text-right">
-                        <div className="text-sm text-gray-400 mb-1">
-                          {new Date(game.game_time).toLocaleDateString(
-                            "en-US",
-                            {
-                              weekday: "short",
-                              month: "numeric",
-                              day: "numeric",
-                            }
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-400 mb-1">
-                          {new Date(game.game_time).toLocaleTimeString(
-                            "en-US",
-                            {
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
-                            }
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          {game.tv || "TBD"}
-                        </div>
+                        {game.status === "in_progress" ? (
+                          <>
+                            <div className="text-sm font-bold text-blue-400 mb-1 flex items-center justify-end">
+                              <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                              LIVE
+                            </div>
+                            <div className="text-sm font-medium text-blue-300 mb-1">
+                              {game.quarter ? `Q${game.quarter}` : ""}
+                              {game.time_remaining && ` ${game.time_remaining}`}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {game.tv || "TBD"}
+                            </div>
+                          </>
+                        ) : game.status === "completed" ? (
+                          <>
+                            <div className="text-sm font-bold text-green-400 mb-1">
+                              FINAL
+                            </div>
+                            <div className="text-sm text-gray-400">
+                              {game.tv || "TBD"}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm text-gray-400 mb-1">
+                              {new Date(game.game_time).toLocaleDateString(
+                                "en-US",
+                                {
+                                  weekday: "short",
+                                  month: "numeric",
+                                  day: "numeric",
+                                }
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-400 mb-1">
+                              {new Date(game.game_time).toLocaleTimeString(
+                                "en-US",
+                                {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-400">
+                              {game.tv || "TBD"}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
                     {/* Game Status and Pick Info */}
                     {game.status === "in_progress" ? (
                       <div className="text-center">
-                        <div className="text-sm font-bold text-blue-400 mb-2">
-                          <span className="inline-flex items-center">
-                            <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
-                            LIVE
-                          </span>
-                        </div>
-                        {game.quarter && (
-                          <div className="text-xs text-blue-300 font-medium mb-2">
-                            Q{game.quarter}
-                          </div>
-                        )}
-                        <div className="text-lg font-bold text-white mb-2">
-                          {game.away_team} {game.away_score || 0} -{" "}
-                          {game.home_team} {game.home_score || 0}
-                        </div>
                         {pick && (
                           <div className="space-y-1">
                             <div className="text-sm text-blue-300 font-medium flex items-center justify-center gap-2">
