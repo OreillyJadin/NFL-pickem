@@ -28,14 +28,15 @@ export function PasswordResetModal({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [email, setEmail] = useState(userEmail);
 
   const handlePasswordReset = async () => {
     setLoading(true);
     setError("");
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${window.location.origin}/profile`,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback`,
       });
 
       if (error) {
@@ -80,7 +81,7 @@ export function PasswordResetModal({
               </h3>
               <p className="text-sm text-gray-600 mb-4">
                 We've sent a password reset link to{" "}
-                <span className="font-medium">{userEmail}</span>
+                <span className="font-medium">{email}</span>
               </p>
               <p className="text-xs text-gray-500">
                 Click the link in the email to reset your password
@@ -93,9 +94,9 @@ export function PasswordResetModal({
                 <Input
                   id="email"
                   type="email"
-                  value={userEmail}
-                  disabled
-                  className="bg-gray-50"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
                 <p className="text-xs text-gray-500">
                   Password reset link will be sent to this email

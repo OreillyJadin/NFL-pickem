@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PasswordResetModal } from "@/components/PasswordResetModal";
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -22,6 +23,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,16 +89,30 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
             {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center space-y-2">
           <button
             type="button"
-            onClick={onToggleMode}
-            className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
+            onClick={() => setIsResetModalOpen(true)}
+            className="text-sm text-gray-400 hover:text-gray-300"
           >
-            Don&apos;t have an account? Sign up
+            Forgot your password?
           </button>
+          <div>
+            <button
+              type="button"
+              onClick={onToggleMode}
+              className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
+            >
+              Don&apos;t have an account? Sign up
+            </button>
+          </div>
         </div>
       </CardContent>
+      <PasswordResetModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        userEmail={email}
+      />
     </Card>
   );
 }
