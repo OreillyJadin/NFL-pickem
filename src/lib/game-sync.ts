@@ -89,7 +89,9 @@ export async function syncGameScore(gameId: string) {
         .filter(Boolean);
 
       if (broadcastNames.length > 0) {
-        tvInfo = broadcastNames.join(", ");
+        tvInfo = broadcastNames
+          .map((name: string) => (name === "Prime Video" ? "Prime" : name))
+          .join(", ");
       }
     }
 
