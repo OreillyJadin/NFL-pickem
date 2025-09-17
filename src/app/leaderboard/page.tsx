@@ -42,7 +42,7 @@ function ProfilePicture({ userId }: { userId: string }) {
   }
 
   if (!imageUrl) {
-    return <div className="w-4 h-4 bg-gray-400 rounded-full"></div>;
+    return <div className="w-6 h-6 bg-gray-400 rounded-full"></div>;
   }
 
   return (
@@ -357,8 +357,8 @@ export default function Leaderboard() {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navigation />
-      <div className="max-w-6xl mx-auto p-4">
-        <div className="mb-8">
+      <div className="w-full px-0 sm:px-4">
+        <div className="mb-8 px-4 pt-6">
           <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
           <p className="text-gray-300">
             See how you stack up against other players
@@ -366,7 +366,7 @@ export default function Leaderboard() {
         </div>
 
         {/* View Mode Toggle */}
-        <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
+        <div className="mb-6 mx-4 p-4 bg-gray-800 rounded-lg border border-gray-600">
           <div className="space-y-4">
             <div className="flex gap-2">
               <Button
@@ -434,7 +434,7 @@ export default function Leaderboard() {
         </div>
 
         {/* Leaderboard Table */}
-        <Card className="bg-gray-800 border-gray-600">
+        <Card className="bg-gray-800 border-gray-600 mx-0 rounded-none sm:mx-4 sm:rounded-lg">
           <CardHeader>
             <CardTitle className="text-xl sm:text-2xl text-white">
               {viewMode === "season"
@@ -517,7 +517,7 @@ export default function Leaderboard() {
                           </td>
                           <td className="py-2 px-1 sm:px-2">
                             <div className="flex items-center space-x-2">
-                              <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                                 <ProfilePicture userId={entry.user_id} />
                               </div>
                               <div
@@ -579,7 +579,7 @@ export default function Leaderboard() {
         </Card>
 
         {/* Scoring Info */}
-        <Card className="mt-4 bg-gray-800 border-gray-600">
+        <Card className="mt-4 bg-gray-800 border-gray-600 mx-0 rounded-none sm:mx-4 sm:rounded-lg">
           <CardHeader>
             <CardTitle className="text-lg sm:text-xl text-white">
               Scoring System
