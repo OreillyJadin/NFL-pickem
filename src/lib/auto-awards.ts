@@ -168,16 +168,16 @@ export async function processCompletedWeeks(): Promise<{
           season
         );
 
-        if (awardsResult.success) {
+        if (!awardsResult.error) {
           processedWeeks.push({
             week,
             seasonType: season_type,
             season,
-            awardsCreated: awardsResult.awardsCreated || 0,
+            awardsCreated: awardsResult.data?.length || 0,
           });
           console.log(
             `Successfully processed ${
-              awardsResult.awardsCreated || 0
+              awardsResult.data?.length || 0
             } awards for Week ${week} (${season_type})`
           );
         } else {

@@ -6,11 +6,7 @@ export interface PickResult {
 }
 
 export function calculatePickPoints(pick: Pick, game: Game): PickResult {
-  if (
-    game.status !== "completed" ||
-    game.home_score === null ||
-    game.away_score === null
-  ) {
+  if (game.status !== "completed" || !game.home_score || !game.away_score) {
     return { isCorrect: false, points: 0 };
   }
 
