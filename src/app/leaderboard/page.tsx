@@ -82,7 +82,20 @@ export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  // Function to calculate current NFL week
+  const getCurrentNFLWeek = () => {
+    const now = new Date();
+    const seasonStart = new Date(2025, 8, 4); // September 4, 2025
+    if (now < seasonStart) return 1;
+
+    const diffTime = now.getTime() - seasonStart.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const currentWeek = Math.floor(diffDays / 7) + 1;
+
+    return Math.min(Math.max(currentWeek, 1), 18); // Keep between week 1 and 18
+  };
+
+  const [selectedWeek, setSelectedWeek] = useState<number>(getCurrentNFLWeek());
   const [selectedSeasonType, setSelectedSeasonType] = useState<
     "preseason" | "regular"
   >("regular");
@@ -379,7 +392,10 @@ export default function Leaderboard() {
                 Season
               </Button>
               <Button
-                onClick={() => setViewMode("weekly")}
+                onClick={() => {
+                  setViewMode("weekly");
+                  setSelectedWeek(getCurrentNFLWeek()); // Reset to current week when switching to weekly view
+                }}
                 variant={viewMode === "weekly" ? "default" : "outline"}
                 className={`flex-1 text-sm ${
                   viewMode === "weekly"
