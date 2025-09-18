@@ -5,32 +5,32 @@ export const AWARD_TYPES = {
   top_scorer: {
     emoji: "🏆",
     name: "1st Place",
-    description: "Highest points this week",
+    description: "Weekly Winner",
   },
   second_scorer: {
     emoji: "🥈",
     name: "2nd Place",
-    description: "Second highest points this week",
+    description: "Runner Up",
   },
   third_scorer: {
     emoji: "🥉",
     name: "3rd Place",
-    description: "Third highest points this week",
+    description: "Third Place",
   },
   lowest_scorer: {
     emoji: "🥶",
-    name: "Lowest Scorer",
-    description: "Lowest points this week",
+    name: "Lowest Score",
+    description: "Last Place",
   },
   perfect_week: {
     emoji: "💯",
     name: "Perfect Week",
-    description: "Got all picks correct",
+    description: "All Correct",
   },
   cold_week: {
     emoji: "🧊",
     name: "Cold Week",
-    description: "Got all picks wrong",
+    description: "All Wrong",
   },
 } as const;
 
