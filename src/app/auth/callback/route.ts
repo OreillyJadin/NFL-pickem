@@ -30,6 +30,16 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // URL to redirect to after sign in process completes
+  // Check if this is a password reset
+  const type = requestUrl.searchParams.get("type");
+
+  // If it's a password reset, redirect to the reset password page
+  if (type === "recovery") {
+    return NextResponse.redirect(
+      new URL("/auth/reset-password", requestUrl.origin)
+    );
+  }
+
+  // For normal sign-ins, redirect to profile
   return NextResponse.redirect(new URL("/profile", requestUrl.origin));
 }

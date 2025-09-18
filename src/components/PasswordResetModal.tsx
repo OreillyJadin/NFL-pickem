@@ -12,40 +12,65 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Eye, EyeOff } from "lucide-react";
 
 interface PasswordResetModalProps {
   isOpen: boolean;
   onClose: () => void;
   userEmail: string;
+  mode?: "reset" | "change"; // "reset" for forgot password, "change" for logged-in users
 }
 
 export function PasswordResetModal({
   isOpen,
   onClose,
   userEmail,
+  mode = "reset", // default to reset mode for backward compatibility
 }: PasswordResetModalProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [email, setEmail] = useState(userEmail);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handlePasswordReset = async () => {
+  const handlePasswordAction = async () => {
+    if (mode === "change" && newPassword.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      });
+      let error;
+
+      if (mode === "change") {
+        // Direct password change for logged-in users
+        const result = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+        error = result.error;
+      } else {
+        // Password reset email for non-logged-in users
+        const result = await supabase.auth.resetPasswordForEmail(userEmail, {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        });
+        error = result.error;
+      }
 
       if (error) {
         setError(error.message);
       } else {
         setSuccess(true);
+        setNewPassword("");
       }
     } catch (err) {
-      setError("Failed to send password reset email");
+      setError(
+        mode === "change"
+          ? "Failed to update password"
+          : "Failed to send reset email"
+      );
     } finally {
       setLoading(false);
     }
@@ -54,6 +79,8 @@ export function PasswordResetModal({
   const handleClose = () => {
     setSuccess(false);
     setError("");
+    setNewPassword("");
+    setShowPassword(false);
     onClose();
   };
 
@@ -63,10 +90,12 @@ export function PasswordResetModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            Reset Password
+            {mode === "change" ? "Change Password" : "Reset Password"}
           </DialogTitle>
           <DialogDescription>
-            We'll send you a password reset link to your email
+            {mode === "change"
+              ? "Enter your new password below"
+              : "We'll send you a password reset link"}
           </DialogDescription>
         </DialogHeader>
 
@@ -74,34 +103,64 @@ export function PasswordResetModal({
           {success ? (
             <div className="text-center py-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="h-8 w-8 text-green-600" />
+                <Lock className="h-8 w-8 text-green-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Check Your Email
+                {mode === "change" ? "Password Updated" : "Check Your Email"}
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                We've sent a password reset link to{" "}
-                <span className="font-medium">{email}</span>
+                {mode === "change"
+                  ? "Your password has been successfully changed"
+                  : `We've sent a password reset link to ${userEmail}`}
               </p>
-              <p className="text-xs text-gray-500">
-                Click the link in the email to reset your password
-              </p>
+              <Button onClick={handleClose}>Close</Button>
             </div>
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                  value={userEmail}
+                  disabled
+                  className="bg-gray-100 text-gray-600"
                 />
                 <p className="text-xs text-gray-500">
-                  Password reset link will be sent to this email
+                  {mode === "change"
+                    ? "This is your account email"
+                    : "Password reset link will be sent to this email"}
                 </p>
               </div>
+
+              {mode === "change" && (
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter your new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Password must be at least 6 characters long
+                  </p>
+                </div>
+              )}
 
               {error && (
                 <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
@@ -117,8 +176,14 @@ export function PasswordResetModal({
                 >
                   Cancel
                 </Button>
-                <Button onClick={handlePasswordReset} disabled={loading}>
-                  {loading ? "Sending..." : "Send Reset Link"}
+                <Button onClick={handlePasswordAction} disabled={loading}>
+                  {loading
+                    ? mode === "change"
+                      ? "Updating..."
+                      : "Sending..."
+                    : mode === "change"
+                    ? "Update Password"
+                    : "Send Reset Link"}
                 </Button>
               </div>
             </>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +24,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,10 +93,32 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
         <div className="mt-4 text-center space-y-2">
           <button
             type="button"
-            onClick={() => setIsResetModalOpen(true)}
-            className="text-sm text-gray-400 hover:text-gray-300"
+            onClick={async () => {
+              if (!email) {
+                setError("Please enter your email address first");
+                return;
+              }
+              setIsResetting(true);
+              setError("");
+              try {
+                const { error } = await supabase.auth.resetPasswordForEmail(
+                  email,
+                  {
+                    redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+                  }
+                );
+                if (error) throw error;
+                alert("Password reset email sent! Check your inbox.");
+              } catch (err: any) {
+                setError(err.message || "Failed to send reset email");
+              } finally {
+                setIsResetting(false);
+              }
+            }}
+            disabled={isResetting}
+            className="text-sm text-gray-400 hover:text-gray-300 disabled:opacity-50"
           >
-            Forgot your password?
+            {isResetting ? "Sending..." : "Forgot your password?"}
           </button>
           <div>
             <button
@@ -108,11 +131,6 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
           </div>
         </div>
       </CardContent>
-      <PasswordResetModal
-        isOpen={isResetModalOpen}
-        onClose={() => setIsResetModalOpen(false)}
-        userEmail={email}
-      />
     </Card>
   );
 }
