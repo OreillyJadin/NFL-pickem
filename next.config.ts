@@ -12,13 +12,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   // Increase body size limit for file uploads
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+  serverExternalPackages: [],
   // API route body size limit
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb",
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
     },
   },
 };

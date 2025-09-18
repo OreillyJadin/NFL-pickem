@@ -190,14 +190,14 @@ export default function Dashboard() {
     try {
       setLoadingGames(true);
 
-      // Load games for selected week and season type (scheduled and in_progress only)
+      // Load all games for selected week and season type
       const { data: dbGames, error } = await supabase
         .from("games")
         .select("*")
         .eq("week", selectedWeek)
         .eq("season_type", selectedSeasonType)
         .eq("season", 2025)
-        .in("status", ["scheduled", "in_progress"])
+        .order("status", { ascending: true }) // 'completed' comes after 'in_progress' and 'scheduled'
         .order("game_time", { ascending: true });
 
       if (error || !dbGames || dbGames.length === 0) {
@@ -562,7 +562,7 @@ export default function Dashboard() {
       <Navigation />
 
       {/* Horizontal Scrollable Week Selector - Top of Page */}
-      <div className="bg-gray-800 rounded-none overflow-hidden">
+      <div className="bg-gray-800 rounded-none overflow-hidden mb-2">
         <div className="flex overflow-x-auto scrollbar-hide week-selector-scroll py-4 px-2 cursor-grab active:cursor-grabbing">
           {availableWeeks
             .filter((w) => w.season_type === "regular")
@@ -624,20 +624,21 @@ export default function Dashboard() {
       </div>
 
       <div className="w-full">
-        <div className="mb-6 px-4">
+        <div className="mb-2 px-4">
           <div className="flex items-center justify-between gap-4">
-            <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-300">
-                  🔒 Locks: {locksUsed}/3: +2 Correct, -2 Wrong
-                </span>
-              </div>
-            </div>
             <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-sm px-4 py-2 border-gray-600 text-gray-300 bg-gray-800 hover:bg-gray-700"
+              >
+                🔒 Locks: {locksUsed}/3
+              </Button>
               <Button
                 onClick={handleSyncAllGames}
                 disabled={syncingScores}
-                className="bg-green-700 hover:bg-green-800 text-white text-xs px-4 py-2"
+                size="sm"
+                className="bg-green-700 hover:bg-green-800 text-white text-sm px-4 py-2"
               >
                 {syncingScores ? "Syncing..." : "🚀 Sync Games"}
               </Button>
@@ -645,7 +646,7 @@ export default function Dashboard() {
                 onClick={() => setShowTutorial(true)}
                 variant="outline"
                 size="sm"
-                className="text-xs px-4 py-2 border-gray-600 text-gray-300 hover:bg-gray-700"
+                className="text-sm px-4 py-2 border-gray-600 text-gray-300 hover:bg-gray-700"
               >
                 📚 Help
               </Button>
@@ -847,6 +848,16 @@ export default function Dashboard() {
                             <div className="text-sm font-bold text-green-400 mb-1">
                               FINAL
                             </div>
+                            <div className="text-sm text-gray-400 mb-1">
+                              {new Date(game.game_time).toLocaleDateString(
+                                "en-US",
+                                {
+                                  weekday: "short",
+                                  month: "numeric",
+                                  day: "numeric",
+                                }
+                              )}
+                            </div>
                             <div className="text-sm text-gray-400">
                               {game.tv || "TBD"}
                             </div>
@@ -902,10 +913,6 @@ export default function Dashboard() {
                       </div>
                     ) : game.status === "completed" ? (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-white mb-2">
-                          {game.away_team} {game.away_score} - {game.home_team}{" "}
-                          {game.home_score}
-                        </div>
                         {pick && (
                           <div className="space-y-1">
                             <div className="text-sm text-blue-300 font-medium flex items-center justify-center gap-2">
@@ -913,23 +920,24 @@ export default function Dashboard() {
                                 <span className="text-yellow-400">🔒</span>
                               )}
                               Your pick: {pick.picked_team}
-                            </div>
-                            <div
-                              className={`text-sm font-medium ${
-                                pick.picked_team ===
+                              <span
+                                className={`text-sm font-medium ${
+                                  pick.picked_team ===
+                                  ((game.away_score || 0) >
+                                  (game.home_score || 0)
+                                    ? game.away_team
+                                    : game.home_team)
+                                    ? "text-green-400"
+                                    : "text-red-400"
+                                }`}
+                              >
+                                {pick.picked_team ===
                                 ((game.away_score || 0) > (game.home_score || 0)
                                   ? game.away_team
                                   : game.home_team)
-                                  ? "text-green-400"
-                                  : "text-red-400"
-                              }`}
-                            >
-                              {pick.picked_team ===
-                              ((game.away_score || 0) > (game.home_score || 0)
-                                ? game.away_team
-                                : game.home_team)
-                                ? "✓ Correct"
-                                : "✗ Incorrect"}
+                                  ? "(Win)"
+                                  : "(Loss)"}
+                              </span>
                             </div>
                           </div>
                         )}

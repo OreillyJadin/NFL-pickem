@@ -358,15 +358,13 @@ export default function Leaderboard() {
     <div className="min-h-screen bg-gray-900">
       <Navigation />
       <div className="w-full px-0 sm:px-4">
-        <div className="mb-8 px-4 pt-6">
-          <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
-          <p className="text-gray-300">
-            See how you stack up against other players
-          </p>
+        <div className="mb-2 px-4">
+          <h1 className="text-3xl font-bold text-white text-center mt-2">
+            Leaderboard
+          </h1>
         </div>
-
         {/* View Mode Toggle */}
-        <div className="mb-6 mx-4 p-4 bg-gray-800 rounded-lg border border-gray-600">
+        <div className="mb-2 mt-2 mx-4 p-2 bg-gray-800 rounded-lg border border-gray-600">
           <div className="space-y-4">
             <div className="flex gap-2">
               <Button
@@ -579,51 +577,47 @@ export default function Leaderboard() {
         </Card>
 
         {/* Scoring Info */}
-        <Card className="mt-4 bg-gray-800 border-gray-600 mx-0 rounded-none sm:mx-4 sm:rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-lg sm:text-xl text-white">
-              Scoring System
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-3 bg-green-900/20 rounded-lg border border-green-600">
-                <h4 className="font-bold text-green-300 mb-2 text-sm sm:text-base">
-                  Normal Picks
-                </h4>
-                <ul className="text-xs sm:text-sm text-green-200 space-y-1">
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-400">✓</span>
-                    Correct: +1 point
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-red-400">✗</span>
-                    Incorrect: 0 points
-                  </li>
-                </ul>
-              </div>
-              <div className="p-3 bg-yellow-900/20 rounded-lg border border-yellow-600">
-                <h4 className="font-bold text-yellow-300 mb-2 text-sm sm:text-base">
-                  Lock Picks
-                </h4>
-                <ul className="text-xs sm:text-sm text-yellow-200 space-y-1">
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-400">✓</span>
-                    Correct: +2 points
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-red-400">✗</span>
-                    Incorrect: -2 points
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-blue-400">#</span>
-                    Max 3 locks per week
-                  </li>
-                </ul>
-              </div>
+        <div className="mx-4 mt-4">
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-4">
+            Scoring System
+          </h3>
+          <div className="flex gap-4">
+            <div className="flex-1 p-3 bg-green-900/20 rounded-lg border border-green-600">
+              <h4 className="font-bold text-green-300 mb-2 text-sm sm:text-base">
+                Normal Picks
+              </h4>
+              <ul className="text-xs sm:text-sm text-green-200 space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-400">✓</span>
+                  Correct: +1 point
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-red-400">✗</span>
+                  Incorrect: 0 points
+                </li>
+              </ul>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex-1 p-3 bg-yellow-900/20 rounded-lg border border-yellow-600">
+              <h4 className="font-bold text-yellow-300 mb-2 text-sm sm:text-base flex items-center gap-2">
+                <span>🔒</span>Lock Picks
+              </h4>
+              <ul className="text-xs sm:text-sm text-yellow-200 space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-400">✓</span>
+                  Correct: +2 points
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-red-400">✗</span>
+                  Incorrect: -2 points
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-400">#</span>
+                  Max 3 locks per week
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
