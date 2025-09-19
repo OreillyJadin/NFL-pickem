@@ -667,9 +667,18 @@ export default function Profile() {
                                             : "bg-red-600 text-red-100"
                                         }`}
                                       >
-                                        {result === "correct"
-                                          ? "✓ WIN"
-                                          : "✗ LOSS"}
+                                        {result === "correct" ? (
+                                          <>
+                                            ✓ WIN
+                                            {(game as any)?.week >= 3 && (
+                                              <span className="ml-1 text-blue-200">
+                                                ⭐ +{pick.is_lock ? "2" : "1"}
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          "✗ LOSS"
+                                        )}
                                       </span>
                                     ) : (
                                       <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-600 text-blue-100">
@@ -721,9 +730,18 @@ export default function Profile() {
                                             : "bg-red-600 text-red-100"
                                         }`}
                                       >
-                                        {result === "correct"
-                                          ? "✓ WIN"
-                                          : "✗ LOSS"}
+                                        {result === "correct" ? (
+                                          <>
+                                            ✓ WIN
+                                            {(game as any)?.week >= 3 && (
+                                              <span className="ml-1 text-blue-200">
+                                                ⭐ +{pick.is_lock ? "2" : "1"}
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          "✗ LOSS"
+                                        )}
                                       </span>
                                     ) : (
                                       <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-600 text-blue-100">

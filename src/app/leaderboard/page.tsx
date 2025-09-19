@@ -597,8 +597,8 @@ export default function Leaderboard() {
           <h3 className="text-lg sm:text-xl font-bold text-white mb-4">
             Scoring System
           </h3>
-          <div className="flex gap-4">
-            <div className="flex-1 p-3 bg-green-900/20 rounded-lg border border-green-600">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 bg-green-900/20 rounded-lg border border-green-600">
               <h4 className="font-bold text-green-300 mb-2 text-sm sm:text-base">
                 Normal Picks
               </h4>
@@ -613,7 +613,7 @@ export default function Leaderboard() {
                 </li>
               </ul>
             </div>
-            <div className="flex-1 p-3 bg-yellow-900/20 rounded-lg border border-yellow-600">
+            <div className="p-3 bg-yellow-900/20 rounded-lg border border-yellow-600">
               <h4 className="font-bold text-yellow-300 mb-2 text-sm sm:text-base flex items-center gap-2">
                 <span>🔒</span>Lock Picks
               </h4>
@@ -631,6 +631,48 @@ export default function Leaderboard() {
                   Max 3 locks per week
                 </li>
               </ul>
+            </div>
+            <div className="col-span-2 p-3 bg-blue-900/20 rounded-lg border border-blue-600">
+              <h4 className="font-bold text-blue-300 mb-2 text-sm sm:text-base flex items-center gap-2">
+                <span>⭐</span>Bonus Points (Week 3+)
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <h5 className="font-semibold text-blue-300 text-sm sm:text-base">
+                    Solo Pick
+                  </h5>
+                  <div className="text-xs sm:text-sm text-blue-200">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400 font-bold">+1</span>
+                      Only correct pick on a team
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <h5 className="font-semibold text-blue-300 text-sm sm:text-base">
+                    Solo Lock
+                  </h5>
+                  <div className="text-xs sm:text-sm text-blue-200">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400 font-bold">+1</span>
+                      Only correct lock on a team
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <h5 className="font-semibold text-blue-300 text-sm sm:text-base">
+                    Super Bonus
+                  </h5>
+                  <div className="text-xs sm:text-sm text-blue-200">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400 font-bold">+2</span>
+                      Only pick AND lock on a team
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

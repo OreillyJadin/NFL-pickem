@@ -574,6 +574,30 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-900">
       <Navigation />
 
+      {/* Welcome Message and New Feature Announcement */}
+      <div className="text-center py-6 px-4">
+        <div className="bg-blue-900/20 border border-blue-600 rounded-lg p-4 max-w-2xl mx-auto">
+          <div className="flex items-center justify-center gap-2 text-blue-300 font-semibold mb-2">
+            <span className="text-lg">⭐</span>
+            <span>New Feature: Bonus Points!</span>
+          </div>
+          <p className="text-blue-200 text-sm">
+            Starting Week 3, earn bonus points for unique picks:
+            <span className="block mt-2 space-y-1">
+              <span className="block">
+                • Solo Pick (+1): Only person to pick a team correctly
+              </span>
+              <span className="block">
+                • Solo Lock (+1): Only person to lock a team correctly
+              </span>
+              <span className="block">
+                • Super Bonus (+2): Only pick AND lock on a correct pick
+              </span>
+            </span>
+          </p>
+        </div>
+      </div>
+
       {/* Horizontal Scrollable Week Selector - Top of Page */}
       <div className="bg-gray-800 rounded-none overflow-hidden mb-2">
         <div className="flex overflow-x-auto scrollbar-hide week-selector-scroll py-2 px-2 cursor-grab active:cursor-grabbing">
@@ -950,6 +974,16 @@ export default function Dashboard() {
                                   : game.home_team)
                                   ? "(Win)"
                                   : "(Loss)"}
+                                {game.week >= 3 &&
+                                  pick.picked_team ===
+                                    ((game.away_score || 0) >
+                                    (game.home_score || 0)
+                                      ? game.away_team
+                                      : game.home_team) && (
+                                    <span className="text-blue-400 ml-1">
+                                      ⭐ +{pick.is_lock ? "2" : "1"}
+                                    </span>
+                                  )}
                               </span>
                             </div>
                           </div>

@@ -53,6 +53,16 @@ export default function Home() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="bg-blue-900/20 border border-blue-600 rounded-lg p-3 mb-4">
+              <div className="flex items-center justify-center gap-2 text-blue-300 font-semibold mb-2">
+                <span className="text-lg">⭐</span>
+                <span>New Feature: Bonus Points!</span>
+              </div>
+              <p className="text-blue-200 text-sm">
+                Starting Week 3, earn extra points for unique picks. Check the
+                leaderboard for details!
+              </p>
+            </div>
             <Button
               onClick={goToDashboard}
               className="w-full bg-blue-600 hover:bg-blue-700"
