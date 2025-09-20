@@ -44,6 +44,10 @@ interface Pick {
   game_id: string;
   picked_team: string;
   is_lock: boolean;
+  solo_pick?: boolean;
+  solo_lock?: boolean;
+  super_bonus?: boolean;
+  bonus_points?: number;
 }
 
 export default function Dashboard() {
@@ -585,13 +589,13 @@ export default function Dashboard() {
             Starting Week 3, earn bonus points for unique picks:
             <span className="block mt-2 space-y-1">
               <span className="block">
-                • Solo Pick (+1): Only person to pick a team correctly
+                • Solo Pick (+2): Only person to pick a team correctly
               </span>
               <span className="block">
-                • Solo Lock (+1): Only person to lock a team correctly
+                • Solo Lock (+2): Only person to lock a team correctly
               </span>
               <span className="block">
-                • Super Bonus (+2): Only pick AND lock on a correct pick
+                • Super Bonus (+5): Only pick AND lock on a correct pick
               </span>
             </span>
           </p>
@@ -957,33 +961,34 @@ export default function Dashboard() {
                                 <span className="text-yellow-400">🔒</span>
                               )}
                               Your pick: {pick.picked_team}
+                            </div>
+                            <div className="flex justify-center">
                               <span
-                                className={`text-sm font-medium ${
+                                className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
                                   pick.picked_team ===
                                   ((game.away_score || 0) >
                                   (game.home_score || 0)
                                     ? game.away_team
                                     : game.home_team)
-                                    ? "text-green-400"
-                                    : "text-red-400"
+                                    ? "bg-green-600 text-green-100"
+                                    : "bg-red-600 text-red-100"
                                 }`}
                               >
                                 {pick.picked_team ===
                                 ((game.away_score || 0) > (game.home_score || 0)
                                   ? game.away_team
-                                  : game.home_team)
-                                  ? "(Win)"
-                                  : "(Loss)"}
-                                {game.week >= 3 &&
-                                  pick.picked_team ===
-                                    ((game.away_score || 0) >
-                                    (game.home_score || 0)
-                                      ? game.away_team
-                                      : game.home_team) && (
-                                    <span className="text-blue-400 ml-1">
-                                      ⭐ +{pick.is_lock ? "2" : "1"}
-                                    </span>
-                                  )}
+                                  : game.home_team) ? (
+                                  <>
+                                    ✓ WIN
+                                    {(pick.bonus_points || 0) > 0 && (
+                                      <span className="ml-1 text-blue-200">
+                                        ⭐ +{pick.bonus_points}
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  "✗ LOSS"
+                                )}
                               </span>
                             </div>
                           </div>

@@ -46,11 +46,11 @@ async function calculateBonusPoints(
   // Calculate bonus points
   if (soloPick && soloLock && pick.is_lock) {
     superBonus = true;
-    bonus = 2;
+    bonus = 5;
   } else if (soloLock && pick.is_lock) {
-    bonus = 1;
+    bonus = 2;
   } else if (soloPick) {
-    bonus = 1;
+    bonus = 2;
   }
 
   // Update the pick in the database with bonus information

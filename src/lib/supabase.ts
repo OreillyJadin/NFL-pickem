@@ -44,6 +44,10 @@ export interface Pick {
   picked_team: string;
   is_lock: boolean;
   created_at: string;
+  solo_pick?: boolean;
+  solo_lock?: boolean;
+  super_bonus?: boolean;
+  bonus_points?: number;
 }
 
 export interface Award {

@@ -59,8 +59,8 @@ export default function Home() {
                 <span>New Feature: Bonus Points!</span>
               </div>
               <p className="text-blue-200 text-sm">
-                Starting Week 3, earn extra points for unique picks. Check the
-                leaderboard for details!
+                Starting Week 3, earn bonus points: Solo Pick (+2), Solo Lock
+                (+2), Super Bonus (+5) for both!
               </p>
             </div>
             <Button

@@ -643,7 +643,7 @@ export default function Leaderboard() {
                   </h5>
                   <div className="text-xs sm:text-sm text-blue-200">
                     <div className="flex items-center gap-2">
-                      <span className="text-blue-400 font-bold">+1</span>
+                      <span className="text-blue-400 font-bold">+2</span>
                       Only correct pick on a team
                     </div>
                   </div>
@@ -655,7 +655,7 @@ export default function Leaderboard() {
                   </h5>
                   <div className="text-xs sm:text-sm text-blue-200">
                     <div className="flex items-center gap-2">
-                      <span className="text-blue-400 font-bold">+1</span>
+                      <span className="text-blue-400 font-bold">+2</span>
                       Only correct lock on a team
                     </div>
                   </div>
@@ -667,7 +667,7 @@ export default function Leaderboard() {
                   </h5>
                   <div className="text-xs sm:text-sm text-blue-200">
                     <div className="flex items-center gap-2">
-                      <span className="text-blue-400 font-bold">+2</span>
+                      <span className="text-blue-400 font-bold">+5</span>
                       Only pick AND lock on a team
                     </div>
                   </div>

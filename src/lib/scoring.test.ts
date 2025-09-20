@@ -93,32 +93,32 @@ async function testBonusPoints() {
 
   // Test 2: Solo pick bonus
   const soloResult = await calculatePickPoints(soloPick, mockGame, [soloPick]);
-  console.log("\nTest 2 - Solo pick (should be 2 points, 1 bonus):");
+  console.log("\nTest 2 - Solo pick (should be 3 points, 2 bonus):");
   console.log("Result:", soloResult);
-  console.log("Expected: { isCorrect: true, points: 2, bonus: 1 }");
-  console.log("Passed:", soloResult.points === 2 && soloResult.bonus === 1);
+  console.log("Expected: { isCorrect: true, points: 3, bonus: 2 }");
+  console.log("Passed:", soloResult.points === 3 && soloResult.bonus === 2);
 
   // Test 3: Solo lock bonus
   const soloLockResult = await calculatePickPoints(soloLock, mockGame, [
     soloLock,
     nonLockPick,
   ]);
-  console.log("\nTest 3 - Solo lock (should be 3 points, 1 bonus):");
+  console.log("\nTest 3 - Solo lock (should be 4 points, 2 bonus):");
   console.log("Result:", soloLockResult);
-  console.log("Expected: { isCorrect: true, points: 3, bonus: 1 }");
+  console.log("Expected: { isCorrect: true, points: 4, bonus: 2 }");
   console.log(
     "Passed:",
-    soloLockResult.points === 3 && soloLockResult.bonus === 1
+    soloLockResult.points === 4 && soloLockResult.bonus === 2
   );
 
   // Test 4: Super bonus
   const superResult = await calculatePickPoints(superBonus, mockGame, [
     superBonus,
   ]);
-  console.log("\nTest 4 - Super bonus (should be 4 points, 2 bonus):");
+  console.log("\nTest 4 - Super bonus (should be 7 points, 5 bonus):");
   console.log("Result:", superResult);
-  console.log("Expected: { isCorrect: true, points: 4, bonus: 2 }");
-  console.log("Passed:", superResult.points === 4 && superResult.bonus === 2);
+  console.log("Expected: { isCorrect: true, points: 7, bonus: 5 }");
+  console.log("Passed:", superResult.points === 7 && superResult.bonus === 5);
 
   // Test 5: Week 2 (no bonus)
   const week2Game = { ...mockGame, week: 2 };

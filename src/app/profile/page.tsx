@@ -38,6 +38,10 @@ interface PickHistory {
   picked_team: string;
   is_lock: boolean;
   created_at: string;
+  solo_pick?: boolean;
+  solo_lock?: boolean;
+  super_bonus?: boolean;
+  bonus_points?: number;
   game: {
     home_team: string;
     away_team: string;
@@ -670,9 +674,9 @@ export default function Profile() {
                                         {result === "correct" ? (
                                           <>
                                             ✓ WIN
-                                            {(game as any)?.week >= 3 && (
+                                            {(pick.bonus_points || 0) > 0 && (
                                               <span className="ml-1 text-blue-200">
-                                                ⭐ +{pick.is_lock ? "2" : "1"}
+                                                ⭐ +{pick.bonus_points}
                                               </span>
                                             )}
                                           </>
@@ -733,9 +737,9 @@ export default function Profile() {
                                         {result === "correct" ? (
                                           <>
                                             ✓ WIN
-                                            {(game as any)?.week >= 3 && (
+                                            {(pick.bonus_points || 0) > 0 && (
                                               <span className="ml-1 text-blue-200">
-                                                ⭐ +{pick.is_lock ? "2" : "1"}
+                                                ⭐ +{pick.bonus_points}
                                               </span>
                                             )}
                                           </>
