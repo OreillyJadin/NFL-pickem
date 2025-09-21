@@ -6,6 +6,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { TutorialModal } from "@/components/TutorialModal";
 import { Button } from "@/components/ui/button";
+import { Star, BookOpen, Smartphone } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -55,7 +56,7 @@ export default function Home() {
           <CardContent className="space-y-4">
             <div className="bg-blue-900/20 border border-blue-600 rounded-lg p-3 mb-4">
               <div className="flex items-center justify-center gap-2 text-blue-300 font-semibold mb-2">
-                <span className="text-lg">⭐</span>
+                <Star className="w-5 h-5" />
                 <span>New Feature: Bonus Points!</span>
               </div>
               <p className="text-blue-200 text-sm">
@@ -74,7 +75,10 @@ export default function Home() {
               variant="outline"
               className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
             >
-              📚 Take a Tour
+              <span className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Take a Tour
+              </span>
             </Button>
             <Button
               onClick={signOut}
@@ -116,7 +120,7 @@ export default function Home() {
         {/* Subtle home screen reminder */}
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
-            <span>📱</span>
+            <Smartphone className="w-4 h-4" />
             <span>Add to home screen for quick access</span>
           </p>
           <div className="mt-2 flex justify-center">

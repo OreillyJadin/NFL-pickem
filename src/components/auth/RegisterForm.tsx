@@ -7,6 +7,7 @@ import { uploadProfilePicture } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Check } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -234,7 +235,10 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
               <p className="text-sm text-red-400">{usernameError}</p>
             )}
             {!usernameError && username.length >= 3 && !checkingUsername && (
-              <p className="text-sm text-green-400">✓ Username available</p>
+              <p className="text-sm text-green-400 flex items-center gap-1">
+                <Check className="w-4 h-4" />
+                Username available
+              </p>
             )}
           </div>
           <div className="space-y-2">

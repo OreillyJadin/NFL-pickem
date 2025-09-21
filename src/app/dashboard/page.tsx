@@ -2,6 +2,18 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  Lock,
+  Star,
+  Check,
+  X,
+  User,
+  Edit,
+  Unlock,
+  RefreshCw,
+  BookOpen,
+  Rocket,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -18,7 +30,6 @@ import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/lib/storage";
 import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
 import { syncAllCurrentGames, syncGameScore } from "@/lib/game-sync";
-import { User } from "lucide-react";
 
 interface Game {
   id: string;
@@ -54,6 +65,34 @@ export default function Dashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [games, setGames] = useState<Game[]>([]);
+
+  // Custom sort function for games: in_progress > scheduled > completed, then by game_time
+  const sortGames = (games: Game[]) => {
+    return games.sort((a, b) => {
+      // Define status priority: in_progress = 1, scheduled = 2, completed = 3
+      const getStatusPriority = (status: string) => {
+        switch (status) {
+          case "in_progress":
+            return 1;
+          case "scheduled":
+            return 2;
+          case "completed":
+            return 3;
+          default:
+            return 4;
+        }
+      };
+
+      const statusDiff =
+        getStatusPriority(a.status) - getStatusPriority(b.status);
+      if (statusDiff !== 0) {
+        return statusDiff;
+      }
+
+      // If same status, sort by game time
+      return new Date(a.game_time).getTime() - new Date(b.game_time).getTime();
+    });
+  };
   const [picks, setPicks] = useState<Pick[]>([]);
   const [loadingGames, setLoadingGames] = useState(true);
   // Function to calculate current NFL week
@@ -214,7 +253,6 @@ export default function Dashboard() {
         .eq("week", selectedWeek)
         .eq("season_type", selectedSeasonType)
         .eq("season", 2025)
-        .order("status", { ascending: true }) // 'completed' comes after 'in_progress' and 'scheduled'
         .order("game_time", { ascending: true });
 
       if (error || !dbGames || dbGames.length === 0) {
@@ -222,12 +260,12 @@ export default function Dashboard() {
         if (selectedWeek === 1 && selectedSeasonType === "regular") {
           const response = await fetch("/data/week1.json");
           const data = await response.json();
-          setGames(data.games);
+          setGames(sortGames(data.games));
         } else {
           setGames([]);
         }
       } else {
-        setGames(dbGames);
+        setGames(sortGames(dbGames));
       }
     } catch (error) {
       console.error("Error loading games:", error);
@@ -582,7 +620,7 @@ export default function Dashboard() {
       <div className="text-center py-6 px-4">
         <div className="bg-blue-900/20 border border-blue-600 rounded-lg p-4 max-w-2xl mx-auto">
           <div className="flex items-center justify-center gap-2 text-blue-300 font-semibold mb-2">
-            <span className="text-lg">⭐</span>
+            <Star className="w-5 h-5" />
             <span>New Feature: Bonus Points!</span>
           </div>
           <p className="text-blue-200 text-sm">
@@ -673,7 +711,10 @@ export default function Dashboard() {
                 size="sm"
                 className="text-sm px-4 py-2 border-gray-600 text-gray-300 bg-gray-800 hover:bg-gray-700"
               >
-                🔒 Locks: {locksUsed}/3
+                <span className="flex items-center gap-1">
+                  <Lock className="w-4 h-4" />
+                  Locks: {locksUsed}/3
+                </span>
               </Button>
               <Button
                 onClick={handleSyncAllGames}
@@ -681,7 +722,14 @@ export default function Dashboard() {
                 size="sm"
                 className="bg-green-700 hover:bg-green-800 text-white text-sm px-4 py-2"
               >
-                {syncingScores ? "Syncing..." : "🚀 Sync Games"}
+                <span className="flex items-center gap-2">
+                  {syncingScores ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Rocket className="w-4 h-4" />
+                  )}
+                  {syncingScores ? "Syncing..." : "Sync Games"}
+                </span>
               </Button>
               <Button
                 onClick={() => setShowTutorial(true)}
@@ -689,7 +737,10 @@ export default function Dashboard() {
                 size="sm"
                 className="text-sm px-4 py-2 border-gray-600 text-gray-300 hover:bg-gray-700"
               >
-                📚 Help
+                <span className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Help
+                </span>
               </Button>
             </div>
           </div>
@@ -940,13 +991,14 @@ export default function Dashboard() {
                           <div className="space-y-1">
                             <div className="text-sm text-blue-300 font-medium flex items-center justify-center gap-2">
                               {pick.is_lock && (
-                                <span className="text-yellow-400">🔒</span>
+                                <Lock className="w-4 h-4 text-yellow-400" />
                               )}
                               Your pick: {pick.picked_team}
                             </div>
                             {pick.is_lock && (
-                              <div className="text-xs text-yellow-400 font-medium">
-                                🔒 LOCKED
+                              <div className="text-xs text-yellow-400 font-medium flex items-center justify-center gap-1">
+                                <Lock className="w-3 h-3" />
+                                LOCKED
                               </div>
                             )}
                           </div>
@@ -958,7 +1010,7 @@ export default function Dashboard() {
                           <div className="space-y-1">
                             <div className="text-sm text-blue-300 font-medium flex items-center justify-center gap-2">
                               {pick.is_lock && (
-                                <span className="text-yellow-400">🔒</span>
+                                <Lock className="w-4 h-4 text-yellow-400" />
                               )}
                               Your pick: {pick.picked_team}
                             </div>
@@ -979,15 +1031,20 @@ export default function Dashboard() {
                                   ? game.away_team
                                   : game.home_team) ? (
                                   <>
-                                    ✓ WIN
+                                    <Check className="w-3 h-3 mr-1" />
+                                    WIN
                                     {(pick.bonus_points || 0) > 0 && (
-                                      <span className="ml-1 text-blue-200">
-                                        ⭐ +{pick.bonus_points}
+                                      <span className="ml-1 text-blue-200 flex items-center">
+                                        <Star className="w-3 h-3 mr-1" />+
+                                        {pick.bonus_points}
                                       </span>
                                     )}
                                   </>
                                 ) : (
-                                  "✗ LOSS"
+                                  <>
+                                    <X className="w-3 h-3 mr-1" />
+                                    LOSS
+                                  </>
                                 )}
                               </span>
                             </div>
@@ -998,9 +1055,9 @@ export default function Dashboard() {
                       <div className="text-center">
                         {pick && (
                           <div className="space-y-2">
-                            <div className="text-sm text-blue-300">
+                            <div className="text-sm text-blue-300 flex items-center">
                               {pick.is_lock && (
-                                <span className="text-yellow-400 mr-1">🔒</span>
+                                <Lock className="w-3 h-3 text-yellow-400 mr-1" />
                               )}
                               Picked: {pick.picked_team.split(" ").pop()}
                             </div>
@@ -1023,7 +1080,11 @@ export default function Dashboard() {
                                 `}
                               >
                                 <span className="text-sm">
-                                  {pick.is_lock ? "🔒" : "🔓"}
+                                  {pick.is_lock ? (
+                                    <Lock className="w-4 h-4" />
+                                  ) : (
+                                    <Unlock className="w-4 h-4" />
+                                  )}
                                 </span>
                                 <span>
                                   {pick.is_lock ? "Remove Lock" : "Lock Pick"}
@@ -1075,7 +1136,10 @@ export default function Dashboard() {
                 </div>
               </div>
               <CardTitle className="text-xl">
-                🎨 Complete Your Profile!
+                <span className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Complete Your Profile!
+                </span>
               </CardTitle>
               <CardDescription>
                 Make your profile stand out on the leaderboard
@@ -1098,7 +1162,10 @@ export default function Dashboard() {
                   className="px-6 py-3 text-base font-semibold"
                   size="lg"
                 >
-                  ✏️ Edit Profile
+                  <span className="flex items-center gap-2">
+                    <Edit className="w-4 h-4" />
+                    Edit Profile
+                  </span>
                 </Button>
                 <Button
                   variant="outline"

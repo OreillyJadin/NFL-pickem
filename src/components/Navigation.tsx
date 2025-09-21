@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { BarChart3, Trophy, User } from "lucide-react";
 
 export function Navigation() {
   const { user, signOut } = useAuth();
@@ -27,7 +28,10 @@ export function Navigation() {
                     : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
                 }`}
               >
-                Dashboard
+                <span className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Dashboard
+                </span>
               </button>
               <button
                 onClick={() => router.push("/profile")}
@@ -37,7 +41,10 @@ export function Navigation() {
                     : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
                 }`}
               >
-                Profile
+                <span className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Profile
+                </span>
               </button>
               <button
                 onClick={() => router.push("/leaderboard")}
@@ -47,7 +54,10 @@ export function Navigation() {
                     : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
                 }`}
               >
-                Leaderboard
+                <span className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4" />
+                  Leaderboard
+                </span>
               </button>
             </div>
           </div>
@@ -78,7 +88,10 @@ export function Navigation() {
                   : "text-gray-400 hover:text-gray-200 hover:bg-gray-700 border border-gray-600"
               }`}
             >
-              📊 Dashboard
+              <span className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Dashboard
+              </span>
             </button>
             <button
               onClick={() => router.push("/leaderboard")}
@@ -88,7 +101,10 @@ export function Navigation() {
                   : "text-gray-400 hover:text-gray-200 hover:bg-gray-700 border border-gray-600"
               }`}
             >
-              🏆 Leaderboard
+              <span className="flex items-center gap-2">
+                <Trophy className="w-4 h-4" />
+                Leaderboard
+              </span>
             </button>
             <button
               onClick={() => router.push("/profile")}
@@ -98,7 +114,10 @@ export function Navigation() {
                   : "text-gray-400 hover:text-gray-200 hover:bg-gray-700 border border-gray-600"
               }`}
             >
-              👤 Profile
+              <span className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Profile
+              </span>
             </button>
           </div>
         </div>

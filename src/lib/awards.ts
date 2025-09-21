@@ -1,34 +1,42 @@
 import { supabase } from "./supabase";
 import { Award } from "./supabase";
+import {
+  Trophy,
+  Medal,
+  Award as AwardIcon,
+  Snowflake,
+  Target,
+  Zap,
+} from "lucide-react";
 
 export const AWARD_TYPES = {
   top_scorer: {
-    emoji: "🏆",
+    icon: Trophy,
     name: "1st Place",
     description: "Weekly Winner",
   },
   second_scorer: {
-    emoji: "🥈",
+    icon: Medal,
     name: "2nd Place",
     description: "Runner Up",
   },
   third_scorer: {
-    emoji: "🥉",
+    icon: AwardIcon,
     name: "3rd Place",
     description: "Third Place",
   },
   lowest_scorer: {
-    emoji: "🥶",
+    icon: Snowflake,
     name: "Lowest Score",
     description: "Last Place",
   },
   perfect_week: {
-    emoji: "💯",
+    icon: Target,
     name: "Perfect Week",
     description: "All Correct",
   },
   cold_week: {
-    emoji: "🧊",
+    icon: Zap,
     name: "Cold Week",
     description: "All Wrong",
   },
@@ -294,7 +302,7 @@ export async function processWeeklyAwards(
 export function getAwardDisplay(award: Award) {
   const awardInfo = AWARD_TYPES[award.award_type];
   return {
-    emoji: awardInfo.emoji,
+    icon: awardInfo.icon,
     name: `${awardInfo.name} [Week ${award.week}]`,
     description: awardInfo.description,
     points: award.points,

@@ -13,6 +13,7 @@ import {
 
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
+import { Lock, Trophy, Check, X, Star, Unlock } from "lucide-react";
 import { getProfilePictureUrl } from "@/lib/storage";
 import { getUserAwards, getAwardDisplay } from "@/lib/awards";
 import { Award } from "@/lib/supabase";
@@ -479,7 +480,10 @@ export default function Profile() {
         {/* Lock Stats Cards */}
         <div className="grid grid-cols-4 gap-1 mb-4">
           <Card className="border-yellow-600 bg-yellow-900/20 p-2 text-center">
-            <div className="text-xs text-yellow-300">🔒 Locks</div>
+            <div className="text-xs text-yellow-300 flex items-center justify-center gap-1">
+              <Lock className="w-3 h-3" />
+              Locks
+            </div>
             <div className="text-lg font-bold text-yellow-200">
               {stats.lockPicks}
             </div>
@@ -511,7 +515,8 @@ export default function Profile() {
         <Card className="mb-4 bg-gray-800 border-gray-600">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg text-white">
-              🏆 Trophy Wall
+              <Trophy className="w-5 h-5 text-yellow-400" />
+              Trophy Wall
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -534,7 +539,9 @@ export default function Profile() {
                       className="p-2 border rounded bg-gradient-to-br from-yellow-900/30 to-orange-900/30 border-yellow-600"
                     >
                       <div className="text-center">
-                        <div className="text-2xl mb-1">{display.emoji}</div>
+                        <div className="mb-1 flex justify-center">
+                          <display.icon className="w-6 h-6 text-yellow-400" />
+                        </div>
                         <div className="font-semibold text-yellow-200 text-xs mb-1">
                           {display.name}
                         </div>
@@ -628,8 +635,9 @@ export default function Profile() {
                               {formatPickTime(game?.game_time)}
                             </div>
                             {pick.is_lock && (
-                              <div className="text-xs text-yellow-400 font-medium">
-                                🔒 LOCKED
+                              <div className="text-xs text-yellow-400 font-medium flex items-center justify-center gap-1">
+                                <Lock className="w-3 h-3" />
+                                LOCKED
                               </div>
                             )}
                           </div>
@@ -673,15 +681,20 @@ export default function Profile() {
                                       >
                                         {result === "correct" ? (
                                           <>
-                                            ✓ WIN
+                                            <Check className="w-3 h-3 mr-1" />
+                                            WIN
                                             {(pick.bonus_points || 0) > 0 && (
                                               <span className="ml-1 text-blue-200">
-                                                ⭐ +{pick.bonus_points}
+                                                <Star className="w-3 h-3 mr-1" />
+                                                +{pick.bonus_points}
                                               </span>
                                             )}
                                           </>
                                         ) : (
-                                          "✗ LOSS"
+                                          <>
+                                            <X className="w-3 h-3 mr-1" />
+                                            LOSS
+                                          </>
                                         )}
                                       </span>
                                     ) : (
@@ -736,15 +749,20 @@ export default function Profile() {
                                       >
                                         {result === "correct" ? (
                                           <>
-                                            ✓ WIN
+                                            <Check className="w-3 h-3 mr-1" />
+                                            WIN
                                             {(pick.bonus_points || 0) > 0 && (
                                               <span className="ml-1 text-blue-200">
-                                                ⭐ +{pick.bonus_points}
+                                                <Star className="w-3 h-3 mr-1" />
+                                                +{pick.bonus_points}
                                               </span>
                                             )}
                                           </>
                                         ) : (
-                                          "✗ LOSS"
+                                          <>
+                                            <X className="w-3 h-3 mr-1" />
+                                            LOSS
+                                          </>
                                         )}
                                       </span>
                                     ) : (

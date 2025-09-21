@@ -9,6 +9,7 @@ import {
 } from "@/lib/storage";
 import { PasswordResetModal } from "@/components/PasswordResetModal";
 import { Button } from "@/components/ui/button";
+import { Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -301,7 +302,10 @@ export function ProfileEditModal({
                 onClick={() => setShowPasswordModal(true)}
                 className="w-full"
               >
-                🔒 Change Password
+                <span className="flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Change Password
+                </span>
               </Button>
             </div>
           </div>

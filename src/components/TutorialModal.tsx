@@ -17,6 +17,10 @@ import {
   Trophy,
   Target,
   Lock,
+  Medal,
+  Award,
+  Snowflake,
+  Zap,
 } from "lucide-react";
 
 interface TutorialModalProps {
@@ -86,32 +90,37 @@ export function TutorialModal({ isOpen, onClose, onSkip }: TutorialModalProps) {
             </div>
           </div>
           <div className="p-4 bg-yellow-900/20 rounded-lg border border-yellow-600">
-            <p className="text-sm text-gray-300 mb-3">
-              🏆 <strong>Weekly Awards:</strong> Earn trophies for perfect
-              weeks, top scores, and more!
+            <p className="text-sm text-gray-300 mb-3 flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-yellow-400" />
+              <strong>Weekly Awards:</strong> Earn trophies for perfect weeks,
+              top scores, and more!
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <div className="bg-gray-800 p-2 rounded border border-gray-600">
-                <div className="font-semibold text-yellow-300">
-                  🏆 Top Scorer
+                <div className="font-semibold text-yellow-300 flex items-center gap-2">
+                  <Trophy className="w-4 h-4" />
+                  Top Scorer
                 </div>
                 <div className="text-gray-300">Highest points</div>
               </div>
               <div className="bg-gray-800 p-2 rounded border border-gray-600">
-                <div className="font-semibold text-yellow-300">
-                  🥶 Lowest Scorer
+                <div className="font-semibold text-yellow-300 flex items-center gap-2">
+                  <Snowflake className="w-4 h-4" />
+                  Lowest Scorer
                 </div>
                 <div className="text-gray-300">Lowest points</div>
               </div>
               <div className="bg-gray-800 p-2 rounded border border-gray-600">
-                <div className="font-semibold text-yellow-300">
-                  💯 Perfect Week
+                <div className="font-semibold text-yellow-300 flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  Perfect Week
                 </div>
                 <div className="text-gray-300">All picks correct</div>
               </div>
               <div className="bg-gray-800 p-2 rounded border border-gray-600">
-                <div className="font-semibold text-yellow-300">
-                  🧊 Cold Week
+                <div className="font-semibold text-yellow-300 flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  Cold Week
                 </div>
                 <div className="text-gray-300">All picks wrong</div>
               </div>

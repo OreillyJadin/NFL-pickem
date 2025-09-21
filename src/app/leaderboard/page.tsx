@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { Lock, Star, Check, X } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -604,26 +605,27 @@ export default function Leaderboard() {
               </h4>
               <ul className="text-xs sm:text-sm text-green-200 space-y-1">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
+                  <Check className="w-3 h-3 text-green-400" />
                   Correct: +1 point
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-red-400">✗</span>
+                  <X className="w-3 h-3 text-red-400" />
                   Incorrect: 0 points
                 </li>
               </ul>
             </div>
             <div className="p-3 bg-yellow-900/20 rounded-lg border border-yellow-600">
               <h4 className="font-bold text-yellow-300 mb-2 text-sm sm:text-base flex items-center gap-2">
-                <span>🔒</span>Lock Picks
+                <Lock className="w-4 h-4" />
+                Lock Picks
               </h4>
               <ul className="text-xs sm:text-sm text-yellow-200 space-y-1">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
+                  <Check className="w-3 h-3 text-green-400" />
                   Correct: +2 points
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-red-400">✗</span>
+                  <X className="w-3 h-3 text-red-400" />
                   Incorrect: -2 points
                 </li>
                 <li className="flex items-center gap-2">
@@ -634,7 +636,8 @@ export default function Leaderboard() {
             </div>
             <div className="col-span-2 p-3 bg-blue-900/20 rounded-lg border border-blue-600">
               <h4 className="font-bold text-blue-300 mb-2 text-sm sm:text-base flex items-center gap-2">
-                <span>⭐</span>Bonus Points (Week 3+)
+                <Star className="w-4 h-4" />
+                Bonus Points (Week 3+)
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
