@@ -782,16 +782,33 @@ export default function Dashboard() {
 
             // Helper function to calculate total points for a pick
             const calculatePickTotalPoints = (pick: Pick, game: Game) => {
-              if (game.status !== "completed" || !game.home_score || !game.away_score) {
+              if (
+                game.status !== "completed" ||
+                !game.home_score ||
+                !game.away_score
+              ) {
                 return 0;
               }
 
-              const winner = game.home_score > game.away_score ? game.home_team : game.away_team;
+              const winner =
+                game.home_score > game.away_score
+                  ? game.home_team
+                  : game.away_team;
               const isCorrect = pick.picked_team === winner;
 
               if (isCorrect) {
                 const basePoints = pick.is_lock ? 2 : 1;
-                const bonusPoints = pick.bonus_points || 0;
+                
+                // Calculate bonus points based on solo status
+                let bonusPoints = 0;
+                if (pick.super_bonus) {
+                  bonusPoints = 5;
+                } else if (pick.solo_lock) {
+                  bonusPoints = 2;
+                } else if (pick.solo_pick) {
+                  bonusPoints = 2;
+                }
+                
                 return basePoints + bonusPoints;
               } else {
                 return pick.is_lock ? -2 : 0;
