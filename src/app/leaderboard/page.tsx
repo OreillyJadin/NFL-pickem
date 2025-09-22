@@ -141,6 +141,7 @@ export default function Leaderboard() {
               user_id,
               picked_team,
               is_lock,
+              bonus_points,
               game:games!inner(
                 home_team,
                 away_team,
@@ -242,6 +243,7 @@ export default function Leaderboard() {
               user_id,
               picked_team,
               is_lock,
+              bonus_points,
               game:games!inner(
                 home_team,
                 away_team,

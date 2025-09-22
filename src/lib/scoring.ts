@@ -122,24 +122,9 @@ async function calculateBonusPoints(
     return 0;
   }
 
-  // Fetch the updated pick data to get the latest bonus points
-  try {
-    const { data: updatedPick, error } = await supabase
-      .from("picks")
-      .select("bonus_points")
-      .eq("id", pick.id)
-      .single();
-
-    if (error) {
-      console.error("Error fetching updated pick bonus points:", error);
-      return 0;
-    }
-
-    return updatedPick?.bonus_points || 0;
-  } catch (error) {
-    console.error("Error fetching updated pick bonus points:", error);
-    return 0;
-  }
+  // Return the bonus points that are already stored in the pick object
+  // This avoids making individual database calls for each pick
+  return pick.bonus_points || 0;
 }
 
 export async function calculatePickPoints(
@@ -155,10 +140,8 @@ export async function calculatePickPoints(
     game.home_score > game.away_score ? game.home_team : game.away_team;
   const isCorrect = pick.picked_team === winner;
 
-  // Ensure solo pick status is updated for this game when calculating points
-  if (game.week >= 3) {
-    await updateSoloPickStatus(game.id);
-  }
+  // Solo pick status should be updated when games change status, not during point calculation
+  // This avoids performance issues during leaderboard calculations
 
   if (isCorrect) {
     const basePoints = pick.is_lock ? 2 : 1;
