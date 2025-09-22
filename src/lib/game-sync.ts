@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { updateSoloPickStatus } from "./scoring";
 
 // ESPN API integration for real-time scores
 async function fetchESPNGameData(espnId: string) {
@@ -125,6 +126,11 @@ export async function syncGameScore(gameId: string) {
     console.log(
       `Updated game ${gameId}: ${awayTeam.team.displayName} ${awayScore} - ${homeTeam.team.displayName} ${homeScore} (${status})`
     );
+
+    // Update solo pick/lock status when game status changes to in_progress or completed
+    if (status === "in_progress" || status === "completed") {
+      await updateSoloPickStatus(gameId);
+    }
 
     return { success: true, homeScore, awayScore, status };
   } catch (error) {

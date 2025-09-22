@@ -759,6 +759,27 @@ export default function Dashboard() {
             const pick = getPickForGame(game.id);
             const locked = isGameLocked(game.game_time);
 
+            // Helper function to render solo status stars
+            const renderSoloStars = (pick: Pick) => {
+              if (!pick.solo_pick && !pick.solo_lock && !pick.super_bonus)
+                return null;
+
+              return (
+                <div className="flex items-center gap-1 ml-2">
+                  {pick.super_bonus ? (
+                    // Two stars for super bonus
+                    <>
+                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                    </>
+                  ) : (
+                    // One star for solo pick or solo lock
+                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                  )}
+                </div>
+              );
+            };
+
             return (
               <div
                 key={game.id}
@@ -994,6 +1015,7 @@ export default function Dashboard() {
                                 <Lock className="w-4 h-4 text-yellow-400" />
                               )}
                               Your pick: {pick.picked_team}
+                              {renderSoloStars(pick)}
                             </div>
                             {pick.is_lock && (
                               <div className="text-xs text-yellow-400 font-medium flex items-center justify-center gap-1">
@@ -1013,6 +1035,7 @@ export default function Dashboard() {
                                 <Lock className="w-4 h-4 text-yellow-400" />
                               )}
                               Your pick: {pick.picked_team}
+                              {renderSoloStars(pick)}
                             </div>
                             <div className="flex justify-center">
                               <span

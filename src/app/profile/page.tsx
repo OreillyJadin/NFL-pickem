@@ -615,6 +615,27 @@ export default function Profile() {
                   const result = getPickResult(pick);
                   const game = pick.game;
 
+                  // Helper function to render solo status stars
+                  const renderSoloStars = (pick: PickHistory) => {
+                    if (!pick.solo_pick && !pick.solo_lock && !pick.super_bonus)
+                      return null;
+
+                    return (
+                      <div className="flex items-center gap-1 ml-2">
+                        {pick.super_bonus ? (
+                          // Two stars for super bonus
+                          <>
+                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                          </>
+                        ) : (
+                          // One star for solo pick or solo lock
+                          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                        )}
+                      </div>
+                    );
+                  };
+
                   return (
                     <div
                       key={pick.id}
@@ -670,7 +691,8 @@ export default function Profile() {
                                   </div>
                                 </div>
                                 {pick.picked_team === game.away_team && (
-                                  <div className="mr-2">
+                                  <div className="mr-2 flex items-center">
+                                    {renderSoloStars(pick)}
                                     {game.status === "completed" ? (
                                       <span
                                         className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
@@ -738,7 +760,8 @@ export default function Profile() {
                                   </div>
                                 </div>
                                 {pick.picked_team === game.home_team && (
-                                  <div className="mr-2">
+                                  <div className="mr-2 flex items-center">
+                                    {renderSoloStars(pick)}
                                     {game.status === "completed" ? (
                                       <span
                                         className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${

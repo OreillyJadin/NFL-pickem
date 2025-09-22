@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { Award } from "./supabase";
+import { calculatePickPoints } from "./scoring";
 import {
   Trophy,
   Medal,
@@ -135,7 +136,8 @@ export async function processWeeklyAwards(
       [userId: string]: { points: number; correct: number; total: number };
     } = {};
 
-    picks.forEach((pick) => {
+    // Process picks with proper bonus point calculation
+    for (const pick of picks) {
       const game = pick.game;
       if (
         !game ||
@@ -143,7 +145,7 @@ export async function processWeeklyAwards(
         game.home_score === null ||
         game.away_score === null
       )
-        return;
+        continue;
 
       if (!userStats[pick.user_id]) {
         userStats[pick.user_id] = { points: 0, correct: 0, total: 0 };
@@ -151,17 +153,14 @@ export async function processWeeklyAwards(
 
       userStats[pick.user_id].total++;
 
-      const winner =
-        game.home_score > game.away_score ? game.home_team : game.away_team;
-      const isCorrect = pick.picked_team === winner;
+      // Use the proper calculatePickPoints function to include bonus points
+      const result = await calculatePickPoints(pick, game, picks);
+      userStats[pick.user_id].points += result.points;
 
-      if (isCorrect) {
+      if (result.isCorrect) {
         userStats[pick.user_id].correct++;
-        userStats[pick.user_id].points += pick.is_lock ? 2 : 1;
-      } else {
-        userStats[pick.user_id].points += pick.is_lock ? -2 : 0;
       }
-    });
+    }
 
     // Find award winners
     const users = Object.entries(userStats);

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/lib/storage";
+import { calculatePickPoints } from "@/lib/scoring";
 
 // Profile Picture Component
 function ProfilePicture({ userId }: { userId: string }) {
@@ -200,7 +201,7 @@ export default function Leaderboard() {
         });
 
         // Process picks and calculate points
-        picks?.forEach((pick) => {
+        for (const pick of picks || []) {
           const game = pick.game as any;
 
           // Only count completed games for stats
@@ -211,21 +212,22 @@ export default function Leaderboard() {
             game.away_score !== null
           ) {
             userStats[pick.user_id].total_picks++;
-            const winner =
-              game.home_score > game.away_score
-                ? game.home_team
-                : game.away_team;
-            const isCorrect = pick.picked_team === winner;
 
-            if (isCorrect) {
+            // Use proper point calculation that includes bonus points
+            const result = await calculatePickPoints(
+              pick as any,
+              game,
+              (picks || []) as any
+            );
+            userStats[pick.user_id].total_points += result.points;
+
+            if (result.isCorrect) {
               userStats[pick.user_id].correct_picks++;
-              userStats[pick.user_id].total_points += pick.is_lock ? 2 : 1;
             } else {
               userStats[pick.user_id].incorrect_picks++;
-              userStats[pick.user_id].total_points += pick.is_lock ? -2 : 0;
             }
           }
-        });
+        }
 
         // Sort by priority: points, %, wins, lowest losses
         const sortedLeaderboard =
@@ -302,7 +304,7 @@ export default function Leaderboard() {
         });
 
         // Process picks and calculate points
-        picks?.forEach((pick) => {
+        for (const pick of picks || []) {
           const game = pick.game as any;
 
           // Only count completed games for stats
@@ -313,21 +315,22 @@ export default function Leaderboard() {
             game.away_score !== null
           ) {
             userStats[pick.user_id].total_picks++;
-            const winner =
-              game.home_score > game.away_score
-                ? game.home_team
-                : game.away_team;
-            const isCorrect = pick.picked_team === winner;
 
-            if (isCorrect) {
+            // Use proper point calculation that includes bonus points
+            const result = await calculatePickPoints(
+              pick as any,
+              game,
+              (picks || []) as any
+            );
+            userStats[pick.user_id].total_points += result.points;
+
+            if (result.isCorrect) {
               userStats[pick.user_id].correct_picks++;
-              userStats[pick.user_id].total_points += pick.is_lock ? 2 : 1;
             } else {
               userStats[pick.user_id].incorrect_picks++;
-              userStats[pick.user_id].total_points += pick.is_lock ? -2 : 0;
             }
           }
-        });
+        }
 
         // Sort by priority: points, %, wins, lowest losses
         const sortedLeaderboard =

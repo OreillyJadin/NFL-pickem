@@ -7,72 +7,139 @@ export interface PickResult {
   bonus: number; // Track bonus points separately
 }
 
+// Calculate and update solo pick/lock status for a game
+export async function updateSoloPickStatus(gameId: string) {
+  try {
+    // Get the game details
+    const { data: game, error: gameError } = await supabase
+      .from("games")
+      .select("*")
+      .eq("id", gameId)
+      .single();
+
+    if (gameError || !game) {
+      console.error("Error fetching game:", gameError);
+      return;
+    }
+
+    // Only process for Week 3+ games that are in_progress or completed
+    if (
+      game.week <= 2 ||
+      (game.status !== "in_progress" && game.status !== "completed")
+    ) {
+      return;
+    }
+
+    // Get all picks for this game
+    const { data: allPicks, error: picksError } = await supabase
+      .from("picks")
+      .select("*")
+      .eq("game_id", gameId);
+
+    if (picksError || !allPicks) {
+      console.error("Error fetching picks:", picksError);
+      return;
+    }
+
+    // Group picks by team
+    const picksByTeam: { [team: string]: Pick[] } = {};
+    const locksByTeam: { [team: string]: Pick[] } = {};
+
+    allPicks.forEach((pick) => {
+      if (!picksByTeam[pick.picked_team]) {
+        picksByTeam[pick.picked_team] = [];
+      }
+      picksByTeam[pick.picked_team].push(pick);
+
+      if (pick.is_lock) {
+        if (!locksByTeam[pick.picked_team]) {
+          locksByTeam[pick.picked_team] = [];
+        }
+        locksByTeam[pick.picked_team].push(pick);
+      }
+    });
+
+    // Update each pick with solo status
+    for (const pick of allPicks) {
+      const teamPicks = picksByTeam[pick.picked_team] || [];
+      const teamLocks = locksByTeam[pick.picked_team] || [];
+
+      const isSoloPick = teamPicks.length === 1;
+      const isSoloLock = pick.is_lock && teamLocks.length === 1;
+      const isSuperBonus = isSoloPick && isSoloLock && pick.is_lock;
+
+      // Calculate bonus points only if game is completed and pick is correct
+      let bonusPoints = 0;
+      if (
+        game.status === "completed" &&
+        game.home_score !== null &&
+        game.away_score !== null
+      ) {
+        const winner =
+          game.home_score > game.away_score ? game.home_team : game.away_team;
+        const isCorrect = pick.picked_team === winner;
+
+        if (isCorrect) {
+          if (isSuperBonus) {
+            bonusPoints = 5;
+          } else if (isSoloLock) {
+            bonusPoints = 2;
+          } else if (isSoloPick) {
+            bonusPoints = 2;
+          }
+        }
+      }
+
+      // Update the pick in database
+      const { error } = await supabase
+        .from("picks")
+        .update({
+          solo_pick: isSoloPick,
+          solo_lock: isSoloLock,
+          super_bonus: isSuperBonus,
+          bonus_points: bonusPoints,
+        })
+        .eq("id", pick.id);
+
+      if (error) {
+        console.error("Error updating pick bonus status:", error);
+      }
+    }
+
+    console.log(`Updated solo pick/lock status for game ${gameId}`);
+  } catch (error) {
+    console.error("Error updating solo pick status:", error);
+  }
+}
+
 async function calculateBonusPoints(
   pick: Pick,
   game: Game,
   allPicks: Pick[]
 ): Promise<number> {
-  // Only apply bonus points from Week 3 onwards
-  if (game.week <= 2) return 0;
-
-  const winner =
-    game.home_score! > game.away_score! ? game.home_team : game.away_team;
-
-  // Get all picks for this game
-  const gamePicks = allPicks.filter((p) => p.game_id === game.id);
-
-  // Get all correct picks for this game
-  const correctPicks = gamePicks.filter((p) => p.picked_team === winner);
-
-  // Get all correct locks for this game
-  const correctLocks = correctPicks.filter((p) => p.is_lock);
-
-  // Get all locks for this game (correct or not)
-  const totalLocks = gamePicks.filter((p) => p.is_lock);
-
-  let bonus = 0;
-  let soloPick = false;
-  let soloLock = false;
-  let superBonus = false;
-
-  // Check for solo pick and solo lock
-  if (correctPicks.length === 1 && correctPicks[0].user_id === pick.user_id) {
-    soloPick = true;
-  }
-  if (correctLocks.length === 1 && correctLocks[0].user_id === pick.user_id) {
-    soloLock = true;
+  // Only apply bonus points from Week 3 onwards and if game is completed
+  if (game.week <= 2 || game.status !== "completed") {
+    return 0;
   }
 
-  // Calculate bonus points
-  if (soloPick && soloLock && pick.is_lock) {
-    superBonus = true;
-    bonus = 5;
-  } else if (soloLock && pick.is_lock) {
-    bonus = 2;
-  } else if (soloPick) {
-    bonus = 2;
-  }
-
-  // Update the pick in the database with bonus information
+  // Fetch the updated pick data to get the latest bonus points
   try {
-    const { error } = await supabase
+    const { data: updatedPick, error } = await supabase
       .from("picks")
-      .update({
-        solo_pick: soloPick,
-        solo_lock: soloLock,
-        super_bonus: superBonus,
-        bonus_points: bonus,
-      })
-      .eq("id", pick.id);
+      .select("bonus_points")
+      .eq("id", pick.id)
+      .single();
 
     if (error) {
-      console.error("Error updating pick bonus fields:", error);
+      console.error("Error fetching updated pick bonus points:", error);
+      return 0;
     }
-  } catch (error) {
-    console.error("Error updating pick bonus fields:", error);
-  }
 
-  return bonus;
+    return updatedPick?.bonus_points || 0;
+  } catch (error) {
+    console.error("Error fetching updated pick bonus points:", error);
+    return 0;
+  }
 }
 
 export async function calculatePickPoints(
@@ -87,6 +154,11 @@ export async function calculatePickPoints(
   const winner =
     game.home_score > game.away_score ? game.home_team : game.away_team;
   const isCorrect = pick.picked_team === winner;
+
+  // Ensure solo pick status is updated for this game when calculating points
+  if (game.week >= 3) {
+    await updateSoloPickStatus(game.id);
+  }
 
   if (isCorrect) {
     const basePoints = pick.is_lock ? 2 : 1;
