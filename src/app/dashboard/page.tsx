@@ -780,6 +780,24 @@ export default function Dashboard() {
               );
             };
 
+            // Helper function to calculate total points for a pick
+            const calculatePickTotalPoints = (pick: Pick, game: Game) => {
+              if (game.status !== "completed" || !game.home_score || !game.away_score) {
+                return 0;
+              }
+
+              const winner = game.home_score > game.away_score ? game.home_team : game.away_team;
+              const isCorrect = pick.picked_team === winner;
+
+              if (isCorrect) {
+                const basePoints = pick.is_lock ? 2 : 1;
+                const bonusPoints = pick.bonus_points || 0;
+                return basePoints + bonusPoints;
+              } else {
+                return pick.is_lock ? -2 : 0;
+              }
+            };
+
             return (
               <div
                 key={game.id}
@@ -1056,6 +1074,9 @@ export default function Dashboard() {
                                   <>
                                     <Check className="w-3 h-3 mr-1" />
                                     WIN
+                                    <span className="ml-1 text-green-200 font-bold">
+                                      +{calculatePickTotalPoints(pick, game)}
+                                    </span>
                                     {(pick.bonus_points || 0) > 0 && (
                                       <span className="ml-1 text-blue-200 flex items-center">
                                         <Star className="w-3 h-3 mr-1" />+
@@ -1067,6 +1088,9 @@ export default function Dashboard() {
                                   <>
                                     <X className="w-3 h-3 mr-1" />
                                     LOSS
+                                    <span className="ml-1 text-red-200 font-bold">
+                                      {calculatePickTotalPoints(pick, game)}
+                                    </span>
                                   </>
                                 )}
                               </span>
