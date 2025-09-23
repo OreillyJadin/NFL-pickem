@@ -79,6 +79,7 @@ export async function updateSoloPickStatus(gameId: string) {
           game.home_score > game.away_score ? game.home_team : game.away_team;
         const isCorrect = pick.picked_team === winner;
 
+        // Bonus points are only awarded if the pick is correct
         if (isCorrect) {
           if (isSuperBonus) {
             bonusPoints = 5;
@@ -122,9 +123,16 @@ async function calculateBonusPoints(
     return 0;
   }
 
-  // Return the bonus points that are already stored in the pick object
-  // This avoids making individual database calls for each pick
-  return pick.bonus_points || 0;
+  // Calculate bonus points based on solo status flags (only if correct)
+  if (pick.super_bonus) {
+    return 5;
+  } else if (pick.solo_lock) {
+    return 2;
+  } else if (pick.solo_pick) {
+    return 2;
+  }
+
+  return 0;
 }
 
 export async function calculatePickPoints(

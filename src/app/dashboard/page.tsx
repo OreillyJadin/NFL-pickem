@@ -796,11 +796,17 @@ export default function Dashboard() {
                   : game.away_team;
               const isCorrect = pick.picked_team === winner;
 
+              // Base points: correct pick +1, correct lock +2, incorrect lock -2
+              let basePoints = 0;
               if (isCorrect) {
-                const basePoints = pick.is_lock ? 2 : 1;
-                
-                // Calculate bonus points based on solo status
-                let bonusPoints = 0;
+                basePoints = pick.is_lock ? 2 : 1;
+              } else {
+                basePoints = pick.is_lock ? -2 : 0;
+              }
+
+              // Bonus points (Week 3+ only, only if correct): solo pick +2, solo lock +2, super bonus +5
+              let bonusPoints = 0;
+              if (game.week >= 3 && isCorrect) {
                 if (pick.super_bonus) {
                   bonusPoints = 5;
                 } else if (pick.solo_lock) {
@@ -808,11 +814,9 @@ export default function Dashboard() {
                 } else if (pick.solo_pick) {
                   bonusPoints = 2;
                 }
-                
-                return basePoints + bonusPoints;
-              } else {
-                return pick.is_lock ? -2 : 0;
               }
+
+              return basePoints + bonusPoints;
             };
 
             return (
@@ -1094,12 +1098,13 @@ export default function Dashboard() {
                                     <span className="ml-1 text-green-200 font-bold">
                                       +{calculatePickTotalPoints(pick, game)}
                                     </span>
-                                    {(pick.bonus_points || 0) > 0 && (
-                                      <span className="ml-1 text-blue-200 flex items-center">
-                                        <Star className="w-3 h-3 mr-1" />+
-                                        {pick.bonus_points}
-                                      </span>
-                                    )}
+                                    {game.week >= 3 &&
+                                      (pick.bonus_points || 0) > 0 && (
+                                        <span className="ml-1 text-blue-200 flex items-center">
+                                          <Star className="w-3 h-3 mr-1" />+
+                                          {pick.bonus_points}
+                                        </span>
+                                      )}
                                   </>
                                 ) : (
                                   <>
