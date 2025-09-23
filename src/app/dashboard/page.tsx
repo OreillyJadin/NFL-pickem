@@ -1098,13 +1098,6 @@ export default function Dashboard() {
                                     <span className="ml-1 text-green-200 font-bold">
                                       +{calculatePickTotalPoints(pick, game)}
                                     </span>
-                                    {game.week >= 3 &&
-                                      (pick.bonus_points || 0) > 0 && (
-                                        <span className="ml-1 text-blue-200 flex items-center">
-                                          <Star className="w-3 h-3 mr-1" />+
-                                          {pick.bonus_points}
-                                        </span>
-                                      )}
                                   </>
                                 ) : (
                                   <>
