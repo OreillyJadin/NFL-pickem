@@ -59,7 +59,7 @@ interface Pick {
   solo_lock?: boolean;
   super_bonus?: boolean;
   bonus_points?: number;
-  total_points?: number;
+  pick_points?: number;
 }
 
 export default function Dashboard() {
@@ -790,7 +790,7 @@ export default function Dashboard() {
               ) {
                 return 0;
               }
-              return pick.total_points || 0;
+              return pick.pick_points || 0;
             };
 
             return (

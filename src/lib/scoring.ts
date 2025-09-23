@@ -111,7 +111,7 @@ export async function updateSoloPickStatus(gameId: string) {
           solo_lock: isSoloLock,
           super_bonus: isSuperBonus,
           bonus_points: bonusPoints,
-          total_points: totalPoints,
+          pick_points: totalPoints,
         })
         .eq("id", pick.id);
 

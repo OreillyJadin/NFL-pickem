@@ -144,7 +144,7 @@ export default function Leaderboard() {
               solo_lock,
               super_bonus,
               bonus_points,
-              total_points,
+              pick_points,
               game:games!inner(
                 home_team,
                 away_team,
@@ -217,8 +217,8 @@ export default function Leaderboard() {
           ) {
             userStats[pick.user_id].total_picks++;
 
-            // Use the pre-calculated total_points from the database
-            const points = pick.total_points || 0;
+            // Use the pre-calculated pick_points from the database
+            const points = pick.pick_points || 0;
             userStats[pick.user_id].total_points += points;
 
             // Determine if pick was correct for stats
@@ -253,7 +253,7 @@ export default function Leaderboard() {
               solo_lock,
               super_bonus,
               bonus_points,
-              total_points,
+              pick_points,
               game:games!inner(
                 home_team,
                 away_team,
@@ -328,8 +328,8 @@ export default function Leaderboard() {
           ) {
             userStats[pick.user_id].total_picks++;
 
-            // Use the pre-calculated total_points from the database
-            const points = pick.total_points || 0;
+            // Use the pre-calculated pick_points from the database
+            const points = pick.pick_points || 0;
             userStats[pick.user_id].total_points += points;
 
             // Determine if pick was correct for stats
