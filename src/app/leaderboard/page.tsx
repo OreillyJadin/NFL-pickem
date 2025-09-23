@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/lib/storage";
-import { calculatePickPoints } from "@/lib/scoring";
 
 // Profile Picture Component
 function ProfilePicture({ userId }: { userId: string }) {
@@ -217,15 +216,56 @@ export default function Leaderboard() {
           ) {
             userStats[pick.user_id].total_picks++;
 
-            // Use proper point calculation that includes bonus points
-            const result = await calculatePickPoints(
-              pick as any,
-              game,
-              (picks || []) as any
-            );
-            userStats[pick.user_id].total_points += result.points;
+            // Use the same point calculation logic as the dashboard
+            const calculatePickTotalPoints = (pick: any, game: any) => {
+              if (
+                game.status !== "completed" ||
+                !game.home_score ||
+                !game.away_score
+              ) {
+                return 0;
+              }
 
-            if (result.isCorrect) {
+              const winner =
+                game.home_score > game.away_score
+                  ? game.home_team
+                  : game.away_team;
+              const isCorrect = pick.picked_team === winner;
+
+              // Base points: correct pick +1, correct lock +2, incorrect lock -2
+              let basePoints = 0;
+              if (isCorrect) {
+                basePoints = pick.is_lock ? 2 : 1;
+              } else {
+                basePoints = pick.is_lock ? -2 : 0;
+              }
+
+              // Bonus points (Week 3+ only, only if correct): solo pick +2, solo lock +2, super bonus +5
+              let bonusPoints = 0;
+              if (game.week >= 3 && isCorrect) {
+                if (pick.super_bonus) {
+                  bonusPoints = 5;
+                } else if (pick.solo_lock) {
+                  bonusPoints = 2;
+                } else if (pick.solo_pick) {
+                  bonusPoints = 2;
+                }
+              }
+
+              return basePoints + bonusPoints;
+            };
+
+            const points = calculatePickTotalPoints(pick, game);
+            userStats[pick.user_id].total_points += points;
+
+            // Determine if pick was correct for stats
+            const winner =
+              game.home_score > game.away_score
+                ? game.home_team
+                : game.away_team;
+            const isCorrect = pick.picked_team === winner;
+
+            if (isCorrect) {
               userStats[pick.user_id].correct_picks++;
             } else {
               userStats[pick.user_id].incorrect_picks++;
@@ -324,15 +364,56 @@ export default function Leaderboard() {
           ) {
             userStats[pick.user_id].total_picks++;
 
-            // Use proper point calculation that includes bonus points
-            const result = await calculatePickPoints(
-              pick as any,
-              game,
-              (picks || []) as any
-            );
-            userStats[pick.user_id].total_points += result.points;
+            // Use the same point calculation logic as the dashboard
+            const calculatePickTotalPoints = (pick: any, game: any) => {
+              if (
+                game.status !== "completed" ||
+                !game.home_score ||
+                !game.away_score
+              ) {
+                return 0;
+              }
 
-            if (result.isCorrect) {
+              const winner =
+                game.home_score > game.away_score
+                  ? game.home_team
+                  : game.away_team;
+              const isCorrect = pick.picked_team === winner;
+
+              // Base points: correct pick +1, correct lock +2, incorrect lock -2
+              let basePoints = 0;
+              if (isCorrect) {
+                basePoints = pick.is_lock ? 2 : 1;
+              } else {
+                basePoints = pick.is_lock ? -2 : 0;
+              }
+
+              // Bonus points (Week 3+ only, only if correct): solo pick +2, solo lock +2, super bonus +5
+              let bonusPoints = 0;
+              if (game.week >= 3 && isCorrect) {
+                if (pick.super_bonus) {
+                  bonusPoints = 5;
+                } else if (pick.solo_lock) {
+                  bonusPoints = 2;
+                } else if (pick.solo_pick) {
+                  bonusPoints = 2;
+                }
+              }
+
+              return basePoints + bonusPoints;
+            };
+
+            const points = calculatePickTotalPoints(pick, game);
+            userStats[pick.user_id].total_points += points;
+
+            // Determine if pick was correct for stats
+            const winner =
+              game.home_score > game.away_score
+                ? game.home_team
+                : game.away_team;
+            const isCorrect = pick.picked_team === winner;
+
+            if (isCorrect) {
               userStats[pick.user_id].correct_picks++;
             } else {
               userStats[pick.user_id].incorrect_picks++;
