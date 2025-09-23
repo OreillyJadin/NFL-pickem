@@ -59,6 +59,7 @@ interface Pick {
   solo_lock?: boolean;
   super_bonus?: boolean;
   bonus_points?: number;
+  total_points?: number;
 }
 
 export default function Dashboard() {
@@ -780,8 +781,8 @@ export default function Dashboard() {
               );
             };
 
-            // Helper function to calculate total points for a pick
-            const calculatePickTotalPoints = (pick: Pick, game: Game) => {
+            // Use the pre-calculated total_points from the database
+            const getPickTotalPoints = (pick: Pick, game: Game) => {
               if (
                 game.status !== "completed" ||
                 !game.home_score ||
@@ -789,34 +790,7 @@ export default function Dashboard() {
               ) {
                 return 0;
               }
-
-              const winner =
-                game.home_score > game.away_score
-                  ? game.home_team
-                  : game.away_team;
-              const isCorrect = pick.picked_team === winner;
-
-              // Base points: correct pick +1, correct lock +2, incorrect lock -2
-              let basePoints = 0;
-              if (isCorrect) {
-                basePoints = pick.is_lock ? 2 : 1;
-              } else {
-                basePoints = pick.is_lock ? -2 : 0;
-              }
-
-              // Bonus points (Week 3+ only, only if correct): solo pick +2, solo lock +2, super bonus +5
-              let bonusPoints = 0;
-              if (game.week >= 3 && isCorrect) {
-                if (pick.super_bonus) {
-                  bonusPoints = 5;
-                } else if (pick.solo_lock) {
-                  bonusPoints = 2;
-                } else if (pick.solo_pick) {
-                  bonusPoints = 2;
-                }
-              }
-
-              return basePoints + bonusPoints;
+              return pick.total_points || 0;
             };
 
             return (
@@ -1096,7 +1070,7 @@ export default function Dashboard() {
                                     <Check className="w-3 h-3 mr-1" />
                                     WIN
                                     <span className="ml-1 text-green-200 font-bold">
-                                      +{calculatePickTotalPoints(pick, game)}
+                                      +{getPickTotalPoints(pick, game)}
                                     </span>
                                   </>
                                 ) : (
@@ -1104,7 +1078,7 @@ export default function Dashboard() {
                                     <X className="w-3 h-3 mr-1" />
                                     LOSS
                                     <span className="ml-1 text-red-200 font-bold">
-                                      {calculatePickTotalPoints(pick, game)}
+                                      {getPickTotalPoints(pick, game)}
                                     </span>
                                   </>
                                 )}

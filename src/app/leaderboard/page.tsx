@@ -144,6 +144,7 @@ export default function Leaderboard() {
               solo_lock,
               super_bonus,
               bonus_points,
+              total_points,
               game:games!inner(
                 home_team,
                 away_team,
@@ -216,46 +217,8 @@ export default function Leaderboard() {
           ) {
             userStats[pick.user_id].total_picks++;
 
-            // Use the same point calculation logic as the dashboard
-            const calculatePickTotalPoints = (pick: any, game: any) => {
-              if (
-                game.status !== "completed" ||
-                !game.home_score ||
-                !game.away_score
-              ) {
-                return 0;
-              }
-
-              const winner =
-                game.home_score > game.away_score
-                  ? game.home_team
-                  : game.away_team;
-              const isCorrect = pick.picked_team === winner;
-
-              // Base points: correct pick +1, correct lock +2, incorrect lock -2
-              let basePoints = 0;
-              if (isCorrect) {
-                basePoints = pick.is_lock ? 2 : 1;
-              } else {
-                basePoints = pick.is_lock ? -2 : 0;
-              }
-
-              // Bonus points (Week 3+ only, only if correct): solo pick +2, solo lock +2, super bonus +5
-              let bonusPoints = 0;
-              if (game.week >= 3 && isCorrect) {
-                if (pick.super_bonus) {
-                  bonusPoints = 5;
-                } else if (pick.solo_lock) {
-                  bonusPoints = 2;
-                } else if (pick.solo_pick) {
-                  bonusPoints = 2;
-                }
-              }
-
-              return basePoints + bonusPoints;
-            };
-
-            const points = calculatePickTotalPoints(pick, game);
+            // Use the pre-calculated total_points from the database
+            const points = pick.total_points || 0;
             userStats[pick.user_id].total_points += points;
 
             // Determine if pick was correct for stats
@@ -290,6 +253,7 @@ export default function Leaderboard() {
               solo_lock,
               super_bonus,
               bonus_points,
+              total_points,
               game:games!inner(
                 home_team,
                 away_team,
@@ -364,46 +328,8 @@ export default function Leaderboard() {
           ) {
             userStats[pick.user_id].total_picks++;
 
-            // Use the same point calculation logic as the dashboard
-            const calculatePickTotalPoints = (pick: any, game: any) => {
-              if (
-                game.status !== "completed" ||
-                !game.home_score ||
-                !game.away_score
-              ) {
-                return 0;
-              }
-
-              const winner =
-                game.home_score > game.away_score
-                  ? game.home_team
-                  : game.away_team;
-              const isCorrect = pick.picked_team === winner;
-
-              // Base points: correct pick +1, correct lock +2, incorrect lock -2
-              let basePoints = 0;
-              if (isCorrect) {
-                basePoints = pick.is_lock ? 2 : 1;
-              } else {
-                basePoints = pick.is_lock ? -2 : 0;
-              }
-
-              // Bonus points (Week 3+ only, only if correct): solo pick +2, solo lock +2, super bonus +5
-              let bonusPoints = 0;
-              if (game.week >= 3 && isCorrect) {
-                if (pick.super_bonus) {
-                  bonusPoints = 5;
-                } else if (pick.solo_lock) {
-                  bonusPoints = 2;
-                } else if (pick.solo_pick) {
-                  bonusPoints = 2;
-                }
-              }
-
-              return basePoints + bonusPoints;
-            };
-
-            const points = calculatePickTotalPoints(pick, game);
+            // Use the pre-calculated total_points from the database
+            const points = pick.total_points || 0;
             userStats[pick.user_id].total_points += points;
 
             // Determine if pick was correct for stats

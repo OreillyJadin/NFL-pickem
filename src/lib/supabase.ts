@@ -48,6 +48,7 @@ export interface Pick {
   solo_lock?: boolean;
   super_bonus?: boolean;
   bonus_points?: number;
+  total_points?: number;
 }
 
 export interface Award {

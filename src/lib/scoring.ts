@@ -68,8 +68,9 @@ export async function updateSoloPickStatus(gameId: string) {
       const isSoloLock = pick.is_lock && teamLocks.length === 1;
       const isSuperBonus = isSoloPick && isSoloLock && pick.is_lock;
 
-      // Calculate bonus points only if game is completed and pick is correct
+      // Calculate bonus points and total points only if game is completed
       let bonusPoints = 0;
+      let totalPoints = 0;
       if (
         game.status === "completed" &&
         game.home_score !== null &&
@@ -79,8 +80,16 @@ export async function updateSoloPickStatus(gameId: string) {
           game.home_score > game.away_score ? game.home_team : game.away_team;
         const isCorrect = pick.picked_team === winner;
 
-        // Bonus points are only awarded if the pick is correct
+        // Calculate base points
+        let basePoints = 0;
         if (isCorrect) {
+          basePoints = pick.is_lock ? 2 : 1;
+        } else {
+          basePoints = pick.is_lock ? -2 : 0;
+        }
+
+        // Calculate bonus points (only if correct and Week 3+)
+        if (isCorrect && game.week >= 3) {
           if (isSuperBonus) {
             bonusPoints = 5;
           } else if (isSoloLock) {
@@ -89,6 +98,9 @@ export async function updateSoloPickStatus(gameId: string) {
             bonusPoints = 2;
           }
         }
+
+        // Calculate total points
+        totalPoints = basePoints + bonusPoints;
       }
 
       // Update the pick in database
@@ -99,6 +111,7 @@ export async function updateSoloPickStatus(gameId: string) {
           solo_lock: isSoloLock,
           super_bonus: isSuperBonus,
           bonus_points: bonusPoints,
+          total_points: totalPoints,
         })
         .eq("id", pick.id);
 
