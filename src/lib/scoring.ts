@@ -76,31 +76,40 @@ export async function updateSoloPickStatus(gameId: string) {
         game.home_score !== null &&
         game.away_score !== null
       ) {
-        const winner =
-          game.home_score > game.away_score ? game.home_team : game.away_team;
-        const isCorrect = pick.picked_team === winner;
+        // Check if game is a tie - void all picks (0 points for everyone)
+        const isTie = game.home_score === game.away_score;
 
-        // Calculate base points
-        let basePoints = 0;
-        if (isCorrect) {
-          basePoints = pick.is_lock ? 2 : 1;
+        if (isTie) {
+          // Ties void all picks - everyone gets 0 points
+          totalPoints = 0;
+          bonusPoints = 0;
         } else {
-          basePoints = pick.is_lock ? -2 : 0;
-        }
+          const winner =
+            game.home_score > game.away_score ? game.home_team : game.away_team;
+          const isCorrect = pick.picked_team === winner;
 
-        // Calculate bonus points (only if correct and Week 3+)
-        if (isCorrect && game.week >= 3) {
-          if (isSuperBonus) {
-            bonusPoints = 5;
-          } else if (isSoloLock) {
-            bonusPoints = 2;
-          } else if (isSoloPick) {
-            bonusPoints = 2;
+          // Calculate base points
+          let basePoints = 0;
+          if (isCorrect) {
+            basePoints = pick.is_lock ? 2 : 1;
+          } else {
+            basePoints = pick.is_lock ? -2 : 0;
           }
-        }
 
-        // Calculate total points
-        totalPoints = basePoints + bonusPoints;
+          // Calculate bonus points (only if correct and Week 3+)
+          if (isCorrect && game.week >= 3) {
+            if (isSuperBonus) {
+              bonusPoints = 5;
+            } else if (isSoloLock) {
+              bonusPoints = 2;
+            } else if (isSoloPick) {
+              bonusPoints = 2;
+            }
+          }
+
+          // Calculate total points
+          totalPoints = basePoints + bonusPoints;
+        }
       }
 
       // Update the pick in database
@@ -154,6 +163,12 @@ export async function calculatePickPoints(
   allPicks: Pick[] = []
 ): Promise<PickResult> {
   if (game.status !== "completed" || !game.home_score || !game.away_score) {
+    return { isCorrect: false, points: 0, bonus: 0 };
+  }
+
+  // Check if game is a tie - void all picks (0 points for everyone)
+  const isTie = game.home_score === game.away_score;
+  if (isTie) {
     return { isCorrect: false, points: 0, bonus: 0 };
   }
 

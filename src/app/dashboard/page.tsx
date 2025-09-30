@@ -412,6 +412,8 @@ export default function Dashboard() {
       if (result.success) {
         // Reload games to show updated scores
         loadGames();
+        // Reload picks to show updated points
+        loadPicks();
       }
     } catch (error) {
       setSyncMessage("Error syncing games");
@@ -436,6 +438,8 @@ export default function Dashboard() {
       if (result.success) {
         // Reload games to show updated scores
         loadGames();
+        // Reload picks to show updated points
+        loadPicks();
       }
     } catch (error) {
       setSyncMessage("Error syncing game");
@@ -785,12 +789,41 @@ export default function Dashboard() {
             const getPickTotalPoints = (pick: Pick, game: Game) => {
               if (
                 game.status !== "completed" ||
-                !game.home_score ||
-                !game.away_score
+                game.home_score === null ||
+                game.away_score === null
               ) {
                 return 0;
               }
               return pick.pick_points || 0;
+            };
+
+            // Determine game result for display
+            const getGameResult = (game: Game, pick: Pick) => {
+              if (
+                game.status !== "completed" ||
+                game.home_score === null ||
+                game.away_score === null
+              ) {
+                return { type: "pending", points: 0 };
+              }
+
+              // Check for tie first
+              if (game.home_score === game.away_score) {
+                return { type: "tie", points: pick.pick_points || 0 };
+              }
+
+              // Determine winner
+              const winner =
+                (game.home_score || 0) > (game.away_score || 0)
+                  ? game.home_team
+                  : game.away_team;
+              const isCorrect = pick.picked_team === winner;
+              const points = pick.pick_points || 0;
+
+              return {
+                type: isCorrect ? "win" : "loss",
+                points: points,
+              };
             };
 
             return (
@@ -1051,38 +1084,45 @@ export default function Dashboard() {
                               {renderSoloStars(pick)}
                             </div>
                             <div className="flex justify-center">
-                              <span
-                                className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                  pick.picked_team ===
-                                  ((game.away_score || 0) >
-                                  (game.home_score || 0)
-                                    ? game.away_team
-                                    : game.home_team)
-                                    ? "bg-green-600 text-green-100"
-                                    : "bg-red-600 text-red-100"
-                                }`}
-                              >
-                                {pick.picked_team ===
-                                ((game.away_score || 0) > (game.home_score || 0)
-                                  ? game.away_team
-                                  : game.home_team) ? (
-                                  <>
-                                    <Check className="w-3 h-3 mr-1" />
-                                    WIN
-                                    <span className="ml-1 text-green-200 font-bold">
-                                      +{getPickTotalPoints(pick, game)}
-                                    </span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <X className="w-3 h-3 mr-1" />
-                                    LOSS
-                                    <span className="ml-1 text-red-200 font-bold">
-                                      {getPickTotalPoints(pick, game)}
-                                    </span>
-                                  </>
-                                )}
-                              </span>
+                              {(() => {
+                                const result = getGameResult(game, pick);
+                                return (
+                                  <span
+                                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                      result.type === "tie"
+                                        ? "bg-gray-600 text-gray-100"
+                                        : result.type === "win"
+                                        ? "bg-green-600 text-green-100"
+                                        : "bg-red-600 text-red-100"
+                                    }`}
+                                  >
+                                    {result.type === "tie" ? (
+                                      <>
+                                        TIE
+                                        <span className="ml-1 text-gray-200 font-bold">
+                                          +{result.points}
+                                        </span>
+                                      </>
+                                    ) : result.type === "win" ? (
+                                      <>
+                                        <Check className="w-3 h-3 mr-1" />
+                                        WIN
+                                        <span className="ml-1 text-green-200 font-bold">
+                                          +{result.points}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <X className="w-3 h-3 mr-1" />
+                                        LOSS
+                                        <span className="ml-1 text-red-200 font-bold">
+                                          {result.points}
+                                        </span>
+                                      </>
+                                    )}
+                                  </span>
+                                );
+                              })()}
                             </div>
                           </div>
                         )}
