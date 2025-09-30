@@ -20,10 +20,37 @@ async function fetchESPNGameData(espnId: string) {
   }
 }
 
-// Sync scores for a specific game
-export async function syncGameScore(gameId: string) {
+// Helper function to detect if game data has changed
+function hasGameDataChanged(currentGame: any, newData: any): boolean {
+  const fieldsToCheck = [
+    "home_score",
+    "away_score",
+    "status",
+    "quarter",
+    "time_remaining",
+    "possession",
+    "halftime",
+    "tv",
+  ];
+
+  for (const field of fieldsToCheck) {
+    if (currentGame[field] !== newData[field]) {
+      console.log(
+        `Game ${currentGame.id}: ${field} changed from ${currentGame[field]} to ${newData[field]}`
+      );
+      return true;
+    }
+  }
+  return false;
+}
+
+// Sync scores for a specific game with smart caching
+export async function syncGameScore(
+  gameId: string,
+  forceSync: boolean = false
+) {
   try {
-    // Get game data
+    // Get game data including last_synced timestamp
     const { data: game, error: gameError } = await supabase
       .from("games")
       .select("*")
@@ -37,6 +64,39 @@ export async function syncGameScore(gameId: string) {
     if (!game.espn_id) {
       console.log(`Game ${gameId} has no ESPN ID, skipping`);
       return { success: false, reason: "No ESPN ID" };
+    }
+
+    // Check if we need to sync based on last sync time and game status
+    if (!forceSync && game.last_synced) {
+      const lastSyncTime = new Date(game.last_synced);
+      const now = new Date();
+      const timeSinceLastSync = now.getTime() - lastSyncTime.getTime();
+      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+      // Skip sync if:
+      // 1. Game is completed and was synced recently
+      // 2. Game is scheduled and was synced in the last 5 minutes
+      if (game.status === "completed" && timeSinceLastSync < fiveMinutes) {
+        console.log(
+          `Game ${gameId} is completed and recently synced, skipping`
+        );
+        return {
+          success: true,
+          skipped: true,
+          reason: "Recently synced completed game",
+        };
+      }
+
+      if (game.status === "scheduled" && timeSinceLastSync < fiveMinutes) {
+        console.log(
+          `Game ${gameId} is scheduled and recently synced, skipping`
+        );
+        return {
+          success: true,
+          skipped: true,
+          reason: "Recently synced scheduled game",
+        };
+      }
     }
 
     // Fetch current data from ESPN
@@ -104,18 +164,40 @@ export async function syncGameScore(gameId: string) {
       status = "in_progress";
     }
 
-    // Update game in database
+    // Prepare new data for comparison
+    const newGameData = {
+      home_score: homeScore,
+      away_score: awayScore,
+      status: status,
+      quarter: quarter,
+      time_remaining: timeRemaining,
+      possession: possession,
+      halftime: isHalftime,
+      tv: tvInfo,
+    };
+
+    // Check if data has actually changed
+    if (!forceSync && !hasGameDataChanged(game, newGameData)) {
+      console.log(`Game ${gameId} data unchanged, skipping database update`);
+      // Still update last_synced timestamp to avoid repeated API calls
+      await supabase
+        .from("games")
+        .update({ last_synced: new Date().toISOString() })
+        .eq("id", gameId);
+
+      return {
+        success: true,
+        skipped: true,
+        reason: "No data changes detected",
+      };
+    }
+
+    // Update game in database with new data and sync timestamp
     const { error: updateError } = await supabase
       .from("games")
       .update({
-        home_score: homeScore,
-        away_score: awayScore,
-        status: status,
-        quarter: quarter,
-        time_remaining: timeRemaining,
-        possession: possession,
-        halftime: isHalftime,
-        tv: tvInfo,
+        ...newGameData,
+        last_synced: new Date().toISOString(),
       })
       .eq("id", gameId);
 
@@ -132,7 +214,7 @@ export async function syncGameScore(gameId: string) {
       await updateSoloPickStatus(gameId);
     }
 
-    return { success: true, homeScore, awayScore, status };
+    return { success: true, homeScore, awayScore, status, updated: true };
   } catch (error) {
     console.error(`Error syncing game ${gameId}:`, error);
     return {
@@ -209,10 +291,10 @@ export async function syncAllGamesTV() {
   }
 }
 
-// Sync all current games
-export async function syncAllCurrentGames() {
+// Sync all current games with smart caching
+export async function syncAllCurrentGames(forceSync: boolean = false) {
   try {
-    console.log("🔄 Starting sync of recent games...");
+    console.log("🔄 Starting smart sync of recent games...");
 
     // Get current date to determine which games to sync
     const now = new Date();
@@ -229,9 +311,12 @@ export async function syncAllCurrentGames() {
     );
 
     // Get games from the last 3 days to 1 day ahead that have ESPN IDs
+    // Include last_synced field for smart caching
     const { data: games, error: gamesError } = await supabase
       .from("games")
-      .select("id, home_team, away_team, espn_id, status, game_time")
+      .select(
+        "id, home_team, away_team, espn_id, status, game_time, last_synced"
+      )
       .not("espn_id", "is", null)
       .gte("game_time", threeDaysAgo.toISOString())
       .lte("game_time", oneDayFromNow.toISOString());
@@ -250,45 +335,93 @@ export async function syncAllCurrentGames() {
       };
     }
 
+    // Filter games that need syncing based on smart caching rules
+    const gamesToSync = games.filter((game) => {
+      if (forceSync) return true;
+
+      // Always sync games that have never been synced
+      if (!game.last_synced) return true;
+
+      const lastSyncTime = new Date(game.last_synced);
+      const timeSinceLastSync = now.getTime() - lastSyncTime.getTime();
+      const fiveMinutes = 5 * 60 * 1000;
+      const thirtyMinutes = 30 * 60 * 1000;
+
+      // Always sync in-progress games (they change frequently)
+      if (game.status === "in_progress") return true;
+
+      // Sync completed games if they haven't been synced in the last 30 minutes
+      // (in case of score corrections)
+      if (game.status === "completed" && timeSinceLastSync > thirtyMinutes)
+        return true;
+
+      // Sync scheduled games if they haven't been synced in the last 5 minutes
+      if (game.status === "scheduled" && timeSinceLastSync > fiveMinutes)
+        return true;
+
+      return false;
+    });
+
     console.log(
-      `📊 Found ${games.length} recent games to sync:`,
-      games.map(
+      `📊 Found ${games.length} recent games, ${gamesToSync.length} need syncing:`,
+      gamesToSync.map(
         (g) =>
           `${g.away_team} @ ${g.home_team} (${new Date(
             g.game_time
-          ).toLocaleDateString()})`
+          ).toLocaleDateString()}) - ${g.status}`
       )
     );
 
+    if (gamesToSync.length === 0) {
+      console.log("✅ All games are up to date, no sync needed");
+      return {
+        success: true,
+        message: "All games are up to date, no sync needed",
+        gamesProcessed: games.length,
+        skipped: games.length,
+        successful: 0,
+        failed: 0,
+      };
+    }
+
     let successCount = 0;
     let errorCount = 0;
+    let skippedCount = 0;
 
-    // Process each game
-    for (const game of games) {
+    // Process each game that needs syncing
+    for (const game of gamesToSync) {
       try {
-        const result = await syncGameScore(game.id);
+        const result = await syncGameScore(game.id, forceSync);
         if (result.success) {
-          successCount++;
+          if (result.skipped) {
+            skippedCount++;
+          } else {
+            successCount++;
+          }
         } else {
           errorCount++;
         }
       } catch (error) {
         errorCount++;
+        console.error(`Error processing game ${game.id}:`, error);
       }
 
       // Add small delay to avoid rate limiting
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
+    const totalProcessed = successCount + errorCount + skippedCount;
     console.log(
-      `Sync completed: ${successCount} successful, ${errorCount} failed`
+      `Smart sync completed: ${successCount} updated, ${skippedCount} skipped, ${errorCount} failed`
     );
 
     return {
       success: true,
-      message: `Synced ${successCount} recent games successfully, ${errorCount} failed`,
+      message: `Smart sync completed: ${successCount} updated, ${skippedCount} skipped, ${errorCount} failed`,
       gamesProcessed: games.length,
+      gamesSynced: gamesToSync.length,
       successful: successCount,
+      skipped: skippedCount,
       failed: errorCount,
     };
   } catch (error) {
