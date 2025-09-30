@@ -43,6 +43,7 @@ interface PickHistory {
   solo_lock?: boolean;
   super_bonus?: boolean;
   bonus_points?: number;
+  pick_points?: number;
   game: {
     home_team: string;
     away_team: string;
@@ -314,9 +315,27 @@ export default function Profile() {
       return "pending";
     }
 
+    // Check for tie first
+    if (game.home_score === game.away_score) {
+      return "tie";
+    }
+
     const winner =
       game.home_score > game.away_score ? game.home_team : game.away_team;
     return pick.picked_team === winner ? "correct" : "incorrect";
+  };
+
+  // Get pick points for display (similar to dashboard)
+  const getPickPoints = (pick: PickHistory) => {
+    const game = pick.game;
+    if (
+      game.status !== "completed" ||
+      game.home_score === null ||
+      game.away_score === null
+    ) {
+      return 0;
+    }
+    return pick.pick_points || 0;
   };
 
   // Filter pick history by selected week
@@ -696,26 +715,36 @@ export default function Profile() {
                                     {game.status === "completed" ? (
                                       <span
                                         className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                          result === "correct"
+                                          result === "tie"
+                                            ? "bg-gray-600 text-gray-100"
+                                            : result === "correct"
                                             ? "bg-green-600 text-green-100"
                                             : "bg-red-600 text-red-100"
                                         }`}
                                       >
-                                        {result === "correct" ? (
+                                        {result === "tie" ? (
+                                          <>
+                                            <span className="mr-1">🤝</span>
+                                            TIE
+                                            <span className="ml-1 text-gray-200 font-bold">
+                                              +{getPickPoints(pick)}
+                                            </span>
+                                          </>
+                                        ) : result === "correct" ? (
                                           <>
                                             <Check className="w-3 h-3 mr-1" />
                                             WIN
-                                            {(pick.bonus_points || 0) > 0 && (
-                                              <span className="ml-1 text-blue-200">
-                                                <Star className="w-3 h-3 mr-1" />
-                                                +{pick.bonus_points}
-                                              </span>
-                                            )}
+                                            <span className="ml-1 text-green-200 font-bold">
+                                              +{getPickPoints(pick)}
+                                            </span>
                                           </>
                                         ) : (
                                           <>
                                             <X className="w-3 h-3 mr-1" />
                                             LOSS
+                                            <span className="ml-1 text-red-200 font-bold">
+                                              {getPickPoints(pick)}
+                                            </span>
                                           </>
                                         )}
                                       </span>
@@ -765,26 +794,36 @@ export default function Profile() {
                                     {game.status === "completed" ? (
                                       <span
                                         className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                          result === "correct"
+                                          result === "tie"
+                                            ? "bg-gray-600 text-gray-100"
+                                            : result === "correct"
                                             ? "bg-green-600 text-green-100"
                                             : "bg-red-600 text-red-100"
                                         }`}
                                       >
-                                        {result === "correct" ? (
+                                        {result === "tie" ? (
+                                          <>
+                                            <span className="mr-1">🤝</span>
+                                            TIE
+                                            <span className="ml-1 text-gray-200 font-bold">
+                                              +{getPickPoints(pick)}
+                                            </span>
+                                          </>
+                                        ) : result === "correct" ? (
                                           <>
                                             <Check className="w-3 h-3 mr-1" />
                                             WIN
-                                            {(pick.bonus_points || 0) > 0 && (
-                                              <span className="ml-1 text-blue-200">
-                                                <Star className="w-3 h-3 mr-1" />
-                                                +{pick.bonus_points}
-                                              </span>
-                                            )}
+                                            <span className="ml-1 text-green-200 font-bold">
+                                              +{getPickPoints(pick)}
+                                            </span>
                                           </>
                                         ) : (
                                           <>
                                             <X className="w-3 h-3 mr-1" />
                                             LOSS
+                                            <span className="ml-1 text-red-200 font-bold">
+                                              {getPickPoints(pick)}
+                                            </span>
                                           </>
                                         )}
                                       </span>
