@@ -380,6 +380,32 @@ export default function Dashboard() {
     }
   }, [user, loadUserProfile]);
 
+  // Auto-center selected week in scrollable container
+  useEffect(() => {
+    const scrollContainer = document.querySelector(
+      ".week-selector-scroll"
+    ) as HTMLElement;
+    const selectedButton = document.querySelector(
+      `[data-week="${selectedWeek}"]`
+    ) as HTMLElement;
+
+    if (scrollContainer && selectedButton) {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const buttonRect = selectedButton.getBoundingClientRect();
+
+      // Calculate the scroll position to center the button
+      const scrollLeft =
+        selectedButton.offsetLeft -
+        containerRect.width / 2 +
+        buttonRect.width / 2;
+
+      scrollContainer.scrollTo({
+        left: scrollLeft,
+        behavior: "smooth",
+      });
+    }
+  }, [selectedWeek]);
+
   const handleProfileUpdate = useCallback(
     async (profileData: { username: string; bio: string }) => {
       if (!user) return;
