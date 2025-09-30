@@ -382,29 +382,44 @@ export default function Dashboard() {
 
   // Auto-center selected week in scrollable container
   useEffect(() => {
-    const scrollContainer = document.querySelector(
-      ".week-selector-scroll"
-    ) as HTMLElement;
-    const selectedButton = document.querySelector(
-      `[data-week="${selectedWeek}"]`
-    ) as HTMLElement;
+    // Add a small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      const scrollContainer = document.querySelector(
+        ".week-selector-scroll"
+      ) as HTMLElement;
+      const selectedButton = document.querySelector(
+        `[data-week="${selectedWeek}"]`
+      ) as HTMLElement;
 
-    if (scrollContainer && selectedButton) {
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const buttonRect = selectedButton.getBoundingClientRect();
-
-      // Calculate the scroll position to center the button
-      const scrollLeft =
-        selectedButton.offsetLeft -
-        containerRect.width / 2 +
-        buttonRect.width / 2;
-
-      scrollContainer.scrollTo({
-        left: scrollLeft,
-        behavior: "smooth",
+      console.log("Auto-center debug:", {
+        scrollContainer: !!scrollContainer,
+        selectedButton: !!selectedButton,
+        selectedWeek,
+        containerWidth: scrollContainer?.offsetWidth,
+        buttonOffsetLeft: selectedButton?.offsetLeft,
+        buttonWidth: selectedButton?.offsetWidth,
       });
-    }
-  }, [selectedWeek]);
+
+      if (scrollContainer && selectedButton) {
+        const containerWidth = scrollContainer.offsetWidth;
+        const buttonOffsetLeft = selectedButton.offsetLeft;
+        const buttonWidth = selectedButton.offsetWidth;
+
+        // Calculate the scroll position to center the button
+        const scrollLeft =
+          buttonOffsetLeft - containerWidth / 2 + buttonWidth / 2;
+
+        console.log("Scrolling to:", scrollLeft);
+
+        scrollContainer.scrollTo({
+          left: Math.max(0, scrollLeft), // Ensure we don't scroll to negative values
+          behavior: "smooth",
+        });
+      }
+    }, 100); // Small delay to ensure DOM is ready
+
+    return () => clearTimeout(timer);
+  }, [selectedWeek, availableWeeks]); // Also trigger when availableWeeks changes
 
   const handleProfileUpdate = useCallback(
     async (profileData: { username: string; bio: string }) => {
@@ -703,7 +718,31 @@ export default function Dashboard() {
                 <button
                   key={`${week.season}-${week.season_type}-${week.week}`}
                   data-week={week.week}
-                  onClick={() => setSelectedWeek(week.week)}
+                  onClick={() => {
+                    setSelectedWeek(week.week);
+                    // Also trigger centering immediately on click
+                    setTimeout(() => {
+                      const scrollContainer = document.querySelector(
+                        ".week-selector-scroll"
+                      ) as HTMLElement;
+                      const button = document.querySelector(
+                        `[data-week="${week.week}"]`
+                      ) as HTMLElement;
+                      if (scrollContainer && button) {
+                        const containerWidth = scrollContainer.offsetWidth;
+                        const buttonOffsetLeft = button.offsetLeft;
+                        const buttonWidth = button.offsetWidth;
+                        const scrollLeft =
+                          buttonOffsetLeft -
+                          containerWidth / 2 +
+                          buttonWidth / 2;
+                        scrollContainer.scrollTo({
+                          left: Math.max(0, scrollLeft),
+                          behavior: "smooth",
+                        });
+                      }
+                    }, 50);
+                  }}
                   className={`flex-shrink-0 px-4 py-2 mx-1 rounded-lg transition-all duration-200 scroll-snap-align-start ${
                     isSelected
                       ? "bg-gray-700 text-white"
