@@ -601,11 +601,18 @@ export default function Leaderboard() {
                           </td>
                           <td className="py-2 px-1 sm:px-2">
                             <div className="flex items-center space-x-2">
-                              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                                <ProfilePicture userId={entry.user_id} />
-                              </div>
                               <button
-                                onClick={() => router.push(`/profile/${entry.user_id}`)}
+                                onClick={() =>
+                                  router.push(`/profile/${entry.user_id}`)
+                                }
+                                className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 hover:bg-gray-500 transition-colors cursor-pointer"
+                              >
+                                <ProfilePicture userId={entry.user_id} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  router.push(`/profile/${entry.user_id}`)
+                                }
                                 className={`font-bold text-sm sm:text-base hover:underline transition-colors ${
                                   isTopThree
                                     ? "text-yellow-300 hover:text-yellow-200"

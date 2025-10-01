@@ -157,14 +157,24 @@ export async function processWeeklyAwards(
         userStats[pick.user_id] = { points: 0, correct: 0, total: 0 };
       }
 
-      userStats[pick.user_id].total++;
+      // Check if game is a tie first
+      const isTie = game.home_score === game.away_score;
+      
+      if (isTie) {
+        // For ties, don't count as total pick, don't count as correct or incorrect
+        // Just add 0 points
+        userStats[pick.user_id].points += 0;
+      } else {
+        // For non-tie games, count as total pick
+        userStats[pick.user_id].total++;
 
-      // Use the proper calculatePickPoints function to include bonus points
-      const result = await calculatePickPoints(pick, game, picks);
-      userStats[pick.user_id].points += result.points;
+        // Use the proper calculatePickPoints function to include bonus points
+        const result = await calculatePickPoints(pick, game, picks);
+        userStats[pick.user_id].points += result.points;
 
-      if (result.isCorrect) {
-        userStats[pick.user_id].correct++;
+        if (result.isCorrect) {
+          userStats[pick.user_id].correct++;
+        }
       }
     }
 
