@@ -604,17 +604,18 @@ export default function Leaderboard() {
                               <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                                 <ProfilePicture userId={entry.user_id} />
                               </div>
-                              <div
-                                className={`font-bold text-sm sm:text-base ${
+                              <button
+                                onClick={() => router.push(`/profile/${entry.user_id}`)}
+                                className={`font-bold text-sm sm:text-base hover:underline transition-colors ${
                                   isTopThree
-                                    ? "text-yellow-300"
+                                    ? "text-yellow-300 hover:text-yellow-200"
                                     : isLast
-                                    ? "text-red-400"
-                                    : "text-white"
+                                    ? "text-red-400 hover:text-red-300"
+                                    : "text-white hover:text-gray-300"
                                 }`}
                               >
                                 {entry.username || entry.email}
-                              </div>
+                              </button>
                             </div>
                           </td>
                           <td className="py-2 px-1 sm:px-2 text-center">
