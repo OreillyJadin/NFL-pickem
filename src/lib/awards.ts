@@ -8,6 +8,7 @@ import {
   Snowflake,
   Target,
   Zap,
+  TrendingDown,
 } from "lucide-react";
 
 export const AWARD_TYPES = {
@@ -40,6 +41,11 @@ export const AWARD_TYPES = {
     icon: Zap,
     name: "Cold Week",
     description: "All Wrong",
+  },
+  negative_points: {
+    icon: TrendingDown,
+    name: "Negative Points",
+    description: "Scored Below Zero",
   },
 } as const;
 
@@ -265,6 +271,18 @@ export async function processWeeklyAwards(
           awards.push({
             userId,
             awardType: "cold_week",
+            points: stats.points,
+            record: `${stats.correct}-${stats.total - stats.correct}`,
+          });
+        }
+      });
+
+      // Negative Points (scored below zero)
+      users.forEach(([userId, stats]) => {
+        if (stats.points < 0 && stats.total > 0) {
+          awards.push({
+            userId,
+            awardType: "negative_points",
             points: stats.points,
             record: `${stats.correct}-${stats.total - stats.correct}`,
           });
