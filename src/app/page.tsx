@@ -57,11 +57,10 @@ export default function Home() {
             <div className="bg-blue-900/20 border border-blue-600 rounded-lg p-3 mb-4">
               <div className="flex items-center justify-center gap-2 text-blue-300 font-semibold mb-2">
                 <Star className="w-5 h-5" />
-                <span>New Feature: Bonus Points!</span>
+                <span>New Feature: View other user profiles!</span>
               </div>
               <p className="text-blue-200 text-sm">
-                Starting Week 3, earn bonus points: Solo Pick (+2), Solo Lock
-                (+2), Super Bonus (+5) for both!
+                Click on any profile picture or username to view their profile!
               </p>
             </div>
             <Button

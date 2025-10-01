@@ -101,6 +101,7 @@ export default function Leaderboard() {
     "preseason" | "regular"
   >("regular");
   const [viewMode, setViewMode] = useState<"season" | "weekly">("season");
+  const [showTutorial, setShowTutorial] = useState(false);
 
   // Helper function to sort leaderboard entries by priority: points, %, wins, lowest losses
   const sortLeaderboard = (a: LeaderboardEntry, b: LeaderboardEntry) => {
@@ -443,6 +444,26 @@ export default function Leaderboard() {
             Leaderboard
           </h1>
         </div>
+
+        {/* Feature Notice Banner */}
+        <div className="mx-4 mb-4 p-3 bg-blue-900/30 border border-blue-600 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="text-blue-400">💡</div>
+              <p className="text-blue-200 text-sm">
+                <span className="font-semibold">New:</span> Click on any profile
+                picture or username to view their profile!
+              </p>
+            </div>
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="text-blue-400 hover:text-blue-300 text-sm underline"
+            >
+              Learn More
+            </button>
+          </div>
+        </div>
+
         {/* View Mode Toggle */}
         <div className="mb-2 mt-2 mx-4 p-2 bg-gray-800 rounded-lg border border-gray-600">
           <div className="space-y-4">
@@ -756,6 +777,82 @@ export default function Leaderboard() {
             </div>
           </div>
         </div>
+
+        {/* Tutorial Modal */}
+        {showTutorial && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-lg border border-gray-600 max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">
+                  Profile Viewing Tutorial
+                </h2>
+                <button
+                  onClick={() => setShowTutorial(false)}
+                  className="text-gray-400 hover:text-white text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4 text-gray-300">
+                <div className="flex items-start space-x-3">
+                  <div className="text-blue-400 text-xl">👆</div>
+                  <div>
+                    <p className="font-semibold text-white">
+                      Click Profile Pictures
+                    </p>
+                    <p className="text-sm">
+                      Click on any user's profile picture to view their detailed
+                      profile
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <div className="text-blue-400 text-xl">👆</div>
+                  <div>
+                    <p className="font-semibold text-white">Click Usernames</p>
+                    <p className="text-sm">
+                      Or click on their username - both work the same way
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <div className="text-green-400 text-xl">👁️</div>
+                  <div>
+                    <p className="font-semibold text-white">View Profiles</p>
+                    <p className="text-sm">
+                      See their stats, awards, and pick history (completed games
+                      only)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <div className="text-yellow-400 text-xl">🔒</div>
+                  <div>
+                    <p className="font-semibold text-white">
+                      Privacy Protected
+                    </p>
+                    <p className="text-sm">
+                      Scheduled games are hidden so picks can't be copied
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowTutorial(false)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
