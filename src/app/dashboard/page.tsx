@@ -382,7 +382,7 @@ export default function Dashboard() {
 
   // Auto-center selected week in scrollable container
   useEffect(() => {
-    // Add a small delay to ensure DOM is ready
+    // Add a longer delay to ensure DOM is fully updated
     const timer = setTimeout(() => {
       const scrollContainer = document.querySelector(
         ".week-selector-scroll"
@@ -398,6 +398,9 @@ export default function Dashboard() {
         containerWidth: scrollContainer?.offsetWidth,
         buttonOffsetLeft: selectedButton?.offsetLeft,
         buttonWidth: selectedButton?.offsetWidth,
+        availableWeeksCount: availableWeeks.filter(
+          (w) => w.season_type === "regular"
+        ).length,
       });
 
       if (scrollContainer && selectedButton) {
@@ -415,8 +418,35 @@ export default function Dashboard() {
           left: Math.max(0, scrollLeft), // Ensure we don't scroll to negative values
           behavior: "smooth",
         });
+      } else {
+        console.log("Auto-center failed - retrying in 200ms");
+        // Retry once more with a longer delay
+        setTimeout(() => {
+          const retryScrollContainer = document.querySelector(
+            ".week-selector-scroll"
+          ) as HTMLElement;
+          const retrySelectedButton = document.querySelector(
+            `[data-week="${selectedWeek}"]`
+          ) as HTMLElement;
+
+          if (retryScrollContainer && retrySelectedButton) {
+            const containerWidth = retryScrollContainer.offsetWidth;
+            const buttonOffsetLeft = retrySelectedButton.offsetLeft;
+            const buttonWidth = retrySelectedButton.offsetWidth;
+
+            const scrollLeft =
+              buttonOffsetLeft - containerWidth / 2 + buttonWidth / 2;
+
+            console.log("Retry scrolling to:", scrollLeft);
+
+            retryScrollContainer.scrollTo({
+              left: Math.max(0, scrollLeft),
+              behavior: "smooth",
+            });
+          }
+        }, 200);
       }
-    }, 100); // Small delay to ensure DOM is ready
+    }, 150); // Increased delay to ensure DOM is ready
 
     return () => clearTimeout(timer);
   }, [selectedWeek, availableWeeks]); // Also trigger when availableWeeks changes

@@ -180,23 +180,39 @@ export default function Profile() {
           game.away_score !== null
         ) {
           completedGames++;
-          const winner =
-            game.home_score > game.away_score ? game.home_team : game.away_team;
-          const isCorrect = pick.picked_team === winner;
-
-          if (isCorrect) {
-            correctPicks++;
+          // Handle ties properly - ties are neither wins nor losses
+          if (game.home_score === game.away_score) {
+            // Tie game - don't count as win or loss
           } else {
-            incorrectPicks++;
+            const winner =
+              game.home_score > game.away_score
+                ? game.home_team
+                : game.away_team;
+            const isCorrect = pick.picked_team === winner;
+
+            if (isCorrect) {
+              correctPicks++;
+            } else {
+              incorrectPicks++;
+            }
           }
 
-          // Count lock picks separately
+          // Count lock picks separately - handle ties properly
           if (pick.is_lock) {
             lockPicks++;
-            if (isCorrect) {
-              lockWins++;
+            if (game.home_score === game.away_score) {
+              // Tie game - don't count lock as win or loss
             } else {
-              lockLosses++;
+              const winner =
+                game.home_score > game.away_score
+                  ? game.home_team
+                  : game.away_team;
+              const isCorrect = pick.picked_team === winner;
+              if (isCorrect) {
+                lockWins++;
+              } else {
+                lockLosses++;
+              }
             }
           }
         }

@@ -133,6 +133,7 @@ export default function Leaderboard() {
 
       if (viewMode === "season") {
         // Load overall season standings - get all users who have made picks
+        console.log("🔄 Loading season standings data...");
         const { data: picks, error: picksError } = await supabase
           .from("picks")
           .select(
@@ -157,7 +158,8 @@ export default function Leaderboard() {
               )
             `
           )
-          .eq("game.season", 2025);
+          .eq("game.season", 2025)
+          .eq("game.status", "completed");
 
         if (picksError) throw picksError;
 
@@ -221,19 +223,49 @@ export default function Leaderboard() {
             const points = pick.pick_points || 0;
             userStats[pick.user_id].total_points += points;
 
-            // Determine if pick was correct for stats
-            const winner =
-              game.home_score > game.away_score
-                ? game.home_team
-                : game.away_team;
-            const isCorrect = pick.picked_team === winner;
-
-            if (isCorrect) {
-              userStats[pick.user_id].correct_picks++;
+            // Determine if pick was correct for stats - handle ties properly
+            if (game.home_score === game.away_score) {
+              // Tie game - don't count as win or loss
             } else {
-              userStats[pick.user_id].incorrect_picks++;
+              const winner =
+                game.home_score > game.away_score
+                  ? game.home_team
+                  : game.away_team;
+              const isCorrect = pick.picked_team === winner;
+
+              if (isCorrect) {
+                userStats[pick.user_id].correct_picks++;
+              } else {
+                userStats[pick.user_id].incorrect_picks++;
+              }
             }
           }
+        }
+
+        // Debug logging for oreillyyyy and Slug
+        const oreillyyyyId = Object.keys(userProfiles).find(
+          (id) => userProfiles[id].username === "oreillyyyy"
+        );
+        const slugId = Object.keys(userProfiles).find(
+          (id) => userProfiles[id].username === "Slug"
+        );
+
+        if (oreillyyyyId && userStats[oreillyyyyId]) {
+          console.log("🔍 oreillyyyy:", {
+            points: userStats[oreillyyyyId].total_points,
+            wins: userStats[oreillyyyyId].correct_picks,
+            losses: userStats[oreillyyyyId].incorrect_picks,
+            total: userStats[oreillyyyyId].total_picks,
+          });
+        }
+
+        if (slugId && userStats[slugId]) {
+          console.log("🔍 Slug:", {
+            points: userStats[slugId].total_points,
+            wins: userStats[slugId].correct_picks,
+            losses: userStats[slugId].incorrect_picks,
+            total: userStats[slugId].total_picks,
+          });
         }
 
         // Sort by priority: points, %, wins, lowest losses
@@ -332,17 +364,21 @@ export default function Leaderboard() {
             const points = pick.pick_points || 0;
             userStats[pick.user_id].total_points += points;
 
-            // Determine if pick was correct for stats
-            const winner =
-              game.home_score > game.away_score
-                ? game.home_team
-                : game.away_team;
-            const isCorrect = pick.picked_team === winner;
-
-            if (isCorrect) {
-              userStats[pick.user_id].correct_picks++;
+            // Determine if pick was correct for stats - handle ties properly
+            if (game.home_score === game.away_score) {
+              // Tie game - don't count as win or loss
             } else {
-              userStats[pick.user_id].incorrect_picks++;
+              const winner =
+                game.home_score > game.away_score
+                  ? game.home_team
+                  : game.away_team;
+              const isCorrect = pick.picked_team === winner;
+
+              if (isCorrect) {
+                userStats[pick.user_id].correct_picks++;
+              } else {
+                userStats[pick.user_id].incorrect_picks++;
+              }
             }
           }
         }
@@ -370,6 +406,18 @@ export default function Leaderboard() {
       loadLeaderboard();
     }
   }, [user, loadLeaderboard]);
+
+  // Auto-center when week changes or view mode changes
+  useEffect(() => {
+    // Scroll to top of leaderboard when week changes or view mode changes
+    const leaderboardElement = document.getElementById("leaderboard-table");
+    if (leaderboardElement) {
+      leaderboardElement.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [selectedWeek, viewMode]);
 
   if (loading || loadingData) {
     return (
@@ -467,7 +515,10 @@ export default function Leaderboard() {
         </div>
 
         {/* Leaderboard Table */}
-        <Card className="bg-gray-800 border-gray-600 mx-0 rounded-none sm:mx-4 sm:rounded-lg">
+        <Card
+          id="leaderboard-table"
+          className="bg-gray-800 border-gray-600 mx-0 rounded-none sm:mx-4 sm:rounded-lg"
+        >
           <CardHeader>
             <CardTitle className="text-xl sm:text-2xl text-white">
               {viewMode === "season"
