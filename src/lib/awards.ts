@@ -159,7 +159,7 @@ export async function processWeeklyAwards(
 
       // Check if game is a tie first
       const isTie = game.home_score === game.away_score;
-      
+
       if (isTie) {
         // For ties, don't count as total pick, don't count as correct or incorrect
         // Just add 0 points

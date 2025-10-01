@@ -58,7 +58,7 @@ export default function PublicProfile() {
   const router = useRouter();
   const params = useParams();
   const userId = params.userId as string;
-  
+
   const [stats, setStats] = useState<UserStats>({
     totalPicks: 0,
     correctPicks: 0,
@@ -181,7 +181,9 @@ export default function PublicProfile() {
             // Tie game - don't count as win or loss
           } else {
             const winner =
-              (game.home_score || 0) > (game.away_score || 0) ? game.home_team : game.away_team;
+              (game.home_score || 0) > (game.away_score || 0)
+                ? game.home_team
+                : game.away_team;
             const isCorrect = pick.picked_team === winner;
 
             if (isCorrect) {
@@ -198,7 +200,9 @@ export default function PublicProfile() {
               // Tie game - don't count lock as win or loss
             } else {
               const winner =
-                (game.home_score || 0) > (game.away_score || 0) ? game.home_team : game.away_team;
+                (game.home_score || 0) > (game.away_score || 0)
+                  ? game.home_team
+                  : game.away_team;
               const isCorrect = pick.picked_team === winner;
               if (isCorrect) {
                 lockWins++;
@@ -210,8 +214,10 @@ export default function PublicProfile() {
         }
       });
 
-      const winPercentage = totalPicks > 0 ? (correctPicks / totalPicks) * 100 : 0;
-      const lockWinPercentage = lockPicks > 0 ? (lockWins / lockPicks) * 100 : 0;
+      const winPercentage =
+        totalPicks > 0 ? (correctPicks / totalPicks) * 100 : 0;
+      const lockWinPercentage =
+        lockPicks > 0 ? (lockWins / lockPicks) * 100 : 0;
 
       setStats({
         totalPicks,
@@ -261,7 +267,13 @@ export default function PublicProfile() {
       loadUserAwards();
       loadAvailableWeeks();
     }
-  }, [userId, loadUserProfile, loadUserStats, loadUserAwards, loadAvailableWeeks]);
+  }, [
+    userId,
+    loadUserProfile,
+    loadUserStats,
+    loadUserAwards,
+    loadAvailableWeeks,
+  ]);
 
   const filteredPickHistory = pickHistory.filter((pick) => {
     if (selectedWeek === "all") return true;
@@ -279,7 +291,12 @@ export default function PublicProfile() {
 
   const getGameResult = (pick: PickHistory) => {
     const game = pick.game;
-    if (!game || game.status !== "completed" || game.home_score === null || game.away_score === null) {
+    if (
+      !game ||
+      game.status !== "completed" ||
+      game.home_score === null ||
+      game.away_score === null
+    ) {
       return null;
     }
 
@@ -287,14 +304,22 @@ export default function PublicProfile() {
       return "TIE";
     }
 
-    const winner = (game.home_score || 0) > (game.away_score || 0) ? game.home_team : game.away_team;
+    const winner =
+      (game.home_score || 0) > (game.away_score || 0)
+        ? game.home_team
+        : game.away_team;
     const isCorrect = pick.picked_team === winner;
     return isCorrect ? "WIN" : "LOSS";
   };
 
   const getGameScore = (pick: PickHistory) => {
     const game = pick.game;
-    if (!game || game.status !== "completed" || game.home_score === null || game.away_score === null) {
+    if (
+      !game ||
+      game.status !== "completed" ||
+      game.home_score === null ||
+      game.away_score === null
+    ) {
       return null;
     }
     return `${game.home_score}-${game.away_score}`;
@@ -600,7 +625,10 @@ export default function PublicProfile() {
                                   {pick.picked_team}
                                 </div>
                                 <div className="text-sm text-gray-400">
-                                  vs {game.home_team === pick.picked_team ? game.away_team : game.home_team}
+                                  vs{" "}
+                                  {game.home_team === pick.picked_team
+                                    ? game.away_team
+                                    : game.home_team}
                                 </div>
                               </div>
                               {renderSoloStars(pick)}
@@ -625,20 +653,21 @@ export default function PublicProfile() {
                                   {score}
                                 </div>
                               )}
-                              {pick.pick_points !== null && pick.pick_points !== undefined && (
-                                <div
-                                  className={`text-sm font-semibold ${
-                                    pick.pick_points > 0
-                                      ? "text-green-400"
-                                      : pick.pick_points < 0
-                                      ? "text-red-400"
-                                      : "text-gray-400"
-                                  }`}
-                                >
-                                  {pick.pick_points > 0 ? "+" : ""}
-                                  {pick.pick_points}
-                                </div>
-                              )}
+                              {pick.pick_points !== null &&
+                                pick.pick_points !== undefined && (
+                                  <div
+                                    className={`text-sm font-semibold ${
+                                      pick.pick_points > 0
+                                        ? "text-green-400"
+                                        : pick.pick_points < 0
+                                        ? "text-red-400"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    {pick.pick_points > 0 ? "+" : ""}
+                                    {pick.pick_points}
+                                  </div>
+                                )}
                             </div>
                           </div>
                         </div>
