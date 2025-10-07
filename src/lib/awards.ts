@@ -2,6 +2,11 @@ import { supabase } from "./supabase";
 import { Award } from "./supabase";
 import { calculatePickPoints } from "./scoring";
 import {
+  sortUsersByTiebreaker,
+  validateTiebreakerLogic,
+  logTiebreakerAnalysis,
+} from "./tiebreaker";
+import {
   Trophy,
   Medal,
   Award as AwardIcon,
@@ -95,6 +100,23 @@ export async function getUserAwards(userId: string) {
   }
 }
 
+/**
+ * Processes weekly awards for a given week, season, and season type.
+ *
+ * TIEBREAKER SYSTEM:
+ * When players are tied in points, the following criteria are used in order:
+ * 1. Points (descending) - Higher points win
+ * 2. Win Percentage (descending) - Higher win percentage wins
+ * 3. Wins (descending) - More wins wins
+ * 4. Lowest Losses (ascending) - Fewer losses wins
+ *
+ * This ensures consistent ranking between leaderboard and awards.
+ *
+ * @param week - The week number (1-18)
+ * @param season - The season year (e.g., 2025)
+ * @param seasonType - The season type ("preseason" | "regular" | "playoffs")
+ * @returns Promise with created awards data or error
+ */
 export async function processWeeklyAwards(
   week: number,
   season: number,
@@ -188,28 +210,17 @@ export async function processWeeklyAwards(
     }[] = [];
 
     if (users.length > 0) {
-      // Sort users by the same logic as leaderboard: points, win%, wins, lowest losses
-      const sortedUsers = users.sort((a, b) => {
-        // 1. Points (descending)
-        if (b[1].points !== a[1].points) {
-          return b[1].points - a[1].points;
-        }
+      // Sort users using the centralized tiebreaker logic
+      const sortedUsers = sortUsersByTiebreaker(users);
 
-        // 2. Win percentage (descending)
-        const aWinPercentage = a[1].total > 0 ? a[1].correct / a[1].total : 0;
-        const bWinPercentage = b[1].total > 0 ? b[1].correct / b[1].total : 0;
-        if (bWinPercentage !== aWinPercentage) {
-          return bWinPercentage - aWinPercentage;
-        }
+      // Log tiebreaker details for debugging
+      logTiebreakerAnalysis(sortedUsers, week);
 
-        // 3. Wins (descending)
-        if (b[1].correct !== a[1].correct) {
-          return b[1].correct - a[1].correct;
-        }
-
-        // 4. Lowest losses (ascending)
-        return a[1].total - a[1].correct - (b[1].total - b[1].correct);
-      });
+      // Validate tiebreaker logic
+      const isValid = validateTiebreakerLogic(sortedUsers, week);
+      if (!isValid) {
+        console.error(`❌ TIEBREAKER VALIDATION FAILED for Week ${week}!`);
+      }
 
       // Top Scorer (1st place)
       if (sortedUsers.length >= 1) {

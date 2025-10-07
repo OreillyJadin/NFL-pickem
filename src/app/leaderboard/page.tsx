@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/lib/storage";
+import { sortLeaderboardByTiebreaker } from "@/lib/tiebreaker";
 
 // Profile Picture Component
 function ProfilePicture({ userId }: { userId: string }) {
@@ -103,66 +104,58 @@ export default function Leaderboard() {
   const [viewMode, setViewMode] = useState<"season" | "weekly">("season");
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // Helper function to sort leaderboard entries by priority: points, %, wins, lowest losses
-  const sortLeaderboard = (a: LeaderboardEntry, b: LeaderboardEntry) => {
-    // 1. Points (descending)
-    if (b.total_points !== a.total_points) {
-      return b.total_points - a.total_points;
-    }
-
-    // 2. Win percentage (descending)
-    const aWinPercentage =
-      a.total_picks > 0 ? a.correct_picks / a.total_picks : 0;
-    const bWinPercentage =
-      b.total_picks > 0 ? b.correct_picks / b.total_picks : 0;
-    if (bWinPercentage !== aWinPercentage) {
-      return bWinPercentage - aWinPercentage;
-    }
-
-    // 3. Wins (descending)
-    if (b.correct_picks !== a.correct_picks) {
-      return b.correct_picks - a.correct_picks;
-    }
-
-    // 4. Lowest losses (ascending)
-    return a.incorrect_picks - b.incorrect_picks;
-  };
+  // Use centralized tiebreaker function for consistency
+  const sortLeaderboard = sortLeaderboardByTiebreaker;
 
   const loadLeaderboard = useCallback(async () => {
     try {
       setLoadingData(true);
 
       if (viewMode === "season") {
-        // Load overall season standings - get all users who have made picks
-        console.log("🔄 Loading season standings data...");
-        const { data: picks, error: picksError } = await supabase
-          .from("picks")
+        // Load overall season standings - get all completed games first, then picks
+        // First get all completed games for the season
+        const { data: completedGames, error: gamesError } = await supabase
+          .from("games")
           .select(
-            `
-              user_id,
-              picked_team,
-              is_lock,
-              solo_pick,
-              solo_lock,
-              super_bonus,
-              bonus_points,
-              pick_points,
-              game:games!inner(
-                home_team,
-                away_team,
-                home_score,
-                away_score,
-                status,
-                week,
-                season,
-                season_type
-              )
-            `
+            "id, home_team, away_team, home_score, away_score, status, week, season, season_type"
           )
-          .eq("game.season", 2025)
-          .eq("game.status", "completed");
+          .eq("season", 2025)
+          .eq("status", "completed");
 
-        if (picksError) throw picksError;
+        if (gamesError) throw gamesError;
+
+        // Create a map of game IDs for quick lookup
+        const gameMap = new Map(completedGames?.map((g) => [g.id, g]) || []);
+
+        // Now get ALL picks for these games using pagination
+        // IMPORTANT: Supabase has a hard 1000 row limit, so we MUST paginate
+        const gameIds = Array.from(gameMap.keys());
+
+        // Fetch all picks with pagination
+        let allPicks: any[] = [];
+        let from = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data: picksBatch, error: picksError } = await supabase
+            .from("picks")
+            .select("user_id, picked_team, is_lock, pick_points, game_id")
+            .in("game_id", gameIds)
+            .range(from, from + pageSize - 1);
+
+          if (picksError) throw picksError;
+
+          if (picksBatch && picksBatch.length > 0) {
+            allPicks = [...allPicks, ...picksBatch];
+            from += pageSize;
+            hasMore = picksBatch.length === pageSize;
+          } else {
+            hasMore = false;
+          }
+        }
+
+        const picks = allPicks;
 
         // Get all user profiles
         const { data: profiles, error: profilesError } = await supabase
@@ -186,7 +179,7 @@ export default function Leaderboard() {
           };
         });
 
-        // Get all users who have made picks (even if no completed games)
+        // Get all users who have made picks
         const usersWithPicks = new Set(
           picks?.map((pick) => pick.user_id) || []
         );
@@ -209,15 +202,10 @@ export default function Leaderboard() {
 
         // Process picks and calculate points
         for (const pick of picks || []) {
-          const game = pick.game as any;
+          const game = gameMap.get(pick.game_id);
 
-          // Only count completed games for stats
-          if (
-            game &&
-            game.status === "completed" &&
-            game.home_score !== null &&
-            game.away_score !== null
-          ) {
+          // Only count if game exists and has scores
+          if (game && game.home_score !== null && game.away_score !== null) {
             userStats[pick.user_id].total_picks++;
 
             // Use the pre-calculated pick_points from the database
@@ -241,32 +229,6 @@ export default function Leaderboard() {
               }
             }
           }
-        }
-
-        // Debug logging for oreillyyyy and Slug
-        const oreillyyyyId = Object.keys(userProfiles).find(
-          (id) => userProfiles[id].username === "oreillyyyy"
-        );
-        const slugId = Object.keys(userProfiles).find(
-          (id) => userProfiles[id].username === "Slug"
-        );
-
-        if (oreillyyyyId && userStats[oreillyyyyId]) {
-          console.log("🔍 oreillyyyy:", {
-            points: userStats[oreillyyyyId].total_points,
-            wins: userStats[oreillyyyyId].correct_picks,
-            losses: userStats[oreillyyyyId].incorrect_picks,
-            total: userStats[oreillyyyyId].total_picks,
-          });
-        }
-
-        if (slugId && userStats[slugId]) {
-          console.log("🔍 Slug:", {
-            points: userStats[slugId].total_points,
-            wins: userStats[slugId].correct_picks,
-            losses: userStats[slugId].incorrect_picks,
-            total: userStats[slugId].total_picks,
-          });
         }
 
         // Sort by priority: points, %, wins, lowest losses

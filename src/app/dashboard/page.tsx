@@ -536,6 +536,30 @@ export default function Dashboard() {
     }
 
     try {
+      // 🔒 SECURITY: Check if game has started before allowing lock toggle
+      const { data: game, error: gameError } = await supabase
+        .from("games")
+        .select("game_time, status, home_team, away_team")
+        .eq("id", gameId)
+        .single();
+
+      if (gameError) {
+        console.error("Error fetching game:", gameError);
+        alert("Error loading game information. Please try again.");
+        return;
+      }
+
+      // Prevent lock toggle after game has started
+      const gameTime = new Date(game.game_time);
+      const now = new Date();
+
+      if (game.status !== "scheduled" || gameTime <= now) {
+        alert(
+          `Cannot modify lock for ${game.away_team} @ ${game.home_team}.\nThis game has already started or is completed.`
+        );
+        return;
+      }
+
       const { error } = await supabase
         .from("picks")
         .update({ is_lock: newLockStatus })
@@ -574,6 +598,30 @@ export default function Dashboard() {
     }
 
     try {
+      // 🔒 SECURITY: Check if game has started before allowing pick
+      const { data: game, error: gameError } = await supabase
+        .from("games")
+        .select("game_time, status, home_team, away_team")
+        .eq("id", gameId)
+        .single();
+
+      if (gameError) {
+        console.error("Error fetching game:", gameError);
+        alert("Error loading game information. Please try again.");
+        return;
+      }
+
+      // Prevent picks after game has started
+      const gameTime = new Date(game.game_time);
+      const now = new Date();
+
+      if (game.status !== "scheduled" || gameTime <= now) {
+        alert(
+          `Cannot modify pick for ${game.away_team} @ ${game.home_team}.\nThis game has already started or is completed.`
+        );
+        return;
+      }
+
       // First try to update existing pick
       const { data: existingPick, error: findError } = await supabase
         .from("picks")

@@ -43,6 +43,9 @@ async function testBonusPoints() {
     game_id: "game1",
     picked_team: "KC",
     is_lock: false,
+    solo_pick: true, // This would be set by updateSoloPickStatus
+    solo_lock: false,
+    super_bonus: false,
     created_at: new Date().toISOString(),
   };
 
@@ -53,6 +56,9 @@ async function testBonusPoints() {
     game_id: "game1",
     picked_team: "KC",
     is_lock: true,
+    solo_pick: false, // Not solo pick because there's another pick
+    solo_lock: true, // But solo lock
+    super_bonus: false,
     created_at: new Date().toISOString(),
   };
 
@@ -62,6 +68,9 @@ async function testBonusPoints() {
     game_id: "game1",
     picked_team: "KC",
     is_lock: false,
+    solo_pick: false,
+    solo_lock: false,
+    super_bonus: false,
     created_at: new Date().toISOString(),
   };
 
@@ -72,6 +81,9 @@ async function testBonusPoints() {
     game_id: "game1",
     picked_team: "KC",
     is_lock: true,
+    solo_pick: true, // Solo pick
+    solo_lock: true, // AND solo lock
+    super_bonus: true, // = super bonus!
     created_at: new Date().toISOString(),
   };
 
@@ -120,15 +132,56 @@ async function testBonusPoints() {
   console.log("Expected: { isCorrect: true, points: 7, bonus: 5 }");
   console.log("Passed:", superResult.points === 7 && superResult.bonus === 5);
 
-  // Test 5: Week 2 (no bonus)
+  // Test 5: Week 2 (no bonus - but still gets base points!)
   const week2Game = { ...mockGame, week: 2 };
-  const week2Result = await calculatePickPoints(soloPick, week2Game, [
-    soloPick,
+  const week2Pick: Pick = {
+    ...soloPick,
+    solo_pick: false, // Week 2 doesn't get solo status in DB
+    solo_lock: false,
+    super_bonus: false,
+  };
+  const week2Result = await calculatePickPoints(week2Pick, week2Game, [
+    week2Pick,
   ]);
   console.log("\nTest 5 - Week 2 pick (should be 1 point, no bonus):");
   console.log("Result:", week2Result);
   console.log("Expected: { isCorrect: true, points: 1, bonus: 0 }");
   console.log("Passed:", week2Result.points === 1 && week2Result.bonus === 0);
+
+  // Test 7: Week 1 (no bonus - but still gets base points!)
+  const week1Game = { ...mockGame, week: 1 };
+  const week1Pick: Pick = {
+    ...soloPick,
+    solo_pick: false,
+    solo_lock: false,
+    super_bonus: false,
+  };
+  const week1Result = await calculatePickPoints(week1Pick, week1Game, [
+    week1Pick,
+  ]);
+  console.log("\nTest 7 - Week 1 pick (should be 1 point, no bonus):");
+  console.log("Result:", week1Result);
+  console.log("Expected: { isCorrect: true, points: 1, bonus: 0 }");
+  console.log("Passed:", week1Result.points === 1 && week1Result.bonus === 0);
+
+  // Test 8: Week 1 lock (no bonus - but still gets 2 base points!)
+  const week1LockPick: Pick = {
+    ...soloPick,
+    is_lock: true,
+    solo_pick: false,
+    solo_lock: false,
+    super_bonus: false,
+  };
+  const week1LockResult = await calculatePickPoints(week1LockPick, week1Game, [
+    week1LockPick,
+  ]);
+  console.log("\nTest 8 - Week 1 lock (should be 2 points, no bonus):");
+  console.log("Result:", week1LockResult);
+  console.log("Expected: { isCorrect: true, points: 2, bonus: 0 }");
+  console.log(
+    "Passed:",
+    week1LockResult.points === 2 && week1LockResult.bonus === 0
+  );
 
   // Test 6: Incorrect pick
   const incorrectPick: Pick = {

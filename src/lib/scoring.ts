@@ -8,7 +8,13 @@ export interface PickResult {
 }
 
 // Calculate and update solo pick/lock status for a game
-export async function updateSoloPickStatus(gameId: string) {
+// This function ALWAYS scores picks regardless of week number
+export async function updateSoloPickStatus(
+  gameId: string,
+  retryCount: number = 0
+) {
+  const MAX_RETRIES = 3;
+
   try {
     // Get the game details
     const { data: game, error: gameError } = await supabase
@@ -19,15 +25,15 @@ export async function updateSoloPickStatus(gameId: string) {
 
     if (gameError || !game) {
       console.error("Error fetching game:", gameError);
-      return;
+      throw new Error(`Failed to fetch game: ${gameError?.message}`);
     }
 
-    // Only process for Week 3+ games that are in_progress or completed
-    if (
-      game.week <= 2 ||
-      (game.status !== "in_progress" && game.status !== "completed")
-    ) {
-      return;
+    // Only process games that are in_progress or completed
+    if (game.status !== "in_progress" && game.status !== "completed") {
+      console.log(
+        `Game ${gameId} is ${game.status}, skipping scoring (only score in_progress or completed games)`
+      );
+      return { success: true, skipped: true, reason: "Game not started" };
     }
 
     // Get all picks for this game
@@ -38,10 +44,15 @@ export async function updateSoloPickStatus(gameId: string) {
 
     if (picksError || !allPicks) {
       console.error("Error fetching picks:", picksError);
-      return;
+      throw new Error(`Failed to fetch picks: ${picksError?.message}`);
     }
 
-    // Group picks by team
+    if (allPicks.length === 0) {
+      console.log(`No picks found for game ${gameId}`);
+      return { success: true, skipped: true, reason: "No picks" };
+    }
+
+    // Group picks by team for solo pick/lock calculation
     const picksByTeam: { [team: string]: Pick[] } = {};
     const locksByTeam: { [team: string]: Pick[] } = {};
 
@@ -59,7 +70,10 @@ export async function updateSoloPickStatus(gameId: string) {
       }
     });
 
-    // Update each pick with solo status
+    // Update each pick with solo status and points
+    let successCount = 0;
+    let errorCount = 0;
+
     for (const pick of allPicks) {
       const teamPicks = picksByTeam[pick.picked_team] || [];
       const teamLocks = locksByTeam[pick.picked_team] || [];
@@ -68,9 +82,11 @@ export async function updateSoloPickStatus(gameId: string) {
       const isSoloLock = pick.is_lock && teamLocks.length === 1;
       const isSuperBonus = isSoloPick && isSoloLock && pick.is_lock;
 
-      // Calculate bonus points and total points only if game is completed
+      // Calculate bonus points and total points
       let bonusPoints = 0;
       let totalPoints = 0;
+
+      // Only calculate final points if game is completed with scores
       if (
         game.status === "completed" &&
         game.home_score !== null &&
@@ -88,7 +104,7 @@ export async function updateSoloPickStatus(gameId: string) {
             game.home_score > game.away_score ? game.home_team : game.away_team;
           const isCorrect = pick.picked_team === winner;
 
-          // Calculate base points
+          // Calculate base points (ALL weeks get base points)
           let basePoints = 0;
           if (isCorrect) {
             basePoints = pick.is_lock ? 2 : 1;
@@ -96,7 +112,7 @@ export async function updateSoloPickStatus(gameId: string) {
             basePoints = pick.is_lock ? -2 : 0;
           }
 
-          // Calculate bonus points (only if correct and Week 3+)
+          // Calculate bonus points (ONLY Week 3+ gets bonus points)
           if (isCorrect && game.week >= 3) {
             if (isSuperBonus) {
               bonusPoints = 5;
@@ -112,7 +128,7 @@ export async function updateSoloPickStatus(gameId: string) {
         }
       }
 
-      // Update the pick in database
+      // Update the pick in database with retry logic
       const { error } = await supabase
         .from("picks")
         .update({
@@ -125,13 +141,51 @@ export async function updateSoloPickStatus(gameId: string) {
         .eq("id", pick.id);
 
       if (error) {
-        console.error("Error updating pick bonus status:", error);
+        console.error(`Error updating pick ${pick.id}:`, error);
+        errorCount++;
+      } else {
+        successCount++;
       }
     }
 
-    console.log(`Updated solo pick/lock status for game ${gameId}`);
+    const result = {
+      success: true,
+      gameId,
+      week: game.week,
+      totalPicks: allPicks.length,
+      successCount,
+      errorCount,
+    };
+
+    console.log(
+      `Updated picks for game ${gameId} (Week ${game.week}): ${successCount} successful, ${errorCount} failed`
+    );
+
+    return result;
   } catch (error) {
-    console.error("Error updating solo pick status:", error);
+    console.error(
+      `Error updating solo pick status (attempt ${
+        retryCount + 1
+      }/${MAX_RETRIES}):`,
+      error
+    );
+
+    // Retry logic for transient errors
+    if (retryCount < MAX_RETRIES) {
+      console.log(`Retrying in 1 second...`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return updateSoloPickStatus(gameId, retryCount + 1);
+    }
+
+    // After max retries, log the error but don't crash
+    console.error(
+      `Failed to update solo pick status for game ${gameId} after ${MAX_RETRIES} attempts`
+    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+      gameId,
+    };
   }
 }
 
