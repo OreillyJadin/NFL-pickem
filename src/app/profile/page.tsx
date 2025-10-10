@@ -444,17 +444,32 @@ export default function Profile() {
         <div className="mb-6">
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-4">
-              <div className="w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                {profilePictureUrl ? (
-                  <img
-                    src={profilePictureUrl}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    onError={() => setProfilePictureUrl(null)}
-                  />
-                ) : (
-                  <User className="h-10 w-10 text-gray-300" />
-                )}
+              <div className="relative flex-shrink-0">
+                <div
+                  className="w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-80 transition-opacity relative group"
+                  onClick={() => setShowEditModal(true)}
+                  role="button"
+                  aria-label="Edit profile picture"
+                >
+                  {profilePictureUrl ? (
+                    <img
+                      src={profilePictureUrl}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={() => setProfilePictureUrl(null)}
+                    />
+                  ) : (
+                    <User className="h-10 w-10 text-gray-300" />
+                  )}
+                  {/* Hover overlay for desktop */}
+                  <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Edit className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                {/* Edit badge - visible on mobile, hidden on desktop hover */}
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center border-2 border-gray-900 md:group-hover:opacity-0 transition-opacity shadow-lg">
+                  <Edit className="h-4 w-4 text-gray-200" />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl font-bold text-white mb-1">

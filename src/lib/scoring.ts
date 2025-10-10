@@ -1,5 +1,11 @@
 import { Pick, Game } from "./supabase";
 import { supabase } from "./supabase";
+import {
+  calculatePickScore,
+  calculateSoloStatusForPick,
+  determineWinner,
+} from "./scoring-engine";
+import { validateGameForScoring } from "./scoring-validator";
 
 export interface PickResult {
   isCorrect: boolean;
@@ -86,45 +92,36 @@ export async function updateSoloPickStatus(
       let bonusPoints = 0;
       let totalPoints = 0;
 
-      // Only calculate final points if game is completed with scores
-      if (
-        game.status === "completed" &&
-        game.home_score !== null &&
-        game.away_score !== null
-      ) {
-        // Check if game is a tie - void all picks (0 points for everyone)
-        const isTie = game.home_score === game.away_score;
-
-        if (isTie) {
-          // Ties void all picks - everyone gets 0 points
+      // Only calculate final points if game is valid for scoring
+      const validation = validateGameForScoring(game);
+      if (!validation.canScore) {
+        console.log(
+          `Pick ${pick.id}: Game ${gameId} not ready for scoring (${validation.reason})`
+        );
+      } else {
+        const winner = determineWinner(game);
+        if (!winner) {
+          // tie or unresolved
           totalPoints = 0;
           bonusPoints = 0;
+          console.log(
+            `Pick ${pick.id}: TIE or unresolved (${game.home_score}-${game.away_score}), 0 points`
+          );
         } else {
-          const winner =
-            game.home_score > game.away_score ? game.home_team : game.away_team;
           const isCorrect = pick.picked_team === winner;
+          const solo = { isSoloPick, isSoloLock };
+          const score = calculatePickScore({
+            isCorrect,
+            isLock: !!pick.is_lock,
+            week: game.week,
+            soloStatus: solo,
+          });
+          bonusPoints = score.bonusPoints;
+          totalPoints = score.totalPoints;
 
-          // Calculate base points (ALL weeks get base points)
-          let basePoints = 0;
-          if (isCorrect) {
-            basePoints = pick.is_lock ? 2 : 1;
-          } else {
-            basePoints = pick.is_lock ? -2 : 0;
-          }
-
-          // Calculate bonus points (ONLY Week 3+ gets bonus points)
-          if (isCorrect && game.week >= 3) {
-            if (isSuperBonus) {
-              bonusPoints = 5;
-            } else if (isSoloLock) {
-              bonusPoints = 2;
-            } else if (isSoloPick) {
-              bonusPoints = 2;
-            }
-          }
-
-          // Calculate total points
-          totalPoints = basePoints + bonusPoints;
+          console.log(
+            `Pick ${pick.id}: ${score.breakdown} (winner=${winner}, pick=${pick.picked_team})`
+          );
         }
       }
 

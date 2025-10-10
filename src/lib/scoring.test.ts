@@ -198,6 +198,35 @@ async function testBonusPoints() {
     "Passed:",
     incorrectResult.points === 0 && incorrectResult.bonus === 0
   );
+
+  // Test 9: Incorrect pick that is solo-locked (should still be -2, no bonus)
+  const losingGame: Game = { ...mockGame, home_score: 14, away_score: 28 };
+  const incorrectSoloLockedPick: Pick = {
+    id: "pick7",
+    user_id: "user7",
+    game_id: "game1",
+    picked_team: "KC", // choose losing team relative to losingGame
+    is_lock: true,
+    solo_pick: true,
+    solo_lock: true,
+    super_bonus: true,
+    created_at: new Date().toISOString(),
+  };
+  const incorrectSoloLockedResult = await calculatePickPoints(
+    incorrectSoloLockedPick,
+    losingGame,
+    [incorrectSoloLockedPick]
+  );
+  console.log(
+    "\nTest 9 - Incorrect solo-locked pick (should be -2 points, no bonus):"
+  );
+  console.log("Result:", incorrectSoloLockedResult);
+  console.log("Expected: { isCorrect: false, points: -2, bonus: 0 }");
+  console.log(
+    "Passed:",
+    incorrectSoloLockedResult.points === -2 &&
+      incorrectSoloLockedResult.bonus === 0
+  );
 }
 
 // Run the tests

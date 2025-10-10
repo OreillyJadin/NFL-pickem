@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
+import { useFeedback } from "@/components/FeedbackProvider";
 import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/lib/storage";
 import { sortLeaderboardByTiebreaker } from "@/lib/tiebreaker";
@@ -81,6 +82,7 @@ interface WeeklyStats {
 export default function Leaderboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { markUserWin } = useFeedback();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -552,6 +554,15 @@ export default function Leaderboard() {
                     {leaderboard.map((entry, index) => {
                       const isTopThree = index < 3;
                       const isLast = index === leaderboard.length - 1;
+                      const isCurrentUser = user && entry.user_id === user.id;
+
+                      // Trigger feedback for top 3 users (but only once per session)
+                      if (isCurrentUser && isTopThree && index === 0) {
+                        // Small delay to let the leaderboard render first
+                        setTimeout(() => {
+                          markUserWin();
+                        }, 1000);
+                      }
 
                       return (
                         <tr

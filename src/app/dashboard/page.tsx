@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { TutorialModal } from "@/components/TutorialModal";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
+import { useFeedback } from "@/components/FeedbackProvider";
 import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/lib/storage";
 import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
@@ -65,6 +66,7 @@ interface Pick {
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { markUserWin } = useFeedback();
   const [games, setGames] = useState<Game[]>([]);
 
   // Custom sort function for games: in_progress > scheduled > completed, then by game_time
