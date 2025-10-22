@@ -1,0 +1,182 @@
+# Project Rules
+
+## Version Control
+
+### Version Numbering (Semantic Versioning)
+- **Major (X.0.0)**: Breaking changes, major refactors, new architecture
+- **Minor (0.X.0)**: New features, significant improvements
+- **Patch (0.0.X)**: Bug fixes, small tweaks, documentation updates
+
+### Rule: Update Version on Every Change
+When making ANY changes to the codebase:
+1. Update the version in `package.json`
+2. Use semantic versioning guidelines above
+3. Commit with a clear message including version number
+
+Example commit messages:
+- `v1.0.0: Complete MVC refactor and documentation`
+- `v1.0.1: Fix scoring bug for tied games`
+- `v1.1.0: Add user profile pictures feature`
+
+## Code Style
+
+### Imports Order
+1. External packages (next, react, etc.)
+2. Types from `@/types/`
+3. Models from `@/models/`
+4. Controllers from `@/controllers/`
+5. Services from `@/services/`
+6. Local components
+
+### Naming Conventions
+- **Models**: PascalCase + "Model" (e.g., `GameModel.ts`)
+- **Controllers**: PascalCase + "Controller" (e.g., `GameController.ts`)
+- **Services**: kebab-case (e.g., `game-sync.ts`)
+- **Components**: PascalCase (e.g., `GameCard.tsx`)
+- **Types**: kebab-case (e.g., `database.ts`)
+
+### Architecture Pattern
+Always follow MVC:
+- **Models** (`src/models/`) - Database operations only
+- **Controllers** (`src/controllers/`) - Business logic & validation
+- **Services** (`src/services/`) - Utility functions
+- **Views** (`src/app/`) - UI and route handlers
+
+### API Routes Pattern
+```typescript
+// ✅ Good - Use controllers
+export async function POST(request: NextRequest) {
+  const data = await request.json();
+  const result = await SomeController.doSomething(data);
+  return NextResponse.json(result);
+}
+
+// ❌ Bad - Direct database access
+export async function POST(request: NextRequest) {
+  await supabase.from('table').insert(...);
+  return NextResponse.json({ success: true });
+}
+```
+
+## Documentation
+
+### When to Update Documentation
+- Adding a new feature → Update PROJECT_GUIDE.md
+- Changing architecture → Update ARCHITECTURE.md
+- Adding setup steps → Update README.md or GETTING_STARTED.md
+
+### Comment Guidelines
+- Add comments for complex logic (explain WHY, not WHAT)
+- Document all public functions with JSDoc
+- Add TODOs with your name: `// TODO(yourname): description`
+
+## Git Workflow
+
+### Branch Naming
+- Features: `feature/feature-name`
+- Bugs: `fix/bug-description`
+- Refactors: `refactor/what-changed`
+- Documentation: `docs/what-updated`
+
+### Commit Messages
+Format: `v{version}: Brief description`
+
+Examples:
+- `v1.0.1: Fix null pointer in scoring controller`
+- `v1.1.0: Add email notifications for weekly winners`
+- `v1.0.2: Update documentation for new developers`
+
+### Before Committing
+1. Update version in package.json
+2. Run `npm run build` - Must succeed
+3. Run `npm run lint` - Fix any errors
+4. Test locally
+5. Commit with version number
+
+## Testing
+
+### Before Pushing
+- [ ] Run `npm run build` successfully
+- [ ] Run `npm run lint` with no errors
+- [ ] Test the feature manually
+- [ ] Check browser console for errors
+- [ ] Verify no breaking changes
+
+## Database
+
+### Always Use Models
+Never query Supabase directly in API routes or components. Always go through:
+1. Model (database operation)
+2. Controller (business logic)
+3. API route (HTTP handler)
+
+### Migration Files
+Keep migrations in `supabase/migrations/` for reference only.
+Actual migrations should be run in Supabase dashboard.
+
+## Environment Variables
+
+### Required Variables
+All environment variables should be documented in:
+- README.md (with examples)
+- .env.example (template file)
+
+Never commit real credentials!
+
+## Performance
+
+### Database Queries
+- Use specific field selection: `.select('id, name')` not `.select('*')`
+- Add pagination for large datasets
+- Use joins to avoid N+1 queries
+- Add appropriate indexes in Supabase
+
+### Caching
+Currently no caching layer. When adding caching:
+- Cache weekly schedules
+- Cache leaderboard data
+- Cache user profiles
+- Set appropriate TTLs
+
+## Security
+
+### Never Expose
+- Service role keys in client code
+- User IDs in URLs (use usernames instead)
+- Internal error details to users
+
+### Always Validate
+- User input in controllers
+- Game timing before accepting picks
+- User permissions before updates
+
+## Deployment
+
+### Vercel Settings
+- Build command: `npm run build`
+- Output directory: `.next`
+- Environment variables: Set in Vercel dashboard
+
+### Cron Jobs
+Configure in Vercel:
+- `/api/cron/sync-scores` - Every 5 minutes
+- `/api/cron/fix-scoring` - Every 15 minutes
+
+## Questions?
+
+When in doubt:
+1. Check existing code for similar patterns
+2. Read PROJECT_GUIDE.md
+3. Ask your teammate
+4. Document your decision
+
+## Version History
+
+- **v1.0.0** - (Planned) Migration to Azure complete
+- **v0.8.0** - MVC refactor complete, clean documentation
+- **v0.5.0** - Added automated scoring and awards
+- **v0.4.0** - Added leaderboard and tiebreaker system
+- **v0.3.0** - Added pick locking feature
+- **v0.2.0** - Basic pick functionality
+- **v0.1.0** - Initial setup
+

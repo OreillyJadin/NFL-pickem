@@ -28,9 +28,9 @@ import { TutorialModal } from "@/components/TutorialModal";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { useFeedback } from "@/components/FeedbackProvider";
 import { supabase } from "@/lib/supabase";
-import { getProfilePictureUrl } from "@/lib/storage";
-import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
-import { syncAllCurrentGames, syncGameScore } from "@/lib/game-sync";
+import { getProfilePictureUrl } from "@/services/storage";
+import { getTeamColors, getTeamAbbreviation } from "@/services/team-colors";
+import { syncAllCurrentGames, syncGameScore } from "@/services/game-sync";
 
 interface Game {
   id: string;

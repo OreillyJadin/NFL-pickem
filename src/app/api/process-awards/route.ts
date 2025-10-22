@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { processCompletedWeeks } from "@/lib/auto-awards";
+import { AwardController } from "@/controllers/AwardController";
 
 export async function POST(request: NextRequest) {
   try {
     console.log("Processing completed weeks for awards...");
 
-    const result = await processCompletedWeeks();
+    const result = await AwardController.processAwards();
 
     if (result.success) {
       return NextResponse.json({
         success: true,
         message: result.message,
-        processedWeeks: result.processedWeeks,
+        awardsCreated: result.awardsCreated,
         timestamp: new Date().toISOString(),
       });
     } else {
@@ -38,12 +38,12 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Allow GET requests for testing
-    const result = await processCompletedWeeks();
+    const result = await AwardController.processAwards();
 
     return NextResponse.json({
       success: result.success,
       message: result.message,
-      processedWeeks: result.processedWeeks,
+      awardsCreated: result.awardsCreated,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

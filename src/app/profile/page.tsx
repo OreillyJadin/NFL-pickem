@@ -14,10 +14,10 @@ import {
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
 import { Lock, Trophy, Check, X, Star, Unlock } from "lucide-react";
-import { getProfilePictureUrl } from "@/lib/storage";
-import { getUserAwards, getAwardDisplay } from "@/lib/awards";
+import { getProfilePictureUrl } from "@/services/storage";
+import { getUserAwards, getAwardDisplay } from "@/services/awards";
 import { Award } from "@/lib/supabase";
-import { getTeamColors, getTeamAbbreviation } from "@/lib/team-colors";
+import { getTeamColors, getTeamAbbreviation } from "@/services/team-colors";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { Button } from "@/components/ui/button";
 import { Edit, User } from "lucide-react";

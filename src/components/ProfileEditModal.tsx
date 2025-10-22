@@ -6,7 +6,7 @@ import {
   uploadProfilePicture,
   deleteFile,
   getProfilePictureUrl,
-} from "@/lib/storage";
+} from "@/services/storage";
 import { PasswordResetModal } from "@/components/PasswordResetModal";
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";

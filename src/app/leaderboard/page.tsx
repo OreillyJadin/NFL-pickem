@@ -15,8 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { useFeedback } from "@/components/FeedbackProvider";
 import { supabase } from "@/lib/supabase";
-import { getProfilePictureUrl } from "@/lib/storage";
-import { sortLeaderboardByTiebreaker } from "@/lib/tiebreaker";
+import { getProfilePictureUrl } from "@/services/storage";
+import { sortLeaderboardByTiebreaker } from "@/services/tiebreaker";
 
 // Profile Picture Component
 function ProfilePicture({ userId }: { userId: string }) {

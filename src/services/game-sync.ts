@@ -1,11 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { updateSoloPickStatus } from "@/services/scoring";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabase } from "@/config/supabase";
+import { updateSoloPickStatus } from "./scoring";
 
 // ESPN API integration for real-time scores
 async function fetchESPNGameData(espnId: string) {
@@ -51,7 +45,10 @@ function hasGameDataChanged(currentGame: any, newData: any): boolean {
 }
 
 // Sync scores for a specific game with smart caching
-async function syncGameScore(gameId: string, forceSync: boolean = false) {
+export async function syncGameScore(
+  gameId: string,
+  forceSync: boolean = false
+) {
   try {
     // Get game data including last_synced timestamp
     const { data: game, error: gameError } = await supabase
@@ -153,7 +150,9 @@ async function syncGameScore(gameId: string, forceSync: boolean = false) {
         .filter(Boolean);
 
       if (broadcastNames.length > 0) {
-        tvInfo = broadcastNames.join(", ");
+        tvInfo = broadcastNames
+          .map((name: string) => (name === "Prime Video" ? "Prime" : name))
+          .join(", ");
       }
     }
 
@@ -199,7 +198,6 @@ async function syncGameScore(gameId: string, forceSync: boolean = false) {
       .update({
         ...newGameData,
         last_synced: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       })
       .eq("id", gameId);
 
@@ -226,37 +224,118 @@ async function syncGameScore(gameId: string, forceSync: boolean = false) {
   }
 }
 
-// Sync all games for a specific week and season type with smart caching
-async function syncWeekScores(
-  week: number,
-  seasonType: string,
-  season: number = 2025,
-  forceSync: boolean = false
-) {
+// Sync TV information for all games
+export async function syncAllGamesTV() {
   try {
-    console.log(
-      `Syncing scores for ${seasonType} week ${week} (season ${season}) with smart caching`
-    );
+    console.log("🔄 Starting TV sync for all games...");
 
-    // Get all games for the week including last_synced field
+    // Get all games that have ESPN IDs
     const { data: games, error: gamesError } = await supabase
       .from("games")
-      .select("id, home_team, away_team, espn_id, status, last_synced")
-      .eq("week", week)
-      .eq("season_type", seasonType)
-      .eq("season", season);
+      .select("id, home_team, away_team, espn_id, tv")
+      .not("espn_id", "is", null);
 
     if (gamesError) {
+      console.error("❌ Database query error:", gamesError);
       throw new Error(`Database query error: ${gamesError.message}`);
     }
 
     if (!games || games.length === 0) {
-      console.log(`No games found for ${seasonType} week ${week}`);
-      return { success: true, gamesProcessed: 0 };
+      console.log("ℹ️ No games with ESPN IDs found");
+      return {
+        success: true,
+        message: "No games with ESPN IDs found",
+        gamesProcessed: 0,
+      };
+    }
+
+    console.log(`📊 Found ${games.length} games to sync TV info for`);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Process each game
+    for (const game of games) {
+      try {
+        const result = await syncGameScore(game.id);
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        errorCount++;
+      }
+
+      // Add small delay to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    console.log(
+      `TV sync completed: ${successCount} successful, ${errorCount} failed`
+    );
+
+    return {
+      success: true,
+      message: `Synced TV info for ${successCount} games successfully, ${errorCount} failed`,
+      gamesProcessed: games.length,
+      successful: successCount,
+      failed: errorCount,
+    };
+  } catch (error) {
+    console.error("Error syncing all games TV:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+// Sync all current games with smart caching
+export async function syncAllCurrentGames(forceSync: boolean = false) {
+  try {
+    console.log("🔄 Starting smart sync of recent games...");
+
+    // Get current date to determine which games to sync
+    const now = new Date();
+    const threeDaysAgo = new Date(now);
+    threeDaysAgo.setDate(now.getDate() - 3);
+    threeDaysAgo.setHours(0, 0, 0, 0);
+
+    const oneDayFromNow = new Date(now);
+    oneDayFromNow.setDate(now.getDate() + 1);
+    oneDayFromNow.setHours(23, 59, 59, 999);
+
+    console.log(
+      `📅 Syncing games from ${threeDaysAgo.toDateString()} to ${oneDayFromNow.toDateString()}`
+    );
+
+    // Get games from the last 3 days to 1 day ahead that have ESPN IDs
+    // Include last_synced field for smart caching
+    const { data: games, error: gamesError } = await supabase
+      .from("games")
+      .select(
+        "id, home_team, away_team, espn_id, status, game_time, last_synced"
+      )
+      .not("espn_id", "is", null)
+      .gte("game_time", threeDaysAgo.toISOString())
+      .lte("game_time", oneDayFromNow.toISOString());
+
+    if (gamesError) {
+      console.error("❌ Database query error:", gamesError);
+      throw new Error(`Database query error: ${gamesError.message}`);
+    }
+
+    if (!games || games.length === 0) {
+      console.log("ℹ️ No recent games found to sync");
+      return {
+        success: true,
+        message: "No recent games found to sync",
+        gamesProcessed: 0,
+      };
     }
 
     // Filter games that need syncing based on smart caching rules
-    const now = new Date();
     const gamesToSync = games.filter((game) => {
       if (forceSync) return true;
 
@@ -284,13 +363,20 @@ async function syncWeekScores(
     });
 
     console.log(
-      `Found ${games.length} games, ${gamesToSync.length} need syncing`
+      `📊 Found ${games.length} recent games, ${gamesToSync.length} need syncing:`,
+      gamesToSync.map(
+        (g) =>
+          `${g.away_team} @ ${g.home_team} (${new Date(
+            g.game_time
+          ).toLocaleDateString()}) - ${g.status}`
+      )
     );
 
     if (gamesToSync.length === 0) {
-      console.log(`All games for ${seasonType} week ${week} are up to date`);
+      console.log("✅ All games are up to date, no sync needed");
       return {
         success: true,
+        message: "All games are up to date, no sync needed",
         gamesProcessed: games.length,
         skipped: games.length,
         successful: 0,
@@ -298,160 +384,51 @@ async function syncWeekScores(
       };
     }
 
-    // Process each game that needs syncing
-    const results = [];
     let successCount = 0;
     let errorCount = 0;
     let skippedCount = 0;
 
+    // Process each game that needs syncing
     for (const game of gamesToSync) {
-      const result = await syncGameScore(game.id, forceSync);
-      results.push({ gameId: game.id, ...result });
-
-      if (result.success) {
-        if (result.skipped) {
-          skippedCount++;
+      try {
+        const result = await syncGameScore(game.id, forceSync);
+        if (result.success) {
+          if (result.skipped) {
+            skippedCount++;
+          } else {
+            successCount++;
+          }
         } else {
-          successCount++;
+          errorCount++;
         }
-      } else {
+      } catch (error) {
         errorCount++;
+        console.error(`Error processing game ${game.id}:`, error);
       }
 
       // Add small delay to avoid rate limiting
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
+    const totalProcessed = successCount + errorCount + skippedCount;
     console.log(
       `Smart sync completed: ${successCount} updated, ${skippedCount} skipped, ${errorCount} failed`
     );
 
     return {
       success: true,
+      message: `Smart sync completed: ${successCount} updated, ${skippedCount} skipped, ${errorCount} failed`,
       gamesProcessed: games.length,
       gamesSynced: gamesToSync.length,
       successful: successCount,
       skipped: skippedCount,
       failed: errorCount,
-      results,
     };
   } catch (error) {
-    console.error("Error syncing week scores:", error);
+    console.error("Error syncing all games:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
     };
-  }
-}
-
-// Get current NFL week (simplified logic)
-function getCurrentWeek() {
-  const now = new Date();
-  const seasonStart = new Date("2025-09-04"); // NFL season start
-  const daysSinceStart = Math.floor(
-    (now.getTime() - seasonStart.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const week = Math.floor(daysSinceStart / 7) + 1;
-  return Math.max(1, Math.min(18, week)); // Clamp between 1 and 18
-}
-
-// Main cron job handler
-export async function GET(request: NextRequest) {
-  try {
-    // Verify this is a legitimate cron request
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    console.log("Starting automated score sync...");
-
-    const currentWeek = getCurrentWeek();
-    const currentSeason = 2025;
-
-    console.log(
-      `Syncing scores for week ${currentWeek}, season ${currentSeason}`
-    );
-
-    // Sync current week and previous week (in case of late updates)
-    const weeksToSync = [currentWeek];
-    if (currentWeek > 1) {
-      weeksToSync.push(currentWeek - 1);
-    }
-
-    const results = {
-      timestamp: new Date().toISOString(),
-      currentWeek,
-      season: currentSeason,
-      weeksProcessed: [] as any[],
-    };
-
-    // Process each week
-    for (const week of weeksToSync) {
-      console.log(`Processing week ${week}...`);
-
-      const weekResults = {
-        week,
-        preseason: await syncWeekScores(
-          week,
-          "preseason",
-          currentSeason,
-          false
-        ),
-        regular: await syncWeekScores(week, "regular", currentSeason, false),
-      };
-
-      results.weeksProcessed.push(weekResults);
-    }
-
-    // Calculate totals
-    const totalGames = results.weeksProcessed.reduce(
-      (sum, week) =>
-        sum +
-        (week.preseason.gamesProcessed || 0) +
-        (week.regular.gamesProcessed || 0),
-      0
-    );
-    const totalSuccessful = results.weeksProcessed.reduce(
-      (sum, week) =>
-        sum + (week.preseason.successful || 0) + (week.regular.successful || 0),
-      0
-    );
-    const totalSkipped = results.weeksProcessed.reduce(
-      (sum, week) =>
-        sum + (week.preseason.skipped || 0) + (week.regular.skipped || 0),
-      0
-    );
-    const totalFailed = results.weeksProcessed.reduce(
-      (sum, week) =>
-        sum + (week.preseason.failed || 0) + (week.regular.failed || 0),
-      0
-    );
-
-    console.log(
-      `Smart automated score sync completed: ${totalSuccessful} updated, ${totalSkipped} skipped, ${totalFailed} failed`
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: `Smart score sync completed: ${totalSuccessful} updated, ${totalSkipped} skipped, ${totalFailed} failed`,
-      summary: {
-        totalGames,
-        totalSuccessful,
-        totalSkipped,
-        totalFailed,
-        weeksProcessed: weeksToSync.length,
-      },
-      results,
-    });
-  } catch (error) {
-    console.error("Cron job error:", error);
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
-    );
   }
 }
