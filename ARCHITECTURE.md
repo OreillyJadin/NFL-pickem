@@ -51,17 +51,20 @@ This application follows the **MVC (Model-View-Controller)** pattern adapted for
 ### 1. View Layer (`src/app/`)
 
 **Responsibilities:**
+
 - Render UI components
 - Handle user interactions
 - Route HTTP requests to controllers
 - Format responses
 
 **Should NOT:**
+
 - Access database directly
 - Contain business logic
 - Perform complex calculations
 
 **Example:**
+
 ```typescript
 // ✅ Good - Delegates to controller
 export async function POST(request: NextRequest) {
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
 // ❌ Bad - Direct database access
 export async function POST(request: NextRequest) {
   const { gameId, team } = await request.json();
-  await supabase.from('picks').insert({ gameId, team });
+  await supabase.from("picks").insert({ gameId, team });
   return NextResponse.json({ success: true });
 }
 ```
@@ -81,32 +84,40 @@ export async function POST(request: NextRequest) {
 ### 2. Controller Layer (`src/controllers/`)
 
 **Responsibilities:**
+
 - Validate input data
 - Enforce business rules
 - Orchestrate operations across models/services
 - Handle errors gracefully
 
 **Should NOT:**
+
 - Perform database operations directly
 - Contain SQL queries
 - Handle HTTP requests/responses
 
 **Example:**
+
 ```typescript
 // ✅ Good - Validation + orchestration
 export class PickController {
-  static async createPick(userId: string, gameId: string, team: string, isLock: boolean) {
+  static async createPick(
+    userId: string,
+    gameId: string,
+    team: string,
+    isLock: boolean
+  ) {
     // Validate game hasn't started
     const game = await GameModel.findById(gameId);
-    if (!game) throw new Error('Game not found');
-    if (this.hasGameStarted(game)) throw new Error('Game already started');
-    
+    if (!game) throw new Error("Game not found");
+    if (this.hasGameStarted(game)) throw new Error("Game already started");
+
     // Validate lock limit
     if (isLock) {
       const locksUsed = await PickModel.countLocksForWeek(userId, game.week);
-      if (locksUsed >= 3) throw new Error('Lock limit exceeded');
+      if (locksUsed >= 3) throw new Error("Lock limit exceeded");
     }
-    
+
     // Create pick
     return await PickModel.create({ userId, gameId, team, isLock });
   }
@@ -116,32 +127,35 @@ export class PickController {
 ### 3. Model Layer (`src/models/`)
 
 **Responsibilities:**
+
 - Execute database queries
 - Basic CRUD operations
 - Return typed data
 - Handle database errors
 
 **Should NOT:**
+
 - Validate business rules
 - Orchestrate multiple operations
 - Contain UI logic
 
 **Example:**
+
 ```typescript
 // ✅ Good - Pure database operation
 export class PickModel {
   static async create(data: CreatePickInput): Promise<Pick | null> {
     const { data: newPick, error } = await supabase
-      .from('picks')
+      .from("picks")
       .insert(data)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Error creating pick:', error);
+      console.error("Error creating pick:", error);
       throw error;
     }
-    
+
     return newPick as Pick;
   }
 }
@@ -150,25 +164,28 @@ export class PickModel {
 ### 4. Service Layer (`src/services/`)
 
 **Responsibilities:**
+
 - Complex utility functions
 - Calculations and algorithms
 - External API integrations
 - Reusable business logic
 
 **Should NOT:**
+
 - Handle HTTP requests
 - Access controllers
 - Contain UI logic
 
 **Example:**
+
 ```typescript
 // ✅ Good - Reusable calculation logic
 export async function updateSoloPickStatus(gameId: string) {
   const game = await GameModel.findById(gameId);
   const picks = await PickModel.findByGame(gameId);
-  
+
   // Complex scoring calculations
-  picks.forEach(pick => {
+  picks.forEach((pick) => {
     const points = calculatePickScore(pick, game);
     PickModel.updateScoring(pick.id, points);
   });
@@ -226,6 +243,7 @@ export async function updateSoloPickStatus(gameId: string) {
 ### Core Tables
 
 **profiles**
+
 ```sql
 - id (uuid, primary key)
 - email (text, unique)
@@ -235,6 +253,7 @@ export async function updateSoloPickStatus(gameId: string) {
 ```
 
 **games**
+
 ```sql
 - id (uuid, primary key)
 - week (integer)
@@ -250,6 +269,7 @@ export async function updateSoloPickStatus(gameId: string) {
 ```
 
 **picks**
+
 ```sql
 - id (uuid, primary key)
 - user_id (uuid, foreign key → profiles)
@@ -265,6 +285,7 @@ export async function updateSoloPickStatus(gameId: string) {
 ```
 
 **awards**
+
 ```sql
 - id (uuid, primary key)
 - user_id (uuid, foreign key → profiles)
@@ -278,6 +299,7 @@ export async function updateSoloPickStatus(gameId: string) {
 ### Database Triggers
 
 **check_pick_timing()**
+
 - Prevents users from changing picks after game starts
 - Allows system updates for scoring fields
 - Runs on UPDATE of picks table
@@ -289,50 +311,61 @@ export async function updateSoloPickStatus(gameId: string) {
 All tables have RLS policies:
 
 **profiles:**
+
 - Users can read all profiles
 - Users can only update their own profile
 
 **picks:**
+
 - Users can only see their own picks (except admins)
 - Users can only create/update their own picks
 - Cannot modify picks after game starts (enforced by trigger)
 
 **games:**
+
 - Everyone can read
 - Only system can create/update (service role)
 
 ### API Security
 
 **Public routes:**
+
 - GET `/api/cron/*` - Protected by CRON_SECRET header
 
 **Authenticated routes:**
+
 - All other routes require valid Supabase session
 
 ## 🔄 Automated Jobs
 
 ### 1. Score Sync (`/api/cron/sync-scores`)
+
 **Frequency:** Every 5 minutes  
 **Purpose:** Fetch latest scores from ESPN API  
 **Process:**
+
 1. Find games that need syncing (in_progress or completed)
 2. Fetch data from ESPN API
 3. Update game scores in database
 4. Trigger scoring if game just completed
 
 ### 2. Fix Scoring (`/api/cron/fix-scoring`)
+
 **Frequency:** Every 15 minutes  
 **Purpose:** Find and fix any scoring errors  
 **Process:**
+
 1. Get all completed games
 2. Check for incorrect scoring patterns
 3. Re-run scoring for problematic games
 4. Log issues found
 
 ### 3. Process Awards (`/api/process-awards`)
+
 **Frequency:** Manual / After each week  
 **Purpose:** Award badges for weekly performance  
 **Process:**
+
 1. Find completed weeks
 2. Calculate top scorers
 3. Create award records
@@ -343,12 +376,14 @@ All tables have RLS policies:
 ### Database Queries
 
 **Optimization techniques:**
+
 - Use `.select('specific, fields')` instead of `.select('*')`
 - Add indexes on frequently queried fields (user_id, game_id, week)
 - Use pagination for large result sets (`.range()`)
 - Avoid N+1 queries by using joins
 
 **Example:**
+
 ```typescript
 // ❌ Bad - N+1 query problem
 const picks = await PickModel.findByUser(userId);
@@ -358,15 +393,16 @@ for (const pick of picks) {
 
 // ✅ Good - Single query with join
 const { data } = await supabase
-  .from('picks')
-  .select('*, game:games(*)')
-  .eq('user_id', userId);
+  .from("picks")
+  .select("*, game:games(*)")
+  .eq("user_id", userId);
 ```
 
 ### Caching Strategy
 
 **Current:** No caching (direct DB queries)  
 **Future:** Consider Redis for:
+
 - Weekly game schedules
 - Leaderboard standings
 - User profiles
@@ -374,16 +410,19 @@ const { data } = await supabase
 ## 🧪 Testing Strategy
 
 ### Unit Tests
+
 - Test models with mocked Supabase client
 - Test controllers with mocked models
 - Test services independently
 
 ### Integration Tests
+
 - Test API routes end-to-end
 - Use test database
 - Verify data persistence
 
 ### Example Test Structure:
+
 ```typescript
 describe('PickController', () => {
   it('should prevent picks after game starts', async () => {
@@ -393,7 +432,7 @@ describe('PickController', () => {
       game_time: '2025-01-01T10:00:00Z', // Past time
       ...
     });
-    
+
     await expect(
       PickController.createPick(userId, gameId, team, false)
     ).rejects.toThrow('Game already started');
@@ -404,12 +443,14 @@ describe('PickController', () => {
 ## 🔧 Development Workflow
 
 ### Local Development
+
 1. Run `npm run dev`
 2. Make changes
 3. Hot reload updates automatically
 4. Test in browser
 
 ### Adding New Feature
+
 1. Define types in `src/types/`
 2. Create model in `src/models/`
 3. Create controller in `src/controllers/`
@@ -418,6 +459,7 @@ describe('PickController', () => {
 6. Test thoroughly
 
 ### Deployment
+
 1. Push to GitHub
 2. Vercel automatically builds and deploys
 3. Cron jobs configured in Vercel dashboard
@@ -445,6 +487,7 @@ describe('PickController', () => {
 ## 🚀 Performance Metrics
 
 **Target metrics:**
+
 - Page load time: < 2 seconds
 - API response time: < 500ms
 - Database query time: < 100ms
@@ -453,17 +496,19 @@ describe('PickController', () => {
 ## 📈 Scalability
 
 **Current capacity:**
+
 - ~100 users
 - ~300 picks per week
 - ~15 games per week
 
 **Scale limitations:**
+
 - Supabase free tier: 500MB database
 - Vercel free tier: 100GB bandwidth
 
 **Future improvements:**
+
 - Add caching layer (Redis)
 - Optimize database queries
 - Add CDN for static assets
 - Consider database read replicas
-

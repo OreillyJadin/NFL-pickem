@@ -5,6 +5,7 @@ Welcome to the NFL Picks App! This guide will help you understand the project st
 ## 📖 What is This App?
 
 A football picks application where users:
+
 - Pick winners for NFL games each week
 - Can "lock" up to 3 picks per week for bonus points
 - Earn points based on correct predictions
@@ -29,16 +30,19 @@ This app follows an **MVC (Model-View-Controller)** architecture:
 ### The Three Layers
 
 **1. Models (Database Layer)**
+
 - Handle all database operations
 - Pure CRUD functions
 - Example: `GameModel.findByWeek()` fetches games from database
 
 **2. Controllers (Business Logic Layer)**
+
 - Orchestrate complex operations
 - Handle validation and business rules
 - Example: `PickController.createPick()` validates game hasn't started before creating pick
 
 **3. Services (Utility Layer)**
+
 - Reusable utility functions
 - Complex operations like scoring calculations
 - Example: `updateSoloPickStatus()` calculates and updates pick points
@@ -57,12 +61,14 @@ This app follows an **MVC (Model-View-Controller)** architecture:
 ### Scoring System
 
 **Base Points:**
+
 - Correct pick: **+1 point**
 - Incorrect pick: **0 points**
 - Correct lock: **+2 points**
 - Incorrect lock: **-2 points**
 
 **Bonus Points:**
+
 - Solo Pick (only one who picked that team): **+1 bonus**
 - Solo Lock (only one who locked that team): **+1 bonus**
 - Super Bonus (solo pick + solo lock): **+1 bonus** (total +3)
@@ -70,6 +76,7 @@ This app follows an **MVC (Model-View-Controller)** architecture:
 ### Automated Systems
 
 **Cron Jobs (run automatically):**
+
 1. `sync-scores` - Syncs game scores from ESPN every 5 minutes
 2. `fix-scoring` - Checks for and fixes any scoring errors
 3. `process-awards` - Awards weekly badges (Top Scorer, Perfect Week, etc.)
@@ -77,17 +84,20 @@ This app follows an **MVC (Model-View-Controller)** architecture:
 ## 📂 Directory Guide
 
 ### `/src/types`
+
 TypeScript type definitions for the entire app.
 
 - `database.ts` - Database tables (User, Game, Pick, Award, Feedback)
 - `api.ts` - API request/response types
 
 ### `/src/config`
+
 Configuration files.
 
 - `supabase.ts` - Supabase client connection
 
 ### `/src/models`
+
 Database operations - each model handles one table.
 
 - `GameModel.ts` - Games table operations
@@ -97,6 +107,7 @@ Database operations - each model handles one table.
 - `AwardModel.ts` - Awards table operations
 
 ### `/src/controllers`
+
 Business logic - coordinates models and services.
 
 - `GameController.ts` - Game operations (fetch, sort, sync)
@@ -107,6 +118,7 @@ Business logic - coordinates models and services.
 - `FeedbackController.ts` - Feedback operations
 
 ### `/src/services`
+
 Utility services - complex operations.
 
 - `scoring.ts` - Main scoring logic
@@ -118,21 +130,25 @@ Utility services - complex operations.
 - `tiebreaker.ts` - Leaderboard tiebreaker logic
 
 ### `/src/app`
+
 Next.js pages and API routes.
 
 **Pages:**
+
 - `/` - Landing page
 - `/dashboard` - Main user dashboard (make picks)
 - `/leaderboard` - Standings and rankings
 - `/profile` - User profile and pick history
 
 **API Routes:**
+
 - `/api/feedback` - Submit user feedback
 - `/api/cron/sync-scores` - Sync game scores
 - `/api/cron/fix-scoring` - Fix scoring issues
 - `/api/process-awards` - Process weekly awards
 
 ### `/src/components`
+
 React components for UI.
 
 - `auth/` - Login and registration forms
@@ -144,6 +160,7 @@ React components for UI.
 ## 🔌 Database Schema
 
 **Tables:**
+
 - `profiles` - User information
 - `games` - NFL games (synced from ESPN)
 - `picks` - User picks for games
@@ -227,14 +244,17 @@ export async function POST(request: NextRequest) {
 ### Common Issues
 
 **Build errors?**
+
 - Check TypeScript types are correct
 - Run `npm run build` to see full error
 
 **Database errors?**
+
 - Check Supabase connection in `.env.local`
 - Verify table permissions in Supabase dashboard
 
 **Scoring not working?**
+
 - Check `/api/cron/fix-scoring` logs
 - Verify game status is "completed"
 - Check pick_points are being calculated
@@ -255,6 +275,7 @@ npm test
 ## 📝 Code Style
 
 ### Import Order
+
 ```typescript
 // 1. External packages
 import { NextRequest } from "next/server";
@@ -273,6 +294,7 @@ import { syncGameScore } from "@/services/game-sync";
 ```
 
 ### Naming Conventions
+
 - **Models:** `GameModel.ts` - PascalCase + "Model"
 - **Controllers:** `GameController.ts` - PascalCase + "Controller"
 - **Services:** `game-sync.ts` - kebab-case
@@ -298,10 +320,10 @@ When making changes:
 ## ❓ Questions?
 
 If you're stuck:
+
 1. Check this guide first
 2. Look at similar existing code
 3. Check the inline comments in the code
 4. Ask your team member!
 
 Happy coding! 🏈
-
