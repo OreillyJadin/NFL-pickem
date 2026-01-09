@@ -1,6 +1,6 @@
 {
   "name": "my-supabase-app",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -20,7 +20,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.2.2",
     "lucide-react": "^0.543.0",
-    "next": "15.5.2",
+    "next": "16.1.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tailwind-merge": "^3.3.1"
@@ -32,7 +32,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.5.2",
+    "eslint-config-next": "16.1.1",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.7",
     "typescript": "^5",
