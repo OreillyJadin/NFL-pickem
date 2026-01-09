@@ -853,7 +853,7 @@ export default function Dashboard() {
                 </button>
               );
             })}
-          
+
           {/* Playoffs Button */}
           <button
             data-playoffs="true"
@@ -872,9 +872,7 @@ export default function Dashboard() {
                   const buttonOffsetLeft = button.offsetLeft;
                   const buttonWidth = button.offsetWidth;
                   const scrollLeft =
-                    buttonOffsetLeft -
-                    containerWidth / 2 +
-                    buttonWidth / 2;
+                    buttonOffsetLeft - containerWidth / 2 + buttonWidth / 2;
                   scrollContainer.scrollTo({
                     left: Math.max(0, scrollLeft),
                     behavior: "smooth",
@@ -971,128 +969,128 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-0">
             {games.map((game, index) => {
-            const pick = getPickForGame(game.id);
-            const locked = isGameLocked(game.game_time);
+              const pick = getPickForGame(game.id);
+              const locked = isGameLocked(game.game_time);
 
-            // Helper function to render solo status stars
-            const renderSoloStars = (pick: Pick) => {
-              if (!pick.solo_pick && !pick.solo_lock && !pick.super_bonus)
-                return null;
+              // Helper function to render solo status stars
+              const renderSoloStars = (pick: Pick) => {
+                if (!pick.solo_pick && !pick.solo_lock && !pick.super_bonus)
+                  return null;
+
+                return (
+                  <div className="flex items-center gap-1 ml-2">
+                    {pick.super_bonus ? (
+                      // Two stars for super bonus
+                      <>
+                        <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                        <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      </>
+                    ) : (
+                      // One star for solo pick or solo lock
+                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                    )}
+                  </div>
+                );
+              };
+
+              // Use the pre-calculated total_points from the database
+              const getPickTotalPoints = (pick: Pick, game: Game) => {
+                if (
+                  game.status !== "completed" ||
+                  game.home_score === null ||
+                  game.away_score === null
+                ) {
+                  return 0;
+                }
+                return pick.pick_points || 0;
+              };
+
+              // Determine game result for display
+              const getGameResult = (game: Game, pick: Pick) => {
+                if (
+                  game.status !== "completed" ||
+                  game.home_score === null ||
+                  game.away_score === null
+                ) {
+                  return { type: "pending", points: 0 };
+                }
+
+                // Check for tie first
+                if (game.home_score === game.away_score) {
+                  return { type: "tie", points: pick.pick_points || 0 };
+                }
+
+                // Determine winner
+                const winner =
+                  (game.home_score || 0) > (game.away_score || 0)
+                    ? game.home_team
+                    : game.away_team;
+                const isCorrect = pick.picked_team === winner;
+                const points = pick.pick_points || 0;
+
+                return {
+                  type: isCorrect ? "win" : "loss",
+                  points: points,
+                };
+              };
 
               return (
-                <div className="flex items-center gap-1 ml-2">
-                  {pick.super_bonus ? (
-                    // Two stars for super bonus
-                    <>
-                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                    </>
-                  ) : (
-                    // One star for solo pick or solo lock
-                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  )}
-                </div>
-              );
-            };
-
-            // Use the pre-calculated total_points from the database
-            const getPickTotalPoints = (pick: Pick, game: Game) => {
-              if (
-                game.status !== "completed" ||
-                game.home_score === null ||
-                game.away_score === null
-              ) {
-                return 0;
-              }
-              return pick.pick_points || 0;
-            };
-
-            // Determine game result for display
-            const getGameResult = (game: Game, pick: Pick) => {
-              if (
-                game.status !== "completed" ||
-                game.home_score === null ||
-                game.away_score === null
-              ) {
-                return { type: "pending", points: 0 };
-              }
-
-              // Check for tie first
-              if (game.home_score === game.away_score) {
-                return { type: "tie", points: pick.pick_points || 0 };
-              }
-
-              // Determine winner
-              const winner =
-                (game.home_score || 0) > (game.away_score || 0)
-                  ? game.home_team
-                  : game.away_team;
-              const isCorrect = pick.picked_team === winner;
-              const points = pick.pick_points || 0;
-
-              return {
-                type: isCorrect ? "win" : "loss",
-                points: points,
-              };
-            };
-
-            return (
-              <div
-                key={game.id}
-                className={`${
-                  locked ? "opacity-75" : ""
-                } bg-gray-900 border-t border-gray-600 ${
-                  index === 0 ? "rounded-t-lg" : ""
-                } ${index === games.length - 1 ? "rounded-b-lg" : ""}`}
-              >
-                <div className="p-4">
-                  <div className="text-white">
-                    {/* Team Matchup Section */}
-                    <div className="flex items-center justify-between mb-2">
-                      {/* Left Side - Team Info */}
-                      <div className="flex-1">
-                        {/* Away Team */}
-                        <div className="flex items-center gap-3 mb-1">
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                            style={{
-                              backgroundColor: getTeamColors(game.away_team)
-                                .primary,
-                            }}
-                          >
-                            {getTeamAbbreviation(game.away_team)}
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-md font-bold text-white flex items-center gap-2">
-                              {game.away_team.split(" ").pop()}
-                              {(game.status === "in_progress" ||
-                                game.status === "completed") && (
-                                <span className="text-lg font-bold text-blue-400">
-                                  {game.away_score || 0}
-                                </span>
-                              )}
-                              {game.possession &&
-                                game.possession ===
-                                  getTeamAbbreviation(game.away_team) && (
-                                  <span className="text-lg">🏈</span>
-                                )}
+                <div
+                  key={game.id}
+                  className={`${
+                    locked ? "opacity-75" : ""
+                  } bg-gray-900 border-t border-gray-600 ${
+                    index === 0 ? "rounded-t-lg" : ""
+                  } ${index === games.length - 1 ? "rounded-b-lg" : ""}`}
+                >
+                  <div className="p-4">
+                    <div className="text-white">
+                      {/* Team Matchup Section */}
+                      <div className="flex items-center justify-between mb-2">
+                        {/* Left Side - Team Info */}
+                        <div className="flex-1">
+                          {/* Away Team */}
+                          <div className="flex items-center gap-3 mb-1">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                              style={{
+                                backgroundColor: getTeamColors(game.away_team)
+                                  .primary,
+                              }}
+                            >
+                              {getTeamAbbreviation(game.away_team)}
                             </div>
-                          </div>
-                          <div className="text-sm text-gray-400 mr-2">
-                            {teamRecords[game.away_team]
-                              ? `${teamRecords[game.away_team].wins}-${
-                                  teamRecords[game.away_team].losses
-                                }`
-                              : "0-0"}
-                          </div>
-                          {game.status === "scheduled" && (
-                            <button
-                              onClick={() =>
-                                !locked &&
-                                makePick(game.id, game.away_team, false)
-                              }
-                              disabled={locked}
-                              className={`
+                            <div className="flex-1">
+                              <div className="text-md font-bold text-white flex items-center gap-2">
+                                {game.away_team.split(" ").pop()}
+                                {(game.status === "in_progress" ||
+                                  game.status === "completed") && (
+                                  <span className="text-lg font-bold text-blue-400">
+                                    {game.away_score || 0}
+                                  </span>
+                                )}
+                                {game.possession &&
+                                  game.possession ===
+                                    getTeamAbbreviation(game.away_team) && (
+                                    <span className="text-lg">🏈</span>
+                                  )}
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-400 mr-2">
+                              {teamRecords[game.away_team]
+                                ? `${teamRecords[game.away_team].wins}-${
+                                    teamRecords[game.away_team].losses
+                                  }`
+                                : "0-0"}
+                            </div>
+                            {game.status === "scheduled" && (
+                              <button
+                                onClick={() =>
+                                  !locked &&
+                                  makePick(game.id, game.away_team, false)
+                                }
+                                disabled={locked}
+                                className={`
                                 px-3 py-1 rounded text-xs font-medium transition-all duration-200
                                 ${
                                   locked
@@ -1105,60 +1103,62 @@ export default function Dashboard() {
                                     : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                                 }
                               `}
+                              >
+                                Pick
+                              </button>
+                            )}
+                          </div>
+
+                          {/* @ Symbol with Line */}
+                          <div className="flex items-center justify-center mb-1">
+                            <span className="text-gray-400 text-lg mr-2">
+                              @
+                            </span>
+                            <div className="flex-1 h-px bg-gray-600"></div>
+                          </div>
+
+                          {/* Home Team */}
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                              style={{
+                                backgroundColor: getTeamColors(game.home_team)
+                                  .primary,
+                              }}
                             >
-                              Pick
-                            </button>
-                          )}
-                        </div>
-
-                        {/* @ Symbol with Line */}
-                        <div className="flex items-center justify-center mb-1">
-                          <span className="text-gray-400 text-lg mr-2">@</span>
-                          <div className="flex-1 h-px bg-gray-600"></div>
-                        </div>
-
-                        {/* Home Team */}
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                            style={{
-                              backgroundColor: getTeamColors(game.home_team)
-                                .primary,
-                            }}
-                          >
-                            {getTeamAbbreviation(game.home_team)}
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-md font-bold text-white flex items-center gap-2">
-                              {game.home_team.split(" ").pop()}
-                              {(game.status === "in_progress" ||
-                                game.status === "completed") && (
-                                <span className="text-lg font-bold text-blue-400">
-                                  {game.home_score || 0}
-                                </span>
-                              )}
-                              {game.possession &&
-                                game.possession ===
-                                  getTeamAbbreviation(game.home_team) && (
-                                  <span className="text-lg">🏈</span>
-                                )}
+                              {getTeamAbbreviation(game.home_team)}
                             </div>
-                          </div>
-                          <div className="text-sm text-gray-400 mr-2">
-                            {teamRecords[game.home_team]
-                              ? `${teamRecords[game.home_team].wins}-${
-                                  teamRecords[game.home_team].losses
-                                }`
-                              : "0-0"}
-                          </div>
-                          {game.status === "scheduled" && (
-                            <button
-                              onClick={() =>
-                                !locked &&
-                                makePick(game.id, game.home_team, false)
-                              }
-                              disabled={locked}
-                              className={`
+                            <div className="flex-1">
+                              <div className="text-md font-bold text-white flex items-center gap-2">
+                                {game.home_team.split(" ").pop()}
+                                {(game.status === "in_progress" ||
+                                  game.status === "completed") && (
+                                  <span className="text-lg font-bold text-blue-400">
+                                    {game.home_score || 0}
+                                  </span>
+                                )}
+                                {game.possession &&
+                                  game.possession ===
+                                    getTeamAbbreviation(game.home_team) && (
+                                    <span className="text-lg">🏈</span>
+                                  )}
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-400 mr-2">
+                              {teamRecords[game.home_team]
+                                ? `${teamRecords[game.home_team].wins}-${
+                                    teamRecords[game.home_team].losses
+                                  }`
+                                : "0-0"}
+                            </div>
+                            {game.status === "scheduled" && (
+                              <button
+                                onClick={() =>
+                                  !locked &&
+                                  makePick(game.id, game.home_team, false)
+                                }
+                                disabled={locked}
+                                className={`
                                 px-3 py-1 rounded text-xs font-medium transition-all duration-200
                                 ${
                                   locked
@@ -1171,187 +1171,187 @@ export default function Dashboard() {
                                     : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                                 }
                               `}
-                            >
-                              Pick
-                            </button>
+                              >
+                                Pick
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right Side - Game Details */}
+                        <div className="ml-6 text-right">
+                          {game.status === "in_progress" ? (
+                            <>
+                              <div className="text-sm font-bold text-blue-400 mb-1 flex items-center justify-end">
+                                <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                                LIVE
+                              </div>
+                              {game.halftime && (
+                                <div className="text-sm font-bold text-orange-400 mb-1 text-right">
+                                  HALF
+                                </div>
+                              )}
+                              <div className="text-sm font-medium text-blue-300 mb-1">
+                                {game.halftime ? (
+                                  ""
+                                ) : (
+                                  <>
+                                    {game.quarter
+                                      ? game.quarter <= 4
+                                        ? `Q${game.quarter}`
+                                        : game.quarter === 5
+                                        ? "OT"
+                                        : `${game.quarter - 4}OT`
+                                      : ""}
+                                    {game.time_remaining &&
+                                      ` ${game.time_remaining}`}
+                                  </>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {game.tv || "TBD"}
+                              </div>
+                            </>
+                          ) : game.status === "completed" ? (
+                            <>
+                              <div className="text-sm font-bold text-green-400 mb-1">
+                                FINAL
+                              </div>
+                              <div className="text-sm text-gray-400 mb-1">
+                                {new Date(game.game_time).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    weekday: "short",
+                                    month: "numeric",
+                                    day: "numeric",
+                                  }
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {game.tv || "TBD"}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-sm text-gray-400 mb-1">
+                                {new Date(game.game_time).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    weekday: "short",
+                                    month: "numeric",
+                                    day: "numeric",
+                                  }
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-400 mb-1">
+                                {new Date(game.game_time).toLocaleTimeString(
+                                  "en-US",
+                                  {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  }
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {game.tv || "TBD"}
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
 
-                      {/* Right Side - Game Details */}
-                      <div className="ml-6 text-right">
-                        {game.status === "in_progress" ? (
-                          <>
-                            <div className="text-sm font-bold text-blue-400 mb-1 flex items-center justify-end">
-                              <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
-                              LIVE
-                            </div>
-                            {game.halftime && (
-                              <div className="text-sm font-bold text-orange-400 mb-1 text-right">
-                                HALF
+                      {/* Game Status and Pick Info */}
+                      {game.status === "in_progress" ? (
+                        <div className="text-center">
+                          {pick && (
+                            <div className="space-y-1">
+                              <div className="text-sm text-blue-300 font-medium flex items-center justify-center gap-2">
+                                {pick.is_lock && (
+                                  <Lock className="w-4 h-4 text-yellow-400" />
+                                )}
+                                Your pick: {pick.picked_team}
+                                {renderSoloStars(pick)}
                               </div>
-                            )}
-                            <div className="text-sm font-medium text-blue-300 mb-1">
-                              {game.halftime ? (
-                                ""
-                              ) : (
-                                <>
-                                  {game.quarter
-                                    ? game.quarter <= 4
-                                      ? `Q${game.quarter}`
-                                      : game.quarter === 5
-                                      ? "OT"
-                                      : `${game.quarter - 4}OT`
-                                    : ""}
-                                  {game.time_remaining &&
-                                    ` ${game.time_remaining}`}
-                                </>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-400">
-                              {game.tv || "TBD"}
-                            </div>
-                          </>
-                        ) : game.status === "completed" ? (
-                          <>
-                            <div className="text-sm font-bold text-green-400 mb-1">
-                              FINAL
-                            </div>
-                            <div className="text-sm text-gray-400 mb-1">
-                              {new Date(game.game_time).toLocaleDateString(
-                                "en-US",
-                                {
-                                  weekday: "short",
-                                  month: "numeric",
-                                  day: "numeric",
-                                }
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-400">
-                              {game.tv || "TBD"}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-sm text-gray-400 mb-1">
-                              {new Date(game.game_time).toLocaleDateString(
-                                "en-US",
-                                {
-                                  weekday: "short",
-                                  month: "numeric",
-                                  day: "numeric",
-                                }
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-400 mb-1">
-                              {new Date(game.game_time).toLocaleTimeString(
-                                "en-US",
-                                {
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                }
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-400">
-                              {game.tv || "TBD"}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Game Status and Pick Info */}
-                    {game.status === "in_progress" ? (
-                      <div className="text-center">
-                        {pick && (
-                          <div className="space-y-1">
-                            <div className="text-sm text-blue-300 font-medium flex items-center justify-center gap-2">
                               {pick.is_lock && (
-                                <Lock className="w-4 h-4 text-yellow-400" />
+                                <div className="text-xs text-yellow-400 font-medium flex items-center justify-center gap-1">
+                                  <Lock className="w-3 h-3" />
+                                  LOCKED
+                                </div>
                               )}
-                              Your pick: {pick.picked_team}
-                              {renderSoloStars(pick)}
                             </div>
-                            {pick.is_lock && (
-                              <div className="text-xs text-yellow-400 font-medium flex items-center justify-center gap-1">
-                                <Lock className="w-3 h-3" />
-                                LOCKED
+                          )}
+                        </div>
+                      ) : game.status === "completed" ? (
+                        <div className="text-center">
+                          {pick && (
+                            <div className="space-y-1">
+                              <div className="text-sm text-blue-300 font-medium flex items-center justify-center gap-2">
+                                {pick.is_lock && (
+                                  <Lock className="w-4 h-4 text-yellow-400" />
+                                )}
+                                Your pick: {pick.picked_team}
+                                {renderSoloStars(pick)}
                               </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ) : game.status === "completed" ? (
-                      <div className="text-center">
-                        {pick && (
-                          <div className="space-y-1">
-                            <div className="text-sm text-blue-300 font-medium flex items-center justify-center gap-2">
-                              {pick.is_lock && (
-                                <Lock className="w-4 h-4 text-yellow-400" />
-                              )}
-                              Your pick: {pick.picked_team}
-                              {renderSoloStars(pick)}
+                              <div className="flex justify-center">
+                                {(() => {
+                                  const result = getGameResult(game, pick);
+                                  return (
+                                    <span
+                                      className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                        result.type === "tie"
+                                          ? "bg-gray-600 text-gray-100"
+                                          : result.type === "win"
+                                          ? "bg-green-600 text-green-100"
+                                          : "bg-red-600 text-red-100"
+                                      }`}
+                                    >
+                                      {result.type === "tie" ? (
+                                        <>
+                                          TIE
+                                          <span className="ml-1 text-gray-200 font-bold">
+                                            +{result.points}
+                                          </span>
+                                        </>
+                                      ) : result.type === "win" ? (
+                                        <>
+                                          <Check className="w-3 h-3 mr-1" />
+                                          WIN
+                                          <span className="ml-1 text-green-200 font-bold">
+                                            +{result.points}
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <X className="w-3 h-3 mr-1" />
+                                          LOSS
+                                          <span className="ml-1 text-red-200 font-bold">
+                                            {result.points}
+                                          </span>
+                                        </>
+                                      )}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                             </div>
-                            <div className="flex justify-center">
-                              {(() => {
-                                const result = getGameResult(game, pick);
-                                return (
-                                  <span
-                                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                      result.type === "tie"
-                                        ? "bg-gray-600 text-gray-100"
-                                        : result.type === "win"
-                                        ? "bg-green-600 text-green-100"
-                                        : "bg-red-600 text-red-100"
-                                    }`}
-                                  >
-                                    {result.type === "tie" ? (
-                                      <>
-                                        TIE
-                                        <span className="ml-1 text-gray-200 font-bold">
-                                          +{result.points}
-                                        </span>
-                                      </>
-                                    ) : result.type === "win" ? (
-                                      <>
-                                        <Check className="w-3 h-3 mr-1" />
-                                        WIN
-                                        <span className="ml-1 text-green-200 font-bold">
-                                          +{result.points}
-                                        </span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <X className="w-3 h-3 mr-1" />
-                                        LOSS
-                                        <span className="ml-1 text-red-200 font-bold">
-                                          {result.points}
-                                        </span>
-                                      </>
-                                    )}
-                                  </span>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        {pick && (
-                          <div className="space-y-2">
-                            <div className="text-sm text-blue-300 flex items-center">
-                              {pick.is_lock && (
-                                <Lock className="w-3 h-3 text-yellow-400 mr-1" />
-                              )}
-                              Picked: {pick.picked_team.split(" ").pop()}
-                            </div>
-                            {!locked && (
-                              <button
-                                onClick={() => toggleLock(game.id)}
-                                disabled={!pick.picked_team || locked}
-                                className={`
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          {pick && (
+                            <div className="space-y-2">
+                              <div className="text-sm text-blue-300 flex items-center">
+                                {pick.is_lock && (
+                                  <Lock className="w-3 h-3 text-yellow-400 mr-1" />
+                                )}
+                                Picked: {pick.picked_team.split(" ").pop()}
+                              </div>
+                              {!locked && (
+                                <button
+                                  onClick={() => toggleLock(game.id)}
+                                  disabled={!pick.picked_team || locked}
+                                  className={`
                                   flex items-center gap-2 px-3 py-1 rounded text-xs font-medium transition-all duration-200 mx-auto
                                   ${
                                     pick.is_lock
@@ -1364,29 +1364,29 @@ export default function Dashboard() {
                                       : "cursor-pointer"
                                   }
                                 `}
-                              >
-                                <span className="text-sm">
-                                  {pick.is_lock ? (
-                                    <Lock className="w-4 h-4" />
-                                  ) : (
-                                    <Unlock className="w-4 h-4" />
-                                  )}
-                                </span>
-                                <span>
-                                  {pick.is_lock ? "Remove Lock" : "Lock Pick"}
-                                </span>
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                                >
+                                  <span className="text-sm">
+                                    {pick.is_lock ? (
+                                      <Lock className="w-4 h-4" />
+                                    ) : (
+                                      <Unlock className="w-4 h-4" />
+                                    )}
+                                  </span>
+                                  <span>
+                                    {pick.is_lock ? "Remove Lock" : "Lock Pick"}
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         )}
 
         <div className="mt-8 px-4 text-center">
