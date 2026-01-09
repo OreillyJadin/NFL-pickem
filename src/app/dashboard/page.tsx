@@ -27,6 +27,7 @@ import { Navigation } from "@/components/Navigation";
 import { TutorialModal } from "@/components/TutorialModal";
 import { ProfileEditModal } from "@/components/ProfileEditModal";
 import { useFeedback } from "@/components/FeedbackProvider";
+import PlayoffBracket from "@/components/PlayoffBracket";
 import { supabase } from "@/lib/supabase";
 import { getProfilePictureUrl } from "@/services/storage";
 import { getTeamColors, getTeamAbbreviation } from "@/services/team-colors";
@@ -113,8 +114,9 @@ export default function Dashboard() {
 
   const [selectedWeek, setSelectedWeek] = useState<number>(getCurrentNFLWeek());
   const [selectedSeasonType, setSelectedSeasonType] = useState<
-    "preseason" | "regular"
+    "preseason" | "regular" | "playoffs"
   >("regular");
+  const [showPlayoffs, setShowPlayoffs] = useState(false);
   const [availableWeeks, setAvailableWeeks] = useState<
     { week: number; season_type: string; season: number }[]
   >([]);
@@ -800,6 +802,8 @@ export default function Dashboard() {
                   data-week={week.week}
                   onClick={() => {
                     setSelectedWeek(week.week);
+                    setShowPlayoffs(false);
+                    setSelectedSeasonType("regular");
                     // Also trigger centering immediately on click
                     setTimeout(() => {
                       const scrollContainer = document.querySelector(
@@ -849,52 +853,107 @@ export default function Dashboard() {
                 </button>
               );
             })}
+          
+          {/* Playoffs Button */}
+          <button
+            data-playoffs="true"
+            onClick={() => {
+              setShowPlayoffs(true);
+              setSelectedSeasonType("playoffs");
+              setTimeout(() => {
+                const scrollContainer = document.querySelector(
+                  ".week-selector-scroll"
+                ) as HTMLElement;
+                const button = document.querySelector(
+                  `[data-playoffs="true"]`
+                ) as HTMLElement;
+                if (scrollContainer && button) {
+                  const containerWidth = scrollContainer.offsetWidth;
+                  const buttonOffsetLeft = button.offsetLeft;
+                  const buttonWidth = button.offsetWidth;
+                  const scrollLeft =
+                    buttonOffsetLeft -
+                    containerWidth / 2 +
+                    buttonWidth / 2;
+                  scrollContainer.scrollTo({
+                    left: Math.max(0, scrollLeft),
+                    behavior: "smooth",
+                  });
+                }
+              }, 50);
+            }}
+            className={`flex-shrink-0 px-4 py-2 mx-1 rounded-lg transition-all duration-200 scroll-snap-align-start ${
+              showPlayoffs
+                ? "bg-yellow-600 text-white"
+                : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            }`}
+            style={{ scrollSnapAlign: "start" }}
+          >
+            <div className="text-center">
+              <div
+                className={`text-sm font-medium ${
+                  showPlayoffs ? "font-bold text-white" : "text-gray-400"
+                }`}
+              >
+                🏆 PLAYOFFS
+              </div>
+              <div
+                className={`text-xs ${
+                  showPlayoffs ? "font-bold text-white" : "text-gray-500"
+                }`}
+              >
+                JAN 10 - FEB 8
+              </div>
+            </div>
+          </button>
         </div>
       </div>
 
       <div className="w-full">
-        <div className="mb-2 px-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-sm px-4 py-2 border-gray-600 text-gray-300 bg-gray-800 hover:bg-gray-700"
-              >
-                <span className="flex items-center gap-1">
-                  <Lock className="w-4 h-4" />
-                  Locks: {locksUsed}/3
-                </span>
-              </Button>
-              <Button
-                onClick={handleSyncAllGames}
-                disabled={syncingScores}
-                size="sm"
-                className="bg-green-700 hover:bg-green-800 text-white text-sm px-4 py-2"
-              >
-                <span className="flex items-center gap-2">
-                  {syncingScores ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Rocket className="w-4 h-4" />
-                  )}
-                  {syncingScores ? "Syncing..." : "Sync Games"}
-                </span>
-              </Button>
-              <Button
-                onClick={() => setShowTutorial(true)}
-                variant="outline"
-                size="sm"
-                className="text-sm px-4 py-2 border-gray-600 text-gray-300 hover:bg-gray-700"
-              >
-                <span className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  Help
-                </span>
-              </Button>
+        {!showPlayoffs && (
+          <div className="mb-2 px-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-sm px-4 py-2 border-gray-600 text-gray-300 bg-gray-800 hover:bg-gray-700"
+                >
+                  <span className="flex items-center gap-1">
+                    <Lock className="w-4 h-4" />
+                    Locks: {locksUsed}/3
+                  </span>
+                </Button>
+                <Button
+                  onClick={handleSyncAllGames}
+                  disabled={syncingScores}
+                  size="sm"
+                  className="bg-green-700 hover:bg-green-800 text-white text-sm px-4 py-2"
+                >
+                  <span className="flex items-center gap-2">
+                    {syncingScores ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Rocket className="w-4 h-4" />
+                    )}
+                    {syncingScores ? "Syncing..." : "Sync Games"}
+                  </span>
+                </Button>
+                <Button
+                  onClick={() => setShowTutorial(true)}
+                  variant="outline"
+                  size="sm"
+                  className="text-sm px-4 py-2 border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    Help
+                  </span>
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {syncMessage && (
           <div className="mb-6 px-4">
@@ -904,8 +963,14 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="space-y-0">
-          {games.map((game, index) => {
+        {/* Conditional rendering: Show Playoff Bracket or Regular Season Games */}
+        {showPlayoffs ? (
+          <div className="px-4">
+            <PlayoffBracket userId={user.id} />
+          </div>
+        ) : (
+          <div className="space-y-0">
+            {games.map((game, index) => {
             const pick = getPickForGame(game.id);
             const locked = isGameLocked(game.game_time);
 
@@ -1322,6 +1387,7 @@ export default function Dashboard() {
             );
           })}
         </div>
+        )}
 
         <div className="mt-8 px-4 text-center">
           <p className="text-sm text-gray-500">
