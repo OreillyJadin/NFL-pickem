@@ -1,6 +1,6 @@
 {
   "name": "my-supabase-app",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -21,8 +21,8 @@
     "dotenv": "^17.2.2",
     "lucide-react": "^0.543.0",
     "next": "16.1.1",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
