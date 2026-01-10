@@ -1,8 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/config/supabase";
-import { Lock, Check, X, Trophy } from "lucide-react";
+import {
+  Lock,
+  Check,
+  X,
+  Trophy,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 interface Game {
   id: string;
@@ -164,6 +171,15 @@ export default function PlayoffBracket({ userId }: PlayoffBracketProps) {
   const [picks, setPicks] = useState<Pick[]>([]);
   const [bracketPicks, setBracketPicks] = useState<BracketPick>({});
   const [loading, setLoading] = useState(true);
+
+  // Mobile swipe carousel state
+  const [currentRound, setCurrentRound] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const roundNames = ["Wild Card", "Divisional", "Conference", "Super Bowl"];
+  const minSwipeDistance = 50;
 
   useEffect(() => {
     loadPlayoffData();
@@ -637,6 +653,410 @@ export default function PlayoffBracket({ userId }: PlayoffBracketProps) {
     );
   };
 
+  // Mobile: Render #1 seed placeholder with full team name
+  const renderMobileByeTeam = (teamName: string, seed: number) => {
+    return (
+      <div className="bg-gray-800 border-2 border-yellow-600 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="bg-yellow-600 text-white font-bold text-sm px-2 py-1 rounded">
+              #{seed}
+            </span>
+            <span className="font-bold text-white text-lg">{teamName}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-400 text-sm font-medium">BYE</span>
+            <Trophy className="w-5 h-5 text-yellow-400" />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Mobile: Render matchup with full team names and large touch targets
+  const renderMobileMatchup = (game: Game) => {
+    const pick = picks.find((p) => p.game_id === game.id);
+    const predictedWinner = bracketPicks[game.id];
+    const gameTime = new Date(game.game_time);
+    const hasStarted = new Date() >= gameTime;
+
+    // Get display teams (may be predicted from previous rounds)
+    const displayAwayTeam = getDisplayTeam(game, "away");
+    const displayHomeTeam = getDisplayTeam(game, "home");
+
+    const homeSelected = predictedWinner === displayHomeTeam;
+    const awaySelected = predictedWinner === displayAwayTeam;
+
+    const isLocked = pick?.is_lock || false;
+
+    // Determine result for completed games
+    let pickResult: "correct" | "incorrect" | null = null;
+    if (game.status === "completed" && pick) {
+      if (game.home_score !== null && game.away_score !== null) {
+        const actualWinner =
+          game.home_score > game.away_score ? game.home_team : game.away_team;
+        pickResult =
+          pick.picked_team === actualWinner ? "correct" : "incorrect";
+      }
+    }
+
+    return (
+      <div className="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
+        {/* Game Info */}
+        <div className="bg-gray-900 px-4 py-2 text-center border-b border-gray-600">
+          <div className="text-sm text-gray-400">
+            {gameTime.toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
+            {" • "}
+            {gameTime.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+            {game.tv && ` • ${game.tv}`}
+          </div>
+        </div>
+
+        {/* Teams */}
+        <div className="divide-y divide-gray-700">
+          {/* Away Team */}
+          <button
+            onClick={() =>
+              !hasStarted &&
+              displayAwayTeam !== "TBD" &&
+              handlePickWinner(game.id, displayAwayTeam)
+            }
+            disabled={hasStarted || displayAwayTeam === "TBD"}
+            className={`w-full px-4 py-4 transition-all flex items-center justify-between ${
+              awaySelected
+                ? "bg-blue-600 text-white"
+                : displayAwayTeam === "TBD"
+                ? "bg-gray-900 text-gray-600"
+                : "bg-gray-800 text-gray-300 active:bg-gray-700"
+            } ${
+              hasStarted || displayAwayTeam === "TBD"
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {getSeed(displayAwayTeam) && (
+                <span
+                  className={`text-sm font-bold px-2 py-0.5 rounded ${
+                    awaySelected
+                      ? "bg-blue-700 text-white"
+                      : "bg-gray-700 text-gray-400"
+                  }`}
+                >
+                  {getSeed(displayAwayTeam)}
+                </span>
+              )}
+              <span className="font-semibold text-base">{displayAwayTeam}</span>
+              {awaySelected && isLocked && (
+                <Lock className="w-4 h-4 text-yellow-400" />
+              )}
+              {awaySelected && pickResult === "correct" && (
+                <Check className="w-5 h-5 text-green-400" />
+              )}
+              {awaySelected && pickResult === "incorrect" && (
+                <X className="w-5 h-5 text-red-400" />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {game.away_score !== null && (
+                <span className="text-xl font-bold">{game.away_score}</span>
+              )}
+              {!hasStarted && displayAwayTeam !== "TBD" && (
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    awaySelected ? "border-white bg-white" : "border-gray-500"
+                  }`}
+                >
+                  {awaySelected && <Check className="w-4 h-4 text-blue-600" />}
+                </div>
+              )}
+            </div>
+          </button>
+
+          {/* VS Divider */}
+          <div className="bg-gray-900 py-1 text-center">
+            <span className="text-xs text-gray-500 font-medium">VS</span>
+          </div>
+
+          {/* Home Team */}
+          <button
+            onClick={() =>
+              !hasStarted &&
+              displayHomeTeam !== "TBD" &&
+              handlePickWinner(game.id, displayHomeTeam)
+            }
+            disabled={hasStarted || displayHomeTeam === "TBD"}
+            className={`w-full px-4 py-4 transition-all flex items-center justify-between ${
+              homeSelected
+                ? "bg-blue-600 text-white"
+                : displayHomeTeam === "TBD"
+                ? "bg-gray-900 text-gray-600"
+                : "bg-gray-800 text-gray-300 active:bg-gray-700"
+            } ${
+              hasStarted || displayHomeTeam === "TBD"
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {getSeed(displayHomeTeam) && (
+                <span
+                  className={`text-sm font-bold px-2 py-0.5 rounded ${
+                    homeSelected
+                      ? "bg-blue-700 text-white"
+                      : "bg-gray-700 text-gray-400"
+                  }`}
+                >
+                  {getSeed(displayHomeTeam)}
+                </span>
+              )}
+              <span className="font-semibold text-base">{displayHomeTeam}</span>
+              {homeSelected && isLocked && (
+                <Lock className="w-4 h-4 text-yellow-400" />
+              )}
+              {homeSelected && pickResult === "correct" && (
+                <Check className="w-5 h-5 text-green-400" />
+              )}
+              {homeSelected && pickResult === "incorrect" && (
+                <X className="w-5 h-5 text-red-400" />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {game.home_score !== null && (
+                <span className="text-xl font-bold">{game.home_score}</span>
+              )}
+              {!hasStarted && displayHomeTeam !== "TBD" && (
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    homeSelected ? "border-white bg-white" : "border-gray-500"
+                  }`}
+                >
+                  {homeSelected && <Check className="w-4 h-4 text-blue-600" />}
+                </div>
+              )}
+            </div>
+          </button>
+        </div>
+
+        {/* Lock Toggle */}
+        {predictedWinner && !hasStarted && (
+          <button
+            onClick={() => toggleLock(game.id)}
+            className={`w-full py-3 text-sm font-medium transition-all border-t border-gray-700 flex items-center justify-center gap-2 ${
+              isLocked
+                ? "bg-yellow-600 text-white active:bg-yellow-700"
+                : "bg-gray-900 text-gray-400 active:bg-gray-800"
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            {isLocked ? "Locked for 2x Points" : "Tap to Lock (2x Points)"}
+          </button>
+        )}
+
+        {/* Points */}
+        {game.status === "completed" && pick && pick.pick_points !== null && (
+          <div className="bg-gray-900 py-2 text-center border-t border-gray-700">
+            <span
+              className={`text-sm font-bold ${
+                pickResult === "correct" ? "text-green-400" : "text-red-400"
+              }`}
+            >
+              {(pick.pick_points || 0) + (pick.bonus_points || 0)} points
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Mobile: Render a full round slide
+  const renderMobileRound = (
+    roundIndex: number,
+    afcGames: Game[],
+    nfcGames: Game[],
+    afcByeTeam?: string,
+    nfcByeTeam?: string
+  ) => {
+    const roundName = roundNames[roundIndex];
+    const isSuperBowl = roundIndex === 3;
+
+    // Count picks made for this round
+    const allGames = [...afcGames, ...nfcGames];
+    const picksMade = allGames.filter((g) => bracketPicks[g.id]).length;
+    const totalGames = allGames.length;
+
+    return (
+      <div className="w-full flex-shrink-0 px-4">
+        {/* Round Header */}
+        <div className="text-center mb-4">
+          <h2 className="text-xl font-bold text-white mb-1">
+            {roundName} {!isSuperBowl && "Round"}
+          </h2>
+          <div className="text-sm text-gray-400">
+            {picksMade}/{totalGames} picks made
+          </div>
+        </div>
+
+        {isSuperBowl ? (
+          // Super Bowl layout - single game
+          <div className="space-y-4">
+            <div className="text-center">
+              <Trophy className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+              <div className="text-sm text-gray-400 mb-4">February 8, 2026</div>
+            </div>
+            {afcGames[0] && renderMobileMatchup(afcGames[0])}
+          </div>
+        ) : (
+          // Conference layout - AFC and NFC sections
+          <div className="space-y-6">
+            {/* AFC Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px flex-1 bg-red-600/50"></div>
+                <h3 className="text-sm font-bold text-red-400 uppercase tracking-wide">
+                  AFC
+                </h3>
+                <div className="h-px flex-1 bg-red-600/50"></div>
+              </div>
+              <div className="space-y-3">
+                {afcByeTeam && renderMobileByeTeam(afcByeTeam, 1)}
+                {afcGames.map((game) => (
+                  <div key={game.id}>{renderMobileMatchup(game)}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* NFC Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px flex-1 bg-blue-600/50"></div>
+                <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wide">
+                  NFC
+                </h3>
+                <div className="h-px flex-1 bg-blue-600/50"></div>
+              </div>
+              <div className="space-y-3">
+                {nfcByeTeam && renderMobileByeTeam(nfcByeTeam, 1)}
+                {nfcGames.map((game) => (
+                  <div key={game.id}>{renderMobileMatchup(game)}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Swipe navigation handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && currentRound < 3) {
+      setCurrentRound((prev) => prev + 1);
+    }
+    if (isRightSwipe && currentRound > 0) {
+      setCurrentRound((prev) => prev - 1);
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
+  const goToRound = (index: number) => {
+    setCurrentRound(index);
+  };
+
+  const nextRound = () => {
+    if (currentRound < 3) {
+      setCurrentRound((prev) => prev + 1);
+    }
+  };
+
+  const prevRound = () => {
+    if (currentRound > 0) {
+      setCurrentRound((prev) => prev - 1);
+    }
+  };
+
+  // Navigation dots component
+  const renderNavigationDots = () => {
+    return (
+      <div className="flex items-center justify-center gap-2 py-3">
+        {roundNames.map((name, index) => (
+          <button
+            key={name}
+            onClick={() => goToRound(index)}
+            className={`transition-all ${
+              index === currentRound
+                ? "w-8 h-2 bg-blue-500 rounded-full"
+                : "w-2 h-2 bg-gray-600 rounded-full hover:bg-gray-500"
+            }`}
+            aria-label={`Go to ${name}`}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Mobile navigation bar with arrows and round name
+  const renderMobileNav = () => {
+    return (
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-800/50 backdrop-blur sticky top-0 z-10">
+        <button
+          onClick={prevRound}
+          disabled={currentRound === 0}
+          className={`p-2 rounded-full transition-all ${
+            currentRound === 0
+              ? "text-gray-600 cursor-not-allowed"
+              : "text-white bg-gray-700 active:bg-gray-600"
+          }`}
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+
+        <div className="flex flex-col items-center">
+          <span className="text-sm font-bold text-white">
+            {roundNames[currentRound]}
+          </span>
+          {renderNavigationDots()}
+        </div>
+
+        <button
+          onClick={nextRound}
+          disabled={currentRound === 3}
+          className={`p-2 rounded-full transition-all ${
+            currentRound === 3
+              ? "text-gray-600 cursor-not-allowed"
+              : "text-white bg-gray-700 active:bg-gray-600"
+          }`}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -697,115 +1117,166 @@ export default function PlayoffBracket({ userId }: PlayoffBracketProps) {
 
   return (
     <div className="pb-8">
-      {/* Header */}
+      {/* Header - shown on both mobile and desktop */}
       <div className="text-center mb-4 px-4">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">
           <Trophy className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 inline-block mr-2 text-yellow-400" />
           2025 NFL Playoffs
         </h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-400">
+        <p className="hidden md:block text-xs sm:text-sm md:text-base text-gray-400">
           Click teams to fill out your bracket • Lock picks for 2x points
         </p>
       </div>
 
-      {/* Full-Width Bracket Container */}
-      <div className="w-full px-2 sm:px-4">
-        <div className="w-full mx-auto">
-          <div className="grid grid-cols-9 gap-1 sm:gap-2 md:gap-3 lg:gap-4">
-            {/* AFC SIDE - Wild Card */}
-            <div className="col-span-1 flex flex-col justify-around space-y-1 sm:space-y-2">
-              <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-red-400 mb-1 uppercase">
-                AFC WC
-              </div>
-              {afcWildCard.map((game) => (
-                <div key={game.id}>{renderMatchup(game)}</div>
-              ))}
-            </div>
+      {/* MOBILE: Swipe Carousel Layout */}
+      <div className="block md:hidden">
+        {/* Mobile Navigation */}
+        {renderMobileNav()}
 
-            {/* AFC - #1 Seed & Divisional */}
-            <div className="col-span-1 flex flex-col justify-center space-y-2 sm:space-y-4">
-              <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-red-400 mb-1 uppercase">
-                AFC Div
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                {renderByeTeam(afcOneSeed, 1)}
-                {afcDivisional.map((game) => (
-                  <div key={game.id}>{renderMatchup(game)}</div>
-                ))}
-              </div>
-            </div>
+        {/* Swipe Carousel Container */}
+        <div
+          ref={carouselRef}
+          className="overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div
+            className="flex transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(-${currentRound * 100}%)` }}
+          >
+            {/* Round 0: Wild Card */}
+            {renderMobileRound(0, afcWildCard, nfcWildCard)}
 
-            {/* AFC Championship */}
-            <div className="col-span-1 flex flex-col justify-center">
-              <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-red-400 mb-2 uppercase">
-                AFC Champ
-              </div>
-              {afcChampionship && renderMatchup(afcChampionship)}
-            </div>
+            {/* Round 1: Divisional */}
+            {renderMobileRound(
+              1,
+              afcDivisional,
+              nfcDivisional,
+              afcOneSeed,
+              nfcOneSeed
+            )}
 
-            {/* AFC to Super Bowl connector */}
-            <div className="col-span-1 flex items-center justify-center">
-              <div className="w-full h-px bg-gray-600"></div>
-            </div>
+            {/* Round 2: Conference Championships */}
+            {renderMobileRound(
+              2,
+              afcChampionship ? [afcChampionship] : [],
+              nfcChampionship ? [nfcChampionship] : []
+            )}
 
-            {/* Super Bowl - Center */}
-            <div className="col-span-1 flex flex-col justify-center items-center">
-              <div className="text-center mb-2">
-                <div className="text-[10px] sm:text-sm md:text-lg font-bold text-white mb-1">
-                  SUPER BOWL
-                </div>
-                <div className="text-[8px] sm:text-xs text-gray-400">Feb 8</div>
-              </div>
-              {superBowl && (
-                <div className="w-full">{renderMatchup(superBowl)}</div>
-              )}
-            </div>
-
-            {/* NFC to Super Bowl connector */}
-            <div className="col-span-1 flex items-center justify-center">
-              <div className="w-full h-px bg-gray-600"></div>
-            </div>
-
-            {/* NFC Championship */}
-            <div className="col-span-1 flex flex-col justify-center">
-              <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-blue-400 mb-2 uppercase">
-                NFC Champ
-              </div>
-              {nfcChampionship && renderMatchup(nfcChampionship)}
-            </div>
-
-            {/* NFC - #1 Seed & Divisional */}
-            <div className="col-span-1 flex flex-col justify-center space-y-2 sm:space-y-4">
-              <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-blue-400 mb-1 uppercase">
-                NFC Div
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                {renderByeTeam(nfcOneSeed, 1)}
-                {nfcDivisional.map((game) => (
-                  <div key={game.id}>{renderMatchup(game)}</div>
-                ))}
-              </div>
-            </div>
-
-            {/* NFC SIDE - Wild Card */}
-            <div className="col-span-1 flex flex-col justify-around space-y-1 sm:space-y-2">
-              <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-blue-400 mb-1 uppercase">
-                NFC WC
-              </div>
-              {nfcWildCard.map((game) => (
-                <div key={game.id}>{renderMatchup(game)}</div>
-              ))}
-            </div>
+            {/* Round 3: Super Bowl */}
+            {renderMobileRound(3, superBowl ? [superBowl] : [], [])}
           </div>
+        </div>
+
+        {/* Swipe Hint */}
+        <div className="text-center mt-4 text-gray-500 text-xs">
+          Swipe left/right to navigate rounds
         </div>
       </div>
 
-      {/* Instructions */}
-      <div className="text-center mt-8 px-4 text-gray-400 text-sm">
-        <p>
-          Fill out your entire bracket by clicking team names • Lock up to 3
-          picks per round for double points
-        </p>
+      {/* DESKTOP: Traditional Bracket Layout */}
+      <div className="hidden md:block">
+        <div className="w-full px-2 sm:px-4">
+          <div className="w-full mx-auto">
+            <div className="grid grid-cols-9 gap-1 sm:gap-2 md:gap-3 lg:gap-4">
+              {/* AFC SIDE - Wild Card */}
+              <div className="col-span-1 flex flex-col justify-around space-y-1 sm:space-y-2">
+                <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-red-400 mb-1 uppercase">
+                  AFC WC
+                </div>
+                {afcWildCard.map((game) => (
+                  <div key={game.id}>{renderMatchup(game)}</div>
+                ))}
+              </div>
+
+              {/* AFC - #1 Seed & Divisional */}
+              <div className="col-span-1 flex flex-col justify-center space-y-2 sm:space-y-4">
+                <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-red-400 mb-1 uppercase">
+                  AFC Div
+                </div>
+                <div className="space-y-1 sm:space-y-2">
+                  {renderByeTeam(afcOneSeed, 1)}
+                  {afcDivisional.map((game) => (
+                    <div key={game.id}>{renderMatchup(game)}</div>
+                  ))}
+                </div>
+              </div>
+
+              {/* AFC Championship */}
+              <div className="col-span-1 flex flex-col justify-center">
+                <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-red-400 mb-2 uppercase">
+                  AFC Champ
+                </div>
+                {afcChampionship && renderMatchup(afcChampionship)}
+              </div>
+
+              {/* AFC to Super Bowl connector */}
+              <div className="col-span-1 flex items-center justify-center">
+                <div className="w-full h-px bg-gray-600"></div>
+              </div>
+
+              {/* Super Bowl - Center */}
+              <div className="col-span-1 flex flex-col justify-center items-center">
+                <div className="text-center mb-2">
+                  <div className="text-[10px] sm:text-sm md:text-lg font-bold text-white mb-1">
+                    SUPER BOWL
+                  </div>
+                  <div className="text-[8px] sm:text-xs text-gray-400">
+                    Feb 8
+                  </div>
+                </div>
+                {superBowl && (
+                  <div className="w-full">{renderMatchup(superBowl)}</div>
+                )}
+              </div>
+
+              {/* NFC to Super Bowl connector */}
+              <div className="col-span-1 flex items-center justify-center">
+                <div className="w-full h-px bg-gray-600"></div>
+              </div>
+
+              {/* NFC Championship */}
+              <div className="col-span-1 flex flex-col justify-center">
+                <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-blue-400 mb-2 uppercase">
+                  NFC Champ
+                </div>
+                {nfcChampionship && renderMatchup(nfcChampionship)}
+              </div>
+
+              {/* NFC - #1 Seed & Divisional */}
+              <div className="col-span-1 flex flex-col justify-center space-y-2 sm:space-y-4">
+                <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-blue-400 mb-1 uppercase">
+                  NFC Div
+                </div>
+                <div className="space-y-1 sm:space-y-2">
+                  {renderByeTeam(nfcOneSeed, 1)}
+                  {nfcDivisional.map((game) => (
+                    <div key={game.id}>{renderMatchup(game)}</div>
+                  ))}
+                </div>
+              </div>
+
+              {/* NFC SIDE - Wild Card */}
+              <div className="col-span-1 flex flex-col justify-around space-y-1 sm:space-y-2">
+                <div className="text-center text-[8px] sm:text-xs md:text-sm font-bold text-blue-400 mb-1 uppercase">
+                  NFC WC
+                </div>
+                {nfcWildCard.map((game) => (
+                  <div key={game.id}>{renderMatchup(game)}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Instructions - Desktop only */}
+        <div className="text-center mt-8 px-4 text-gray-400 text-sm">
+          <p>
+            Fill out your entire bracket by clicking team names • Lock up to 3
+            picks per round for double points
+          </p>
+        </div>
       </div>
     </div>
   );

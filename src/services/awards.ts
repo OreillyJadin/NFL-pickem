@@ -159,9 +159,17 @@ export async function processWeeklyAwards(
 
     if (!picks || !games) return { data: [], error: null };
 
+    // Minimum picks required to be eligible for awards
+    const MIN_PICKS_FOR_AWARDS = 10;
+
     // Calculate awards
     const userStats: {
-      [userId: string]: { points: number; correct: number; total: number };
+      [userId: string]: {
+        points: number;
+        correct: number;
+        total: number;
+        pickCount: number;
+      };
     } = {};
 
     // Process picks with proper bonus point calculation
@@ -176,8 +184,16 @@ export async function processWeeklyAwards(
         continue;
 
       if (!userStats[pick.user_id]) {
-        userStats[pick.user_id] = { points: 0, correct: 0, total: 0 };
+        userStats[pick.user_id] = {
+          points: 0,
+          correct: 0,
+          total: 0,
+          pickCount: 0,
+        };
       }
+
+      // Always count the pick (for minimum eligibility check)
+      userStats[pick.user_id].pickCount++;
 
       // Check if game is a tie first
       const isTie = game.home_score === game.away_score;
@@ -200,8 +216,27 @@ export async function processWeeklyAwards(
       }
     }
 
-    // Find award winners
-    const users = Object.entries(userStats);
+    // Find award winners - only users with at least MIN_PICKS_FOR_AWARDS picks are eligible
+    const allUsers = Object.entries(userStats);
+    const eligibleUsers = allUsers.filter(
+      ([, stats]) => stats.pickCount >= MIN_PICKS_FOR_AWARDS
+    );
+
+    console.log(
+      `Awards eligibility: ${eligibleUsers.length}/${allUsers.length} users made at least ${MIN_PICKS_FOR_AWARDS} picks`
+    );
+
+    // Log ineligible users for debugging
+    const ineligibleUsers = allUsers.filter(
+      ([, stats]) => stats.pickCount < MIN_PICKS_FOR_AWARDS
+    );
+    if (ineligibleUsers.length > 0) {
+      console.log(
+        `Ineligible users (< ${MIN_PICKS_FOR_AWARDS} picks):`,
+        ineligibleUsers.map(([id, stats]) => `${id}: ${stats.pickCount} picks`)
+      );
+    }
+
     const awards: {
       userId: string;
       awardType: keyof typeof AWARD_TYPES;
@@ -209,9 +244,9 @@ export async function processWeeklyAwards(
       record: string;
     }[] = [];
 
-    if (users.length > 0) {
+    if (eligibleUsers.length > 0) {
       // Sort users using the centralized tiebreaker logic
-      const sortedUsers = sortUsersByTiebreaker(users);
+      const sortedUsers = sortUsersByTiebreaker(eligibleUsers);
 
       // Log tiebreaker details for debugging
       logTiebreakerAnalysis(sortedUsers, week);
@@ -261,8 +296,8 @@ export async function processWeeklyAwards(
         });
       }
 
-      // Lowest Scorer
-      const lowestScorer = users.reduce((min, current) =>
+      // Lowest Scorer (only from eligible users)
+      const lowestScorer = eligibleUsers.reduce((min, current) =>
         current[1].points < min[1].points ? current : min
       );
       awards.push({
@@ -274,8 +309,8 @@ export async function processWeeklyAwards(
         }`,
       });
 
-      // Perfect Week (all picks correct)
-      users.forEach(([userId, stats]) => {
+      // Perfect Week (all picks correct) - only for eligible users
+      eligibleUsers.forEach(([userId, stats]) => {
         if (stats.correct === stats.total && stats.total > 0) {
           awards.push({
             userId,
@@ -286,8 +321,8 @@ export async function processWeeklyAwards(
         }
       });
 
-      // Cold Week (all picks wrong)
-      users.forEach(([userId, stats]) => {
+      // Cold Week (all picks wrong) - only for eligible users
+      eligibleUsers.forEach(([userId, stats]) => {
         if (stats.correct === 0 && stats.total > 0) {
           awards.push({
             userId,
@@ -298,8 +333,8 @@ export async function processWeeklyAwards(
         }
       });
 
-      // Negative Points (scored below zero)
-      users.forEach(([userId, stats]) => {
+      // Negative Points (scored below zero) - only for eligible users
+      eligibleUsers.forEach(([userId, stats]) => {
         if (stats.points < 0 && stats.total > 0) {
           awards.push({
             userId,
