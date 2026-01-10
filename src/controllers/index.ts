@@ -4,3 +4,4 @@ export * from "./UserController";
 export * from "./FeedbackController";
 export * from "./ScoringController";
 export * from "./AwardController";
+export * from "./FantasyController";

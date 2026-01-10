@@ -139,13 +139,20 @@ Next.js pages and API routes.
 - `/dashboard` - Main user dashboard (make picks)
 - `/leaderboard` - Standings and rankings
 - `/profile` - User profile and pick history
+- `/fantasy` - Fantasy football roster builder
+- `/fantasy/leaderboard` - Fantasy football leaderboard
+- `/fantasy/team/[userId]` - View other users' fantasy teams
 
 **API Routes:**
 
 - `/api/feedback` - Submit user feedback
 - `/api/cron/sync-scores` - Sync game scores
 - `/api/cron/fix-scoring` - Fix scoring issues
+- `/api/cron/sync-fantasy` - Sync fantasy player stats from ESPN
 - `/api/process-awards` - Process weekly awards
+- `/api/fantasy/team` - Fantasy team management
+- `/api/fantasy/players` - Available fantasy players
+- `/api/fantasy/leaderboard` - Fantasy leaderboard data
 
 ### `/src/components`
 
@@ -159,13 +166,50 @@ React components for UI.
 
 ## 🔌 Database Schema
 
-**Tables:**
+**Core Tables:**
 
 - `profiles` - User information
 - `games` - NFL games (synced from ESPN)
 - `picks` - User picks for games
 - `awards` - Weekly achievement badges
 - `feedback` - User feedback submissions
+
+**Fantasy Football Tables:**
+
+- `fantasy_players` - NFL players available for fantasy selection
+- `fantasy_teams` - User's fantasy roster configuration
+- `fantasy_roster_slots` - Individual roster positions (9 per team)
+- `fantasy_player_stats` - Weekly player stats for point calculation
+
+## 🏈 Fantasy Football Feature
+
+The Fantasy Football feature allows users to build a playoff fantasy roster.
+
+### How It Works
+
+1. **Build Your Roster** - Select 9 players (QB, 2 RB, 2 WR, TE, FLEX, D/ST, K)
+2. **Choose Scoring Format** - PPR, Half PPR, or Standard
+3. **Lock Your Team** - Click "Lock Team" when roster is complete
+4. **Compete** - See your ranking on the Fantasy Leaderboard
+
+### Scoring Formats
+
+- **PPR (Point Per Reception)** - 1 point per catch
+- **Half PPR** - 0.5 points per catch
+- **Standard** - No points for receptions
+
+### Dynamic Format Switching
+
+- Users can switch viewing format anytime to see different point totals
+- Leaderboard can be viewed in any format (per-user preference)
+- All three point values are pre-calculated for instant switching
+
+### Key Files
+
+- `FantasyController.ts` - Business logic for teams/rosters
+- `FantasyTeamModel.ts` - Database operations for teams
+- `fantasy-scoring.ts` - Point calculation engine
+- `fantasy-sync.ts` - ESPN API integration for player stats
 
 ## 🚀 Getting Started
 

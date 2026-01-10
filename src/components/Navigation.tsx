@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { BarChart3, Trophy, User } from "lucide-react";
+import { BarChart3, Trophy, User, Users } from "lucide-react";
 
 export function Navigation() {
   const { user, signOut } = useAuth();
@@ -57,6 +57,19 @@ export function Navigation() {
                 <span className="flex items-center gap-2">
                   <Trophy className="w-4 h-4" />
                   Leaderboard
+                </span>
+              </button>
+              <button
+                onClick={() => router.push("/fantasy")}
+                className={`px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
+                  pathname?.startsWith("/fantasy")
+                    ? "bg-purple-600 text-white"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-purple-600/20"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Fantasy
                 </span>
               </button>
             </div>
@@ -117,6 +130,19 @@ export function Navigation() {
               <span className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 Profile
+              </span>
+            </button>
+            <button
+              onClick={() => router.push("/fantasy")}
+              className={`px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium ${
+                pathname?.startsWith("/fantasy")
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-purple-600/20 border border-purple-600/50"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Fantasy
               </span>
             </button>
           </div>
