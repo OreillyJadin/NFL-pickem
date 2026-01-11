@@ -189,71 +189,45 @@ export async function syncPlayoffPlayers(): Promise<{
 }
 
 /**
- * Parse player stats from ESPN boxscore data
+ * Parse player stats from ESPN boxscore category data
+ * ESPN structure: category.labels = ['C/ATT', 'YDS', 'TD', ...], athlete.stats = ['28/35', '273', '1', ...]
  */
-function parsePlayerStats(
-  playerData: any,
-  teamAbbrev: string
+function parseStatsFromCategory(
+  categoryName: string,
+  labels: string[],
+  stats: string[],
+  existingStats: Partial<FantasyPlayerStats>
 ): Partial<FantasyPlayerStats> {
-  const stats: Partial<FantasyPlayerStats> = {
-    passing_yards: 0,
-    passing_tds: 0,
-    interceptions: 0,
-    rushing_yards: 0,
-    rushing_tds: 0,
-    receptions: 0,
-    receiving_yards: 0,
-    receiving_tds: 0,
-    fumbles_lost: 0,
-    two_point_conversions: 0,
-  };
+  const result = { ...existingStats };
 
-  // Parse each stat category
-  for (const category of playerData.statistics || []) {
-    const statNames = category.names || [];
-    const statValues = category.stats || [];
+  labels.forEach((label: string, index: number) => {
+    const rawValue = stats[index] || "0";
+    const value = parseFloat(rawValue) || 0;
+    const labelUpper = label.toUpperCase();
 
-    statNames.forEach((name: string, index: number) => {
-      const value = parseFloat(statValues[index]) || 0;
+    switch (categoryName.toLowerCase()) {
+      case "passing":
+        if (labelUpper === "YDS") result.passing_yards = value;
+        else if (labelUpper === "TD") result.passing_tds = value;
+        else if (labelUpper === "INT") result.interceptions = value;
+        break;
+      case "rushing":
+        if (labelUpper === "YDS") result.rushing_yards = value;
+        else if (labelUpper === "TD") result.rushing_tds = value;
+        else if (labelUpper === "FUM") result.fumbles_lost = value;
+        break;
+      case "receiving":
+        if (labelUpper === "YDS") result.receiving_yards = value;
+        else if (labelUpper === "TD") result.receiving_tds = value;
+        else if (labelUpper === "REC") result.receptions = value;
+        break;
+      case "fumbles":
+        if (labelUpper === "FUM" || labelUpper === "LOST") result.fumbles_lost = value;
+        break;
+    }
+  });
 
-      switch (name.toLowerCase()) {
-        case "c/att":
-          // Completions/Attempts - parse completions
-          const parts = statValues[index]?.split("/") || [];
-          break;
-        case "yds":
-          // Context matters - check category name
-          if (category.name === "passing") {
-            stats.passing_yards = value;
-          } else if (category.name === "rushing") {
-            stats.rushing_yards = value;
-          } else if (category.name === "receiving") {
-            stats.receiving_yards = value;
-          }
-          break;
-        case "td":
-          if (category.name === "passing") {
-            stats.passing_tds = value;
-          } else if (category.name === "rushing") {
-            stats.rushing_tds = value;
-          } else if (category.name === "receiving") {
-            stats.receiving_tds = value;
-          }
-          break;
-        case "int":
-          stats.interceptions = value;
-          break;
-        case "rec":
-          stats.receptions = value;
-          break;
-        case "fum":
-          stats.fumbles_lost = value;
-          break;
-      }
-    });
-  }
-
-  return stats;
+  return result;
 }
 
 /**
@@ -276,44 +250,100 @@ export async function syncGamePlayerStats(
     const gameData = await fetchGameSummary(espnGameId);
 
     if (!gameData?.boxscore?.players) {
+      console.log(`No player data in boxscore for game ${espnGameId}`);
       return { success: true, playersUpdated: 0, errors: [] };
     }
+
+    // Collect stats per player across all categories (player may appear in rushing AND receiving)
+    const playerStatsMap: Map<string, { playerId: string; playerName: string; stats: Partial<FantasyPlayerStats> }> = new Map();
 
     for (const teamData of gameData.boxscore.players) {
       const teamInfo = teamData.team;
       const teamAbbrev =
         TEAM_ABBREV_MAP[teamInfo?.displayName] || teamInfo?.abbreviation;
 
+      console.log(`Processing team: ${teamInfo?.displayName} (${teamAbbrev})`);
+
       for (const category of teamData.statistics || []) {
+        const categoryName = category.name || "";
+        const labels = category.labels || [];
+
+        console.log(`  Category: ${categoryName}, Labels: ${labels.join(", ")}`);
+
         for (const athlete of category.athletes || []) {
-          try {
-            // Find player in our database
-            const player = await FantasyPlayerModel.findByEspnId(athlete.athlete?.id);
-            if (!player) continue;
+          const espnId = athlete.athlete?.id?.toString();
+          const playerName = athlete.athlete?.displayName || "Unknown";
+          const athleteStats = athlete.stats || [];
 
-            // Parse stats
-            const rawStats = parsePlayerStats(athlete, teamAbbrev);
+          if (!espnId) continue;
 
-            // Calculate fantasy points in all formats
-            const points = calculateAllFormats(rawStats);
-
-            // Upsert stats
-            await FantasyStatsModel.upsert({
-              player_id: player.id,
-              week,
-              season,
-              game_id: espnGameId,
-              ...rawStats,
-              points_ppr: points.ppr,
-              points_half_ppr: points.half_ppr,
-              points_standard: points.standard,
-            } as Omit<FantasyPlayerStats, "id" | "last_updated">);
-
-            playersUpdated++;
-          } catch (error) {
-            errors.push(`Error updating ${athlete.athlete?.displayName}: ${error}`);
+          // Get or create player stats entry
+          let playerEntry = playerStatsMap.get(espnId);
+          if (!playerEntry) {
+            playerEntry = {
+              playerId: espnId,
+              playerName,
+              stats: {
+                passing_yards: 0,
+                passing_tds: 0,
+                interceptions: 0,
+                rushing_yards: 0,
+                rushing_tds: 0,
+                receptions: 0,
+                receiving_yards: 0,
+                receiving_tds: 0,
+                fumbles_lost: 0,
+                two_point_conversions: 0,
+              },
+            };
+            playerStatsMap.set(espnId, playerEntry);
           }
+
+          // Parse stats from this category and merge with existing
+          playerEntry.stats = parseStatsFromCategory(
+            categoryName,
+            labels,
+            athleteStats,
+            playerEntry.stats
+          );
+
+          console.log(`    ${playerName}: ${athleteStats.slice(0, 4).join(", ")}...`);
         }
+      }
+    }
+
+    console.log(`Collected stats for ${playerStatsMap.size} players`);
+
+    // Now save all collected stats to database
+    for (const [espnId, playerEntry] of playerStatsMap) {
+      try {
+        // Find player in our database
+        const player = await FantasyPlayerModel.findByEspnId(espnId);
+        if (!player) {
+          console.log(`Player not found in DB: ${playerEntry.playerName} (ESPN ID: ${espnId})`);
+          continue;
+        }
+
+        // Calculate fantasy points in all formats
+        const points = calculateAllFormats(playerEntry.stats);
+
+        console.log(`Saving ${player.name}: PPR=${points.ppr.toFixed(1)}, Std=${points.standard.toFixed(1)}`);
+
+        // Upsert stats
+        await FantasyStatsModel.upsert({
+          player_id: player.id,
+          week,
+          season,
+          game_id: espnGameId,
+          ...playerEntry.stats,
+          points_ppr: points.ppr,
+          points_half_ppr: points.half_ppr,
+          points_standard: points.standard,
+        } as Omit<FantasyPlayerStats, "id" | "last_updated">);
+
+        playersUpdated++;
+      } catch (error) {
+        errors.push(`Error updating ${playerEntry.playerName}: ${error}`);
       }
     }
 

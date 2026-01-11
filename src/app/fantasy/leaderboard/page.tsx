@@ -17,6 +17,8 @@ export default function FantasyLeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewingFormat, setViewingFormat] = useState<ScoringFormat>("ppr");
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   // Fetch leaderboard and user's preferred format
   useEffect(() => {
@@ -62,6 +64,31 @@ export default function FantasyLeaderboardPage() {
     }
   }
 
+  async function handleSyncStats() {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const response = await fetch("/api/cron/sync-fantasy?week=1&season=2025");
+      const data = await response.json();
+
+      if (data.success) {
+        setSyncMessage(
+          `Stats updated! ${data.gamesProcessed || 0} games, ${data.playersUpdated || 0} players.`
+        );
+        // Refresh leaderboard
+        await fetchLeaderboard();
+      } else {
+        setSyncMessage(`Sync failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      console.error("Error syncing stats:", err);
+      setSyncMessage("Failed to sync stats.");
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncMessage(null), 5000);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-900">
       <Navigation />
@@ -86,23 +113,35 @@ export default function FantasyLeaderboardPage() {
                 Playoff fantasy rankings
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <ScoringFormatToggle
                 value={viewingFormat}
                 onChange={setViewingFormat}
                 size="sm"
               />
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={fetchLeaderboard}
-                className="text-gray-400 hover:text-white"
+                onClick={handleSyncStats}
+                disabled={syncing}
+                className="border-green-500 text-green-400 hover:bg-green-500/20"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Sync Status Message */}
+        {syncMessage && (
+          <div className={`mb-4 p-3 rounded-lg text-sm ${
+            syncMessage.includes("failed") || syncMessage.includes("Failed")
+              ? "bg-red-500/20 text-red-300 border border-red-500/30"
+              : "bg-green-500/20 text-green-300 border border-green-500/30"
+          }`}>
+            {syncMessage}
+          </div>
+        )}
 
         {/* Format Info */}
         <div className="mb-6 p-3 bg-purple-600/10 border border-purple-500/30 rounded-lg">

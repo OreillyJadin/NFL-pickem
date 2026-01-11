@@ -21,6 +21,8 @@ export default function FantasyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewingFormat, setViewingFormat] = useState<ScoringFormat>("ppr");
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   // Fetch user's fantasy team
   useEffect(() => {
@@ -171,6 +173,33 @@ export default function FantasyPage() {
     }
   }
 
+  async function handleSyncStats() {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      // Sync stats for week 1 of 2025 season (adjust as needed)
+      const response = await fetch("/api/cron/sync-fantasy?week=1&season=2025");
+      const data = await response.json();
+
+      if (data.success) {
+        setSyncMessage(
+          `Stats updated! ${data.gamesProcessed || 0} games processed, ${data.playersUpdated || 0} players updated.`
+        );
+        // Refresh team data to show updated points
+        await fetchTeam();
+      } else {
+        setSyncMessage(`Sync failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      console.error("Error syncing stats:", err);
+      setSyncMessage("Failed to sync stats. Please try again.");
+    } finally {
+      setSyncing(false);
+      // Clear message after 5 seconds
+      setTimeout(() => setSyncMessage(null), 5000);
+    }
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -202,6 +231,16 @@ export default function FantasyPage() {
           <p className="text-gray-400">
             Build your playoff roster and compete against other players!
           </p>
+          {/* Sync Status Message */}
+          {syncMessage && (
+            <div className={`mt-3 p-3 rounded-lg text-sm ${
+              syncMessage.includes("failed") || syncMessage.includes("Failed")
+                ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                : "bg-green-500/20 text-green-300 border border-green-500/30"
+            }`}>
+              {syncMessage}
+            </div>
+          )}
         </div>
 
         {/* Loading State */}
@@ -233,6 +272,8 @@ export default function FantasyPage() {
             onPlayerSelect={handlePlayerSelect}
             onPlayerRemove={handlePlayerRemove}
             onLockTeam={handleLockTeam}
+            onSyncStats={handleSyncStats}
+            isSyncing={syncing}
             isOwner={true}
           />
         )}

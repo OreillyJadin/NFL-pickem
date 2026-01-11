@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { User, Plus, Lock, Trash2 } from "lucide-react";
+import { User, Plus, Lock, Trash2, RefreshCw } from "lucide-react";
 import {
   FantasyTeamWithRoster,
   FantasyPlayer,
@@ -20,6 +20,8 @@ interface RosterBuilderProps {
   onPlayerSelect: (slotType: RosterSlotType, playerId: string) => Promise<void>;
   onPlayerRemove: (slotType: RosterSlotType) => Promise<void>;
   onLockTeam: () => Promise<void>;
+  onSyncStats?: () => Promise<void>;
+  isSyncing?: boolean;
   isOwner: boolean;
 }
 
@@ -47,6 +49,8 @@ export function RosterBuilder({
   onPlayerSelect,
   onPlayerRemove,
   onLockTeam,
+  onSyncStats,
+  isSyncing = false,
   isOwner,
 }: RosterBuilderProps) {
   const [selectedSlot, setSelectedSlot] = useState<RosterSlotType | null>(null);
@@ -110,7 +114,7 @@ export function RosterBuilder({
 
   return (
     <div className="space-y-6">
-      {/* Header with format toggle */}
+      {/* Header with format toggle and sync button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-white">Your Roster</h2>
@@ -118,12 +122,24 @@ export function RosterBuilder({
             {team.is_locked ? "Team is locked" : "Fill all 9 positions to lock your team"}
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <ScoringFormatToggle
             value={viewingFormat}
             onChange={onFormatChange}
             size="sm"
           />
+          {onSyncStats && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSyncStats}
+              disabled={isSyncing}
+              className="border-green-500 text-green-400 hover:bg-green-500/20"
+              title="Update player stats from ESPN"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
+            </Button>
+          )}
         </div>
       </div>
 
