@@ -68,7 +68,11 @@ export default function FantasyLeaderboardPage() {
     setSyncing(true);
     setSyncMessage(null);
     try {
-      const response = await fetch("/api/cron/sync-fantasy?week=1&season=2025");
+      const response = await fetch("/api/cron/sync-fantasy?week=1&season=2025", {
+        headers: session ? {
+          Authorization: `Bearer ${session.access_token}`,
+        } : {},
+      });
       const data = await response.json();
 
       if (data.success) {

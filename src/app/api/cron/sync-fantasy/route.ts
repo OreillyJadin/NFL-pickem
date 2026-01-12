@@ -1,18 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncWeeklyStats, syncPlayoffPlayers } from "@/services/fantasy-sync";
+import { createClient } from "@supabase/supabase-js";
 
 /**
  * GET /api/cron/sync-fantasy
  * Cron job to sync fantasy player stats from ESPN
- * Should run every 5 minutes during playoff games
+ * Can be triggered by: cron secret OR authenticated user
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret for security
+    // Check authorization - allow cron secret OR authenticated user
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
-
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    
+    let isAuthorized = false;
+    
+    // Check for cron secret
+    if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+      isAuthorized = true;
+    }
+    
+    // Check for user auth token (for manual button clicks)
+    if (!isAuthorized && authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      // Verify it's a valid Supabase user token
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (user) {
+        isAuthorized = true;
+      }
+    }
+    
+    // Also allow if no cron secret is configured (local dev)
+    if (!cronSecret) {
+      isAuthorized = true;
+    }
+    
+    if (!isAuthorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

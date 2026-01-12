@@ -174,11 +174,16 @@ export default function FantasyPage() {
   }
 
   async function handleSyncStats() {
+    if (!session) return;
     setSyncing(true);
     setSyncMessage(null);
     try {
       // Sync stats for week 1 of 2025 season (adjust as needed)
-      const response = await fetch("/api/cron/sync-fantasy?week=1&season=2025");
+      const response = await fetch("/api/cron/sync-fantasy?week=1&season=2025", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
       const data = await response.json();
 
       if (data.success) {
